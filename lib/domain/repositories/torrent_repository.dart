@@ -1,0 +1,107 @@
+import '../entities/torrent_status.dart';
+
+/// Abstract repository contract for all torrent operations.
+/// The implementation wires together the engine and the local DB.
+abstract interface class TorrentRepository {
+  /// Live stream of all torrent statuses.
+  /// Emits deduplicated (deep-equal) updates every ~500ms.
+  Stream<List<TorrentStatus>> get statusStream;
+
+  /// Returns the last known snapshot from the local DB.
+  Future<List<TorrentStatus>> getStoredTorrents();
+
+  /// Adds a torrent by magnet URI. Returns the torrent ID.
+  Future<String> addMagnet(String uri, {String? savePath});
+
+  /// Adds a torrent by .torrent file path. Returns the torrent ID.
+  Future<String> addTorrentFile(String filePath, {String? savePath});
+
+  /// Pauses an active torrent.
+  Future<void> pauseTorrent(String id);
+
+  /// Resumes a paused torrent.
+  Future<void> resumeTorrent(String id);
+
+  /// Removes a torrent. Optionally deletes downloaded files.
+  Future<void> deleteTorrent(String id, {bool deleteFiles = false});
+
+  /// Forces a piece-hash recheck on a partially downloaded torrent.
+  Future<void> recheckTorrent(String id);
+
+  /// Updates engine-wide configuration (speed limits, DHT, etc.).
+  Future<void> applyEngineConfig(EngineConfig config);
+}
+
+/// Value object for libtorrent engine configuration.
+class EngineConfig {
+  const EngineConfig({
+    this.downloadLimit = 0,
+    this.uploadLimit = 0,
+    this.maxConnectionsPerTorrent = 200,
+    this.maxGlobalConnections = 500,
+    this.dhtEnabled = true,
+    this.pexEnabled = true,
+    this.lsdEnabled = true,
+    this.wifiOnlyMode = false,
+  });
+
+  /// bytes/sec, 0 = unlimited
+  final int downloadLimit;
+
+  /// bytes/sec, 0 = unlimited
+  final int uploadLimit;
+
+  final int maxConnectionsPerTorrent;
+  final int maxGlobalConnections;
+  final bool dhtEnabled;
+  final bool pexEnabled;
+  final bool lsdEnabled;
+  final bool wifiOnlyMode;
+
+  EngineConfig copyWith({
+    int? downloadLimit,
+    int? uploadLimit,
+    int? maxConnectionsPerTorrent,
+    int? maxGlobalConnections,
+    bool? dhtEnabled,
+    bool? pexEnabled,
+    bool? lsdEnabled,
+    bool? wifiOnlyMode,
+  }) {
+    return EngineConfig(
+      downloadLimit: downloadLimit ?? this.downloadLimit,
+      uploadLimit: uploadLimit ?? this.uploadLimit,
+      maxConnectionsPerTorrent: maxConnectionsPerTorrent ?? this.maxConnectionsPerTorrent,
+      maxGlobalConnections: maxGlobalConnections ?? this.maxGlobalConnections,
+      dhtEnabled: dhtEnabled ?? this.dhtEnabled,
+      pexEnabled: pexEnabled ?? this.pexEnabled,
+      lsdEnabled: lsdEnabled ?? this.lsdEnabled,
+      wifiOnlyMode: wifiOnlyMode ?? this.wifiOnlyMode,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is EngineConfig &&
+          downloadLimit == other.downloadLimit &&
+          uploadLimit == other.uploadLimit &&
+          maxConnectionsPerTorrent == other.maxConnectionsPerTorrent &&
+          maxGlobalConnections == other.maxGlobalConnections &&
+          dhtEnabled == other.dhtEnabled &&
+          pexEnabled == other.pexEnabled &&
+          lsdEnabled == other.lsdEnabled &&
+          wifiOnlyMode == other.wifiOnlyMode;
+
+  @override
+  int get hashCode => Object.hash(
+        downloadLimit,
+        uploadLimit,
+        maxConnectionsPerTorrent,
+        maxGlobalConnections,
+        dhtEnabled,
+        pexEnabled,
+        lsdEnabled,
+        wifiOnlyMode,
+      );
+}

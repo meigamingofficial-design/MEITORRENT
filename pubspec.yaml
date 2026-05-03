@@ -1,0 +1,72 @@
+name: meitorrent
+description: "Production-grade Android torrent client powered by libtorrent 2.0"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Torrent engine
+  libtorrent_flutter: ^1.8.5
+
+  # Background service
+  flutter_foreground_task: ^9.2.2
+  flutter_local_notifications: ^18.0.1
+
+  # Database
+  drift: ^2.22.1
+  drift_flutter: ^0.2.4
+  sqlite3_flutter_libs: ^0.5.42
+
+  # State management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+  hooks_riverpod: ^2.6.1
+  flutter_hooks: ^0.20.5
+
+  # File + storage
+  file_picker: ^8.1.3
+  open_filex: ^4.7.0
+  path_provider: ^2.1.4
+  path: ^1.9.0
+
+  # Permissions
+  permission_handler: ^11.3.1
+
+  # Network connectivity (for WiFi-only mode)
+  connectivity_plus: ^6.1.1
+
+  # Device info (for OEM battery guard)
+  device_info_plus: ^10.1.0
+
+  # UI
+  google_fonts: ^6.2.1
+
+  # Deep linking (magnet:// + .torrent files from browser)
+  app_links: ^6.3.4
+
+  # Utilities
+  collection: ^1.19.0
+  equatable: ^2.0.5
+  logger: ^2.4.0
+  shared_preferences: ^2.5.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+  # Code generation
+  build_runner: ^2.4.13
+  drift_dev: ^2.22.1
+  riverpod_generator: ^2.6.1
+
+  # Testing
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
