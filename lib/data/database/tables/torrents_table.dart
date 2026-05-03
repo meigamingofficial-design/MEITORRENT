@@ -10,6 +10,9 @@ class TorrentsTable extends Table {
   /// Whether the torrent is logically paused.
   BoolColumn get isPaused => boolean().withDefault(const Constant(false))();
 
+  /// Whether the torrent is logically stopped.
+  BoolColumn get isStopped => boolean().withDefault(const Constant(false))();
+
   /// Whether the torrent is logically completed.
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
 

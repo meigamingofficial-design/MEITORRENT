@@ -24,6 +24,16 @@ class $TorrentsTableTable extends TorrentsTable
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("is_paused" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _isStoppedMeta =
+      const VerificationMeta('isStopped');
+  @override
+  late final GeneratedColumn<bool> isStopped = GeneratedColumn<bool>(
+      'is_stopped', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_stopped" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _isCompletedMeta =
       const VerificationMeta('isCompleted');
   @override
@@ -114,6 +124,7 @@ class $TorrentsTableTable extends TorrentsTable
   List<GeneratedColumn> get $columns => [
         id,
         isPaused,
+        isStopped,
         isCompleted,
         magnetUri,
         torrentFilePath,
@@ -145,6 +156,10 @@ class $TorrentsTableTable extends TorrentsTable
     if (data.containsKey('is_paused')) {
       context.handle(_isPausedMeta,
           isPaused.isAcceptableOrUnknown(data['is_paused']!, _isPausedMeta));
+    }
+    if (data.containsKey('is_stopped')) {
+      context.handle(_isStoppedMeta,
+          isStopped.isAcceptableOrUnknown(data['is_stopped']!, _isStoppedMeta));
     }
     if (data.containsKey('is_completed')) {
       context.handle(
@@ -223,6 +238,8 @@ class $TorrentsTableTable extends TorrentsTable
           .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
       isPaused: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_paused'])!,
+      isStopped: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_stopped'])!,
       isCompleted: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_completed'])!,
       magnetUri: attachedDatabase.typeMapping
@@ -264,6 +281,9 @@ class TorrentsTableData extends DataClass
   /// Whether the torrent is logically paused.
   final bool isPaused;
 
+  /// Whether the torrent is logically stopped.
+  final bool isStopped;
+
   /// Whether the torrent is logically completed.
   final bool isCompleted;
 
@@ -302,6 +322,7 @@ class TorrentsTableData extends DataClass
   const TorrentsTableData(
       {required this.id,
       required this.isPaused,
+      required this.isStopped,
       required this.isCompleted,
       this.magnetUri,
       this.torrentFilePath,
@@ -319,6 +340,7 @@ class TorrentsTableData extends DataClass
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['is_paused'] = Variable<bool>(isPaused);
+    map['is_stopped'] = Variable<bool>(isStopped);
     map['is_completed'] = Variable<bool>(isCompleted);
     if (!nullToAbsent || magnetUri != null) {
       map['magnet_uri'] = Variable<String>(magnetUri);
@@ -344,6 +366,7 @@ class TorrentsTableData extends DataClass
     return TorrentsTableCompanion(
       id: Value(id),
       isPaused: Value(isPaused),
+      isStopped: Value(isStopped),
       isCompleted: Value(isCompleted),
       magnetUri: magnetUri == null && nullToAbsent
           ? const Value.absent()
@@ -371,6 +394,7 @@ class TorrentsTableData extends DataClass
     return TorrentsTableData(
       id: serializer.fromJson<String>(json['id']),
       isPaused: serializer.fromJson<bool>(json['isPaused']),
+      isStopped: serializer.fromJson<bool>(json['isStopped']),
       isCompleted: serializer.fromJson<bool>(json['isCompleted']),
       magnetUri: serializer.fromJson<String?>(json['magnetUri']),
       torrentFilePath: serializer.fromJson<String?>(json['torrentFilePath']),
@@ -392,6 +416,7 @@ class TorrentsTableData extends DataClass
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'isPaused': serializer.toJson<bool>(isPaused),
+      'isStopped': serializer.toJson<bool>(isStopped),
       'isCompleted': serializer.toJson<bool>(isCompleted),
       'magnetUri': serializer.toJson<String?>(magnetUri),
       'torrentFilePath': serializer.toJson<String?>(torrentFilePath),
@@ -410,6 +435,7 @@ class TorrentsTableData extends DataClass
   TorrentsTableData copyWith(
           {String? id,
           bool? isPaused,
+          bool? isStopped,
           bool? isCompleted,
           Value<String?> magnetUri = const Value.absent(),
           Value<String?> torrentFilePath = const Value.absent(),
@@ -425,6 +451,7 @@ class TorrentsTableData extends DataClass
       TorrentsTableData(
         id: id ?? this.id,
         isPaused: isPaused ?? this.isPaused,
+        isStopped: isStopped ?? this.isStopped,
         isCompleted: isCompleted ?? this.isCompleted,
         magnetUri: magnetUri.present ? magnetUri.value : this.magnetUri,
         torrentFilePath: torrentFilePath.present
@@ -444,6 +471,7 @@ class TorrentsTableData extends DataClass
     return TorrentsTableData(
       id: data.id.present ? data.id.value : this.id,
       isPaused: data.isPaused.present ? data.isPaused.value : this.isPaused,
+      isStopped: data.isStopped.present ? data.isStopped.value : this.isStopped,
       isCompleted:
           data.isCompleted.present ? data.isCompleted.value : this.isCompleted,
       magnetUri: data.magnetUri.present ? data.magnetUri.value : this.magnetUri,
@@ -472,6 +500,7 @@ class TorrentsTableData extends DataClass
     return (StringBuffer('TorrentsTableData(')
           ..write('id: $id, ')
           ..write('isPaused: $isPaused, ')
+          ..write('isStopped: $isStopped, ')
           ..write('isCompleted: $isCompleted, ')
           ..write('magnetUri: $magnetUri, ')
           ..write('torrentFilePath: $torrentFilePath, ')
@@ -492,6 +521,7 @@ class TorrentsTableData extends DataClass
   int get hashCode => Object.hash(
       id,
       isPaused,
+      isStopped,
       isCompleted,
       magnetUri,
       torrentFilePath,
@@ -510,6 +540,7 @@ class TorrentsTableData extends DataClass
       (other is TorrentsTableData &&
           other.id == this.id &&
           other.isPaused == this.isPaused &&
+          other.isStopped == this.isStopped &&
           other.isCompleted == this.isCompleted &&
           other.magnetUri == this.magnetUri &&
           other.torrentFilePath == this.torrentFilePath &&
@@ -527,6 +558,7 @@ class TorrentsTableData extends DataClass
 class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
   final Value<String> id;
   final Value<bool> isPaused;
+  final Value<bool> isStopped;
   final Value<bool> isCompleted;
   final Value<String?> magnetUri;
   final Value<String?> torrentFilePath;
@@ -543,6 +575,7 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
   const TorrentsTableCompanion({
     this.id = const Value.absent(),
     this.isPaused = const Value.absent(),
+    this.isStopped = const Value.absent(),
     this.isCompleted = const Value.absent(),
     this.magnetUri = const Value.absent(),
     this.torrentFilePath = const Value.absent(),
@@ -560,6 +593,7 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
   TorrentsTableCompanion.insert({
     required String id,
     this.isPaused = const Value.absent(),
+    this.isStopped = const Value.absent(),
     this.isCompleted = const Value.absent(),
     this.magnetUri = const Value.absent(),
     this.torrentFilePath = const Value.absent(),
@@ -580,6 +614,7 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
   static Insertable<TorrentsTableData> custom({
     Expression<String>? id,
     Expression<bool>? isPaused,
+    Expression<bool>? isStopped,
     Expression<bool>? isCompleted,
     Expression<String>? magnetUri,
     Expression<String>? torrentFilePath,
@@ -597,6 +632,7 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (isPaused != null) 'is_paused': isPaused,
+      if (isStopped != null) 'is_stopped': isStopped,
       if (isCompleted != null) 'is_completed': isCompleted,
       if (magnetUri != null) 'magnet_uri': magnetUri,
       if (torrentFilePath != null) 'torrent_file_path': torrentFilePath,
@@ -617,6 +653,7 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
   TorrentsTableCompanion copyWith(
       {Value<String>? id,
       Value<bool>? isPaused,
+      Value<bool>? isStopped,
       Value<bool>? isCompleted,
       Value<String?>? magnetUri,
       Value<String?>? torrentFilePath,
@@ -633,6 +670,7 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
     return TorrentsTableCompanion(
       id: id ?? this.id,
       isPaused: isPaused ?? this.isPaused,
+      isStopped: isStopped ?? this.isStopped,
       isCompleted: isCompleted ?? this.isCompleted,
       magnetUri: magnetUri ?? this.magnetUri,
       torrentFilePath: torrentFilePath ?? this.torrentFilePath,
@@ -657,6 +695,9 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
     }
     if (isPaused.present) {
       map['is_paused'] = Variable<bool>(isPaused.value);
+    }
+    if (isStopped.present) {
+      map['is_stopped'] = Variable<bool>(isStopped.value);
     }
     if (isCompleted.present) {
       map['is_completed'] = Variable<bool>(isCompleted.value);
@@ -706,6 +747,7 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
     return (StringBuffer('TorrentsTableCompanion(')
           ..write('id: $id, ')
           ..write('isPaused: $isPaused, ')
+          ..write('isStopped: $isStopped, ')
           ..write('isCompleted: $isCompleted, ')
           ..write('magnetUri: $magnetUri, ')
           ..write('torrentFilePath: $torrentFilePath, ')
@@ -739,6 +781,7 @@ typedef $$TorrentsTableTableCreateCompanionBuilder = TorrentsTableCompanion
     Function({
   required String id,
   Value<bool> isPaused,
+  Value<bool> isStopped,
   Value<bool> isCompleted,
   Value<String?> magnetUri,
   Value<String?> torrentFilePath,
@@ -757,6 +800,7 @@ typedef $$TorrentsTableTableUpdateCompanionBuilder = TorrentsTableCompanion
     Function({
   Value<String> id,
   Value<bool> isPaused,
+  Value<bool> isStopped,
   Value<bool> isCompleted,
   Value<String?> magnetUri,
   Value<String?> torrentFilePath,
@@ -786,6 +830,9 @@ class $$TorrentsTableTableFilterComposer
 
   ColumnFilters<bool> get isPaused => $composableBuilder(
       column: $table.isPaused, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isStopped => $composableBuilder(
+      column: $table.isStopped, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get isCompleted => $composableBuilder(
       column: $table.isCompleted, builder: (column) => ColumnFilters(column));
@@ -842,6 +889,9 @@ class $$TorrentsTableTableOrderingComposer
   ColumnOrderings<bool> get isPaused => $composableBuilder(
       column: $table.isPaused, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get isStopped => $composableBuilder(
+      column: $table.isStopped, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get isCompleted => $composableBuilder(
       column: $table.isCompleted, builder: (column) => ColumnOrderings(column));
 
@@ -896,6 +946,9 @@ class $$TorrentsTableTableAnnotationComposer
 
   GeneratedColumn<bool> get isPaused =>
       $composableBuilder(column: $table.isPaused, builder: (column) => column);
+
+  GeneratedColumn<bool> get isStopped =>
+      $composableBuilder(column: $table.isStopped, builder: (column) => column);
 
   GeneratedColumn<bool> get isCompleted => $composableBuilder(
       column: $table.isCompleted, builder: (column) => column);
@@ -962,6 +1015,7 @@ class $$TorrentsTableTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<String> id = const Value.absent(),
             Value<bool> isPaused = const Value.absent(),
+            Value<bool> isStopped = const Value.absent(),
             Value<bool> isCompleted = const Value.absent(),
             Value<String?> magnetUri = const Value.absent(),
             Value<String?> torrentFilePath = const Value.absent(),
@@ -979,6 +1033,7 @@ class $$TorrentsTableTableTableManager extends RootTableManager<
               TorrentsTableCompanion(
             id: id,
             isPaused: isPaused,
+            isStopped: isStopped,
             isCompleted: isCompleted,
             magnetUri: magnetUri,
             torrentFilePath: torrentFilePath,
@@ -996,6 +1051,7 @@ class $$TorrentsTableTableTableManager extends RootTableManager<
           createCompanionCallback: ({
             required String id,
             Value<bool> isPaused = const Value.absent(),
+            Value<bool> isStopped = const Value.absent(),
             Value<bool> isCompleted = const Value.absent(),
             Value<String?> magnetUri = const Value.absent(),
             Value<String?> torrentFilePath = const Value.absent(),
@@ -1013,6 +1069,7 @@ class $$TorrentsTableTableTableManager extends RootTableManager<
               TorrentsTableCompanion.insert(
             id: id,
             isPaused: isPaused,
+            isStopped: isStopped,
             isCompleted: isCompleted,
             magnetUri: magnetUri,
             torrentFilePath: torrentFilePath,

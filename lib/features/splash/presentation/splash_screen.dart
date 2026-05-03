@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/engine_process_manager.dart';
 import '../../../core/services/foreground_service_manager.dart';
 import '../../../core/services/logger_service.dart';
-import '../../../core/services/oem_battery_guard.dart';
 import '../../../data/models/torrent_model.dart';
 import '../../torrent_list/presentation/controllers/torrent_notifier.dart';
 import '../../torrent_list/presentation/screens/dashboard_screen.dart';
@@ -94,12 +93,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       // 5. Start foreground service
       await ForegroundServiceManager.instance.startService();
 
-      // 6. OEM battery guard (non-blocking)
-      if (mounted) {
-        unawaited(OemBatteryGuard.instance.promptIfNeeded(context));
-      }
-
-      // 7. Brief pause for logo animation
+      // 6. Brief pause for logo animation
       await Future<void>.delayed(const Duration(milliseconds: 600));
 
       // 8. Navigate

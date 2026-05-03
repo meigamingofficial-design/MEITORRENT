@@ -109,6 +109,19 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     }
   }
 
+  Future<void> stopTorrent(String id) async {
+    try {
+      final repo = ref.read(torrentRepositoryProvider);
+      await repo.stopTorrent(id);
+      AppLogger.i('[Notifier] Successfully stopped torrent: $id');
+    } catch (e, st) {
+      AppLogger.e('[Notifier] Failed to stop torrent: $id',
+          error: e, stack: st);
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+
   Future<void> resumeTorrent(String id) async {
     try {
       final repo = ref.read(torrentRepositoryProvider);
@@ -149,6 +162,26 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     }
   }
 
+  Future<void> pauseAll() async {
+    final repo = ref.read(torrentRepositoryProvider);
+    await repo.pauseAll();
+  }
+
+  Future<void> stopAll() async {
+    final repo = ref.read(torrentRepositoryProvider);
+    await repo.stopAll();
+  }
+
+  Future<void> resumeAll() async {
+    final repo = ref.read(torrentRepositoryProvider);
+    await repo.resumeAll();
+  }
+
+  Future<void> deleteMultiple(List<String> ids, {bool deleteFiles = false}) async {
+    final repo = ref.read(torrentRepositoryProvider);
+    await repo.deleteMultiple(ids, deleteFiles: deleteFiles);
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
@@ -157,4 +190,30 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
       repo.forceSaveAllResumeData();
     }
   }
+}
+
+// ─── Selection Controller ───────────────────────────────────────────────────
+
+@riverpod
+class SelectedTorrents extends _$SelectedTorrents {
+  @override
+  Set<String> build() => {};
+
+  void toggle(String id) {
+    if (state.contains(id)) {
+      state = Set.from(state)..remove(id);
+    } else {
+      state = {...state, id};
+    }
+  }
+
+  void selectAll(List<String> ids) {
+    state = Set.from(ids);
+  }
+
+  void clear() {
+    state = {};
+  }
+
+  bool get isSelectionMode => state.isNotEmpty;
 }

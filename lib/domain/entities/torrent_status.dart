@@ -14,6 +14,7 @@ enum TorrentState {
   allocating,
   checkingResume,
   paused, // Custom added for UI
+  stopped, // Custom added for UI (Hard Pause)
   error,
 }
 
@@ -38,6 +39,8 @@ extension TorrentStateX on TorrentState {
         return 'Checking Resume';
       case TorrentState.paused:
         return 'Paused';
+      case TorrentState.stopped:
+        return 'Stopped';
       case TorrentState.error:
         return 'Error';
     }
@@ -51,6 +54,8 @@ extension TorrentStateX on TorrentState {
       this == TorrentState.checkingFiles ||
       this == TorrentState.checkingResume ||
       this == TorrentState.allocating;
+
+  bool get isPausedState => this == TorrentState.paused || this == TorrentState.stopped;
 
   bool get isFinished =>
       this == TorrentState.finished || this == TorrentState.seeding;
@@ -100,6 +105,7 @@ class TorrentStatus extends Equatable {
   final String? magnetUri;
   final String? torrentFilePath;
   final bool isPaused;
+  final bool isStopped;
   final bool isCompleted;
   final bool isSequentialDownload;
   final Uint8List? resumeData;
@@ -124,6 +130,7 @@ class TorrentStatus extends Equatable {
     this.magnetUri,
     this.torrentFilePath,
     this.isPaused = false,
+    this.isStopped = false,
     this.isCompleted = false,
     this.isSequentialDownload = false,
     this.resumeData,
@@ -150,6 +157,7 @@ class TorrentStatus extends Equatable {
         magnetUri,
         torrentFilePath,
         isPaused,
+        isStopped,
         isCompleted,
         isSequentialDownload,
         resumeData,
@@ -177,6 +185,7 @@ class TorrentStatus extends Equatable {
         magnetUri == other.magnetUri &&
         torrentFilePath == other.torrentFilePath &&
         isPaused == other.isPaused &&
+        isStopped == other.isStopped &&
         isCompleted == other.isCompleted &&
         isSequentialDownload == other.isSequentialDownload &&
         _listEquals(resumeData, other.resumeData);
@@ -212,6 +221,7 @@ class TorrentStatus extends Equatable {
     String? magnetUri,
     String? torrentFilePath,
     bool? isPaused,
+    bool? isStopped,
     bool? isCompleted,
     bool? isSequentialDownload,
     Uint8List? resumeData,
@@ -236,6 +246,7 @@ class TorrentStatus extends Equatable {
       magnetUri: magnetUri ?? this.magnetUri,
       torrentFilePath: torrentFilePath ?? this.torrentFilePath,
       isPaused: isPaused ?? this.isPaused,
+      isStopped: isStopped ?? this.isStopped,
       isCompleted: isCompleted ?? this.isCompleted,
       isSequentialDownload: isSequentialDownload ?? this.isSequentialDownload,
       resumeData: resumeData ?? this.resumeData,

@@ -39,7 +39,7 @@ final torrentRepositoryProvider = Provider<TorrentRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TorrentRepositoryRef = ProviderRef<TorrentRepository>;
-String _$torrentNotifierHash() => r'cf0bc2ca7532a507b4a82dafc7f56a553771bd35';
+String _$torrentNotifierHash() => r'acd641319cbc1348bd1d012c01aadd6bf32a0a83';
 
 /// Central state manager for all torrent operations.
 ///
@@ -63,5 +63,21 @@ final torrentNotifierProvider = AutoDisposeAsyncNotifierProvider<
 );
 
 typedef _$TorrentNotifier = AutoDisposeAsyncNotifier<List<TorrentStatus>>;
+String _$selectedTorrentsHash() => r'9f52d7b70cb21b2d12dba54c59b51fd523ad7227';
+
+/// See also [SelectedTorrents].
+@ProviderFor(SelectedTorrents)
+final selectedTorrentsProvider =
+    AutoDisposeNotifierProvider<SelectedTorrents, Set<String>>.internal(
+  SelectedTorrents.new,
+  name: r'selectedTorrentsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$selectedTorrentsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$SelectedTorrents = AutoDisposeNotifier<Set<String>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

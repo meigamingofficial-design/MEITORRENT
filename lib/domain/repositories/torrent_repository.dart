@@ -19,11 +19,28 @@ abstract interface class TorrentRepository {
   /// Pauses an active torrent.
   Future<void> pauseTorrent(String id);
 
-  /// Resumes a paused torrent.
+  /// Stops a torrent (Hard Pause).
+  Future<void> stopTorrent(String id);
+
+  /// Resumes a paused/stopped torrent.
   Future<void> resumeTorrent(String id);
 
   /// Removes a torrent. Optionally deletes downloaded files.
   Future<void> deleteTorrent(String id, {bool deleteFiles = false});
+
+  /// ── Bulk Actions ──
+
+  /// Pauses all active torrents.
+  Future<void> pauseAll();
+
+  /// Stops all active torrents.
+  Future<void> stopAll();
+
+  /// Resumes all paused/stopped torrents.
+  Future<void> resumeAll();
+
+  /// Deletes multiple torrents by ID.
+  Future<void> deleteMultiple(List<String> ids, {bool deleteFiles = false});
 
   /// Forces a piece-hash recheck on a partially downloaded torrent.
   Future<void> recheckTorrent(String id);

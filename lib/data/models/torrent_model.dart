@@ -41,6 +41,7 @@ class TorrentModel {
       torrentFilePath: row.torrentFilePath,
 
       isPaused: row.isPaused,
+      isStopped: row.isStopped,
       isCompleted: row.isCompleted,
       isSequentialDownload: row.isSequentialDownload,
       resumeData: row.resumeData,
@@ -63,6 +64,7 @@ class TorrentModel {
       isSequentialDownload: Value(status.isSequentialDownload),
 
       isPaused: Value(status.isPaused),
+      isStopped: Value(status.isStopped),
       isCompleted: Value(status.isCompleted),
       resumeData: Value(status.resumeData),
     );

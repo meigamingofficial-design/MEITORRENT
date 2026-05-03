@@ -82,6 +82,9 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
     final isFinished = isEffectivelyComplete;
     final hasError = status.state == TorrentState.error;
 
+    final isSelected = ref.watch(selectedTorrentsProvider).contains(widget.torrentId);
+    final isSelectionMode = ref.watch(selectedTorrentsProvider.notifier).isSelectionMode;
+
     return FadeTransition(
       opacity: _fadeAnim,
       child: SlideTransition(
@@ -92,17 +95,27 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
             isActive: isActive,
             hasError: hasError,
             isNew: widget.isNew,
+            isSelected: isSelected,
             child: InkWell(
-              onTap: () => _showOptions(context, ref, status),
+              onTap: () {
+                if (isSelectionMode) {
+                  ref.read(selectedTorrentsProvider.notifier).toggle(widget.torrentId);
+                  HapticFeedback.lightImpact();
+                } else {
+                  _showOptions(context, ref, status);
+                }
+              },
               onLongPress: () {
                 HapticFeedback.mediumImpact();
-                _showOptions(context, ref, status);
+                ref.read(selectedTorrentsProvider.notifier).toggle(widget.torrentId);
               },
               borderRadius: BorderRadius.circular(20),
               splashColor: const Color(0xFF6C63FF).withValues(alpha: 0.12),
               highlightColor: const Color(0xFF6C63FF).withValues(alpha: 0.06),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+              child: Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -200,12 +213,27 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                   ],
                 ),
               ),
+              if (isSelected)
+                Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF6C63FF),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.check, color: Colors.white, size: 14),
+                    ),
+                ),
+              ],
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _showOptions(BuildContext context, WidgetRef ref, TorrentStatus status) {
     showModalBottomSheet<void>(
@@ -266,34 +294,41 @@ class _GlassCard extends StatelessWidget {
     required this.isActive,
     required this.hasError,
     required this.isNew,
+    required this.isSelected,
   });
 
   final Widget child;
   final bool isActive;
   final bool hasError;
   final bool isNew;
+  final bool isSelected;
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = hasError
-        ? const Color(0x80FF5555)
-        : isActive
-            ? const Color(0x806C63FF)
-            : const Color(0x1AFFFFFF);
+    final borderColor = isSelected
+        ? const Color(0xFF6C63FF)
+        : hasError
+            ? const Color(0x80FF5555)
+            : isActive
+                ? const Color(0x806C63FF)
+                : const Color(0x1AFFFFFF);
 
-    final borderWidth = isActive ? 1.5 : 1.0;
+    final borderWidth = isSelected || isActive ? 1.5 : 1.0;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 350),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          colors: hasError
-              ? [const Color(0x1AFF5555), const Color(0x0DFF5555)]
-              : [const Color(0x1A6C63FF), const Color(0x0D48B0FF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: isSelected ? const Color(0xFF6C63FF).withValues(alpha: 0.15) : null,
+        gradient: isSelected
+            ? null
+            : LinearGradient(
+                colors: hasError
+                    ? [const Color(0x1AFF5555), const Color(0x0DFF5555)]
+                    : [const Color(0x1A6C63FF), const Color(0x0D48B0FF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
         border: Border.all(color: borderColor, width: borderWidth),
         boxShadow: isActive
             ? [
@@ -567,17 +602,17 @@ class _ActionButtons extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(torrentNotifierProvider.notifier);
-    final state = status.state;
     final messenger = ScaffoldMessenger.of(context);
 
-    final isPaused = state == TorrentState.paused;
+    final isPaused = status.isPaused;
+    final isStopped = status.isStopped;
     final isDone = status.isEffectivelyComplete;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         // ── Play / Pause toggle ────────────────────────────────────────
-        if (isPaused)
+        if (isPaused || isStopped)
           _CircleIconButton(
             icon: Icons.play_arrow_rounded,
             color: const Color(0xFF6C63FF),
@@ -602,6 +637,20 @@ class _ActionButtons extends ConsumerWidget {
               }
             },
             tooltip: 'Pause',
+          ),
+        // ── Stop button ───────────────────────────────────────────────
+        if (!isStopped)
+          _CircleIconButton(
+            icon: Icons.stop_rounded,
+            color: Colors.white54,
+            onTap: () async {
+              try {
+                await notifier.stopTorrent(status.id);
+              } catch (e) {
+                _showError(messenger, 'Failed to stop: $e');
+              }
+            },
+            tooltip: 'Stop',
           ),
         // ── Open completed target ──────────────────────────────────────
         if (isDone)
@@ -843,10 +892,7 @@ class _TorrentOptionsSheet extends StatelessWidget {
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final isPaused = status.state == TorrentState.paused;
-    final isDownloading = status.state == TorrentState.downloading;
     final isFinished = status.isEffectivelyComplete;
-    final isActive =
-        isDownloading || status.state == TorrentState.downloadingMetadata;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -933,7 +979,6 @@ class _TorrentOptionsSheet extends StatelessWidget {
                 }
               },
             ),
-          if (isActive)
             _OptionTile(
               icon: Icons.pause_rounded,
               iconColor: Colors.white70,
@@ -944,6 +989,20 @@ class _TorrentOptionsSheet extends StatelessWidget {
                   await notifier.pauseTorrent(status.id);
                 } catch (e) {
                   _showErrorSnackBar(messenger, 'Failed to pause: $e');
+                }
+              },
+            ),
+          if (status.state != TorrentState.stopped)
+            _OptionTile(
+              icon: Icons.stop_rounded,
+              iconColor: Colors.white70,
+              label: 'Stop Download',
+              onTap: () async {
+                navigator.pop();
+                try {
+                  await notifier.stopTorrent(status.id);
+                } catch (e) {
+                  _showErrorSnackBar(messenger, 'Failed to stop: $e');
                 }
               },
             ),

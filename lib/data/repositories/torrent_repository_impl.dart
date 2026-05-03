@@ -228,7 +228,7 @@ class TorrentRepositoryImpl implements TorrentRepository {
         ? persisted.totalSize
         : live.totalSize;
 
-    return live.copyWith(
+    var result = live.copyWith(
       magnetUri: live.magnetUri ?? persisted.magnetUri,
       torrentFilePath: live.torrentFilePath ?? persisted.torrentFilePath,
       isSequentialDownload:
@@ -240,7 +240,18 @@ class TorrentRepositoryImpl implements TorrentRepository {
       progress: mergedProgress,
       downloadedBytes: mergedDownloaded,
       totalSize: mergedTotal,
+      isPaused: persisted.isPaused || persisted.isStopped,
+      isStopped: persisted.isStopped,
     );
+
+    // If persisted says stopped, force the state to stopped
+    if (persisted.isStopped) {
+      result = result.copyWith(state: TorrentState.stopped);
+    } else if (persisted.isPaused && result.state != TorrentState.paused) {
+      result = result.copyWith(state: TorrentState.paused);
+    }
+
+    return result;
   }
 
   // ─── Read ─────────────────────────────────────────────────────────
@@ -420,6 +431,17 @@ class TorrentRepositoryImpl implements TorrentRepository {
   }
 
   @override
+  Future<void> stopTorrent(String id) async {
+    final intId = int.tryParse(id);
+    if (intId != null && _isLiveInEngine(intId)) {
+      _engine.pause(intId);
+    }
+    await _updateFlags(id, isStopped: true);
+    await _updateState(id, TorrentState.stopped);
+    await _flushDbWrite();
+  }
+
+  @override
   Future<void> resumeTorrent(String id) async {
     var targetId = id;
     final intId = int.tryParse(id);
@@ -490,7 +512,7 @@ class TorrentRepositoryImpl implements TorrentRepository {
       }
     }
 
-    await _updateFlags(targetId, isPaused: false);
+    await _updateFlags(targetId, isPaused: false, isStopped: false);
     await _updateState(targetId, TorrentState.downloading);
     await _flushDbWrite();
   }
@@ -559,6 +581,34 @@ class TorrentRepositoryImpl implements TorrentRepository {
           _engine.forceRecheck(newId);
         }
       }
+    }
+  }
+
+  @override
+  Future<void> pauseAll() async {
+    for (final s in _lastStatuses) {
+      if (!s.isPaused) await pauseTorrent(s.id);
+    }
+  }
+
+  @override
+  Future<void> stopAll() async {
+    for (final s in _lastStatuses) {
+      if (!s.isStopped) await stopTorrent(s.id);
+    }
+  }
+
+  @override
+  Future<void> resumeAll() async {
+    for (final s in _lastStatuses) {
+      if (s.isPaused || s.isStopped) await resumeTorrent(s.id);
+    }
+  }
+
+  @override
+  Future<void> deleteMultiple(List<String> ids, {bool deleteFiles = false}) async {
+    for (final id in ids) {
+      await deleteTorrent(id, deleteFiles: deleteFiles);
     }
   }
 
@@ -761,12 +811,13 @@ class TorrentRepositoryImpl implements TorrentRepository {
   }
 
   Future<void> _updateFlags(String id,
-      {bool? isPaused, bool? isCompleted}) async {
+      {bool? isPaused, bool? isStopped, bool? isCompleted}) async {
     final row = await _db.getTorrentById(id);
     if (row != null) {
       await _db.upsertTorrent(
         TorrentModel.toCompanion(TorrentModel.fromRow(row).copyWith(
           isPaused: isPaused,
+          isStopped: isStopped,
           isCompleted: isCompleted,
         )),
       );
