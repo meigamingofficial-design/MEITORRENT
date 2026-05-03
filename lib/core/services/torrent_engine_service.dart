@@ -1,7 +1,8 @@
 import 'dart:async';
+import 'dart:typed_data';
 
-import 'package:libtorrent_flutter/libtorrent_flutter.dart' as lt
-    show LibtorrentFlutter, TorrentInfo, TorrentState;
+import '../native/libtorrent_flutter_base.dart' as lt;
+import '../native/models.dart' as lt;
 
 import '../../domain/entities/torrent_status.dart' as domain;
 import '../../domain/repositories/torrent_repository.dart';
@@ -25,6 +26,19 @@ class TorrentEngineService {
   /// id → last emitted status snapshot
   Map<int, domain.TorrentStatus> _lastEmitted = {};
 
+  /// id → magnet URI (for identity/deduplication)
+  final Map<int, String> _idToMagnet = {};
+
+  /// id → .torrent file path (for identity/deduplication)
+  final Map<int, String> _idToFile = {};
+
+  /// The raw address of the native libtorrent session (Hardening #5)
+  int? get sessionAddress => _initialized ? _engine.session.address : null;
+
+  /// The path where downloads are saved
+  String? _defaultDownloadPath;
+  String? get defaultDownloadPath => _defaultDownloadPath;
+
   /// Initialises the libtorrent session.
   /// Retries up to [maxRetries] times with exponential backoff. (Hardening #2)
   Future<void> initialize({
@@ -37,6 +51,7 @@ class TorrentEngineService {
       try {
         await StorageService.instance.ensureDirectoryExists();
         final defaultPath = await StorageService.instance.getDownloadPath();
+        _defaultDownloadPath = defaultPath;
         await lt.LibtorrentFlutter.init(
           pollInterval: const Duration(milliseconds: 200),
           fetchTrackers: true,
@@ -90,24 +105,68 @@ class TorrentEngineService {
   int addMagnet(String uri, String savePath) {
     // Inject trackers for significantly better peer discovery (reference pattern)
     final enhancedUri = TrackerManager.injectTrackers(uri);
-    return _engine.addMagnet(enhancedUri, savePath);
+    final id = _engine.addMagnet(enhancedUri, savePath);
+    _idToMagnet[id] = uri;
+    return id;
+  }
+
+  /// Adds a magnet link with fast-resume data.
+  int addMagnetWithResume(String uri, String savePath, Uint8List resumeData) {
+    final enhancedUri = TrackerManager.injectTrackers(uri);
+    final id = _engine.addMagnetWithResume(enhancedUri, savePath, resumeData);
+    _idToMagnet[id] = uri;
+    return id;
   }
 
   /// Adds a .torrent file. Returns the integer torrent ID.
   int addTorrentFile(String filePath, String savePath) {
-    return _engine.addTorrentFile(filePath, savePath);
+    final id = _engine.addTorrentFile(filePath, savePath);
+    _idToFile[id] = filePath;
+    return id;
+  }
+
+  /// Adds a .torrent file with fast-resume data.
+  int addTorrentFileWithResume(String filePath, String savePath, Uint8List resumeData) {
+    final id = _engine.addTorrentFileWithResume(filePath, savePath, resumeData);
+    _idToFile[id] = filePath;
+    return id;
   }
 
   void pause(int id) => _engine.pauseTorrent(id);
 
   void resume(int id) => _engine.resumeTorrent(id);
 
-  void remove(int id, {bool deleteFiles = false}) =>
-      _engine.removeTorrent(id, deleteFiles: deleteFiles);
+  void remove(int id, {bool deleteFiles = false}) {
+    _engine.removeTorrent(id, deleteFiles: deleteFiles);
+    _idToMagnet.remove(id);
+    _idToFile.remove(id);
+  }
 
   void forceRecheck(int id) {
     _engine.recheckTorrent(id);
     AppLogger.d('[Engine] forceRecheck issued for $id');
+  }
+
+  /// Returns the engine ID if a torrent with the given magnet URI is already registered.
+  int? findIdByMagnet(String uri) {
+    for (final entry in _idToMagnet.entries) {
+      if (entry.value == uri) return entry.key;
+    }
+    return null;
+  }
+
+  /// Returns the engine ID if a torrent with the given file path is already registered.
+  int? findIdByFile(String filePath) {
+    for (final entry in _idToFile.entries) {
+      if (entry.value == filePath) return entry.key;
+    }
+    return null;
+  }
+
+  /// Safely fetches fast-resume data for a torrent.
+  Uint8List? getResumeDataSafe(int id) {
+    if (!_initialized) return null;
+    return _engine.getResumeDataSafe(id);
   }
 
   // Engine does not support explicit resume data saving or advanced params in this version.
@@ -163,13 +222,15 @@ class TorrentEngineService {
       totalSize: info.totalWanted,
       downloadedBytes: info.totalDone,
       uploadedBytes: info.totalUploaded,
-      savePath: info.savePath,
+      savePath: info.savePath.isEmpty ? (_defaultDownloadPath ?? '') : info.savePath,
       addedAt: _lastEmitted[idInt]?.addedAt ?? DateTime.now(),
       ratio: info.totalWanted > 0 ? info.totalUploaded / info.totalWanted : 0.0,
       etaSeconds: _computeEta(info),
       errorMessage: info.errorMsg.isEmpty ? null : info.errorMsg,
       isPaused: info.isPaused,
       isCompleted: isActuallyComplete || info.state == lt.TorrentState.seeding,
+      magnetUri: _idToMagnet[idInt],
+      torrentFilePath: _idToFile[idInt],
     );
   }
 

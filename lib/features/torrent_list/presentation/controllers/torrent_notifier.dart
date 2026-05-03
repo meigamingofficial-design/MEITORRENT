@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -41,12 +42,16 @@ TorrentRepository torrentRepository(Ref ref) {
 /// - Pushes foreground service notification updates on each state change (Hardening #5)
 /// - Delegates write operations to [TorrentRepository]
 @riverpod
-class TorrentNotifier extends _$TorrentNotifier {
+class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   StreamSubscription<List<TorrentStatus>>? _sub;
 
   @override
   Future<List<TorrentStatus>> build() async {
-    ref.onDispose(() => _sub?.cancel());
+    WidgetsBinding.instance.addObserver(this);
+    ref.onDispose(() {
+      WidgetsBinding.instance.removeObserver(this);
+      _sub?.cancel();
+    });
 
     final repo = ref.watch(torrentRepositoryProvider);
 
@@ -141,6 +146,15 @@ class TorrentNotifier extends _$TorrentNotifier {
           error: e, stack: st);
       state = AsyncValue.error(e, st);
       rethrow;
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      // 🛡️ Emergency save on background/kill
+      final repo = ref.read(torrentRepositoryProvider);
+      repo.forceSaveAllResumeData();
     }
   }
 }

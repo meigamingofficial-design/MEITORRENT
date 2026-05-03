@@ -1,6 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../domain/entities/torrent_status.dart';
 import '../utils/speed_formatter.dart';
+import 'folder_service.dart';
 
 /// Handles individual per-torrent notifications using flutter_local_notifications.
 ///
@@ -33,6 +34,18 @@ class NotificationService {
         AndroidInitializationSettings('@mipmap/ic_launcher');
     await _plugin.initialize(
       const InitializationSettings(android: androidSettings),
+      onDidReceiveNotificationResponse: (details) {
+        final payload = details.payload;
+        if (payload != null) {
+          final parts = payload.split('|');
+          if (parts.length == 2) {
+            FolderService.instance.openDownloadTarget(
+              savePath: parts[0],
+              name: parts[1],
+            );
+          }
+        }
+      },
     );
     _initialized = true;
   }
@@ -126,6 +139,7 @@ class NotificationService {
       status.name,
       body,
       NotificationDetails(android: androidDetails),
+      payload: '${status.savePath}|${status.name}',
     );
   }
 

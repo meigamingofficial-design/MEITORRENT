@@ -30,6 +30,10 @@ abstract interface class TorrentRepository {
 
   /// Updates engine-wide configuration (speed limits, DHT, etc.).
   Future<void> applyEngineConfig(EngineConfig config);
+
+  /// Forces an immediate capture and DB write of fast-resume data for all
+  /// active torrents. Call this on app background/exit.
+  Future<void> forceSaveAllResumeData();
 }
 
 /// Value object for libtorrent engine configuration.

@@ -76,9 +76,10 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
           borderRadius: BorderRadius.circular(28),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                 // ── Drag handle ──────────────────────────────────────────────
                 Container(
                   margin: const EdgeInsets.only(top: 12),
@@ -117,7 +118,7 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                             'Add Torrent',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 22,
+                              fontSize: 20,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.5,
                             ),
@@ -167,11 +168,11 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
 
                       // ── Tab views ────────────────────────────────────────────
                       SizedBox(
-                        height: 200,
+                        height: 195,
                         child: TabBarView(
                           controller: _tabController,
                           physics: const NeverScrollableScrollPhysics(),
@@ -219,7 +220,6 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                           ),
                           const SizedBox(width: 16),
                           Expanded(
-                            flex: 2,
                             child: _GradientButton(
                               onPressed: _isLoading ? null : _submitMagnet,
                               child: _isLoading
@@ -231,7 +231,7 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                                         color: Colors.white,
                                       ),
                                     )
-                                  : const Text('Add Torrent'),
+                                  : const Text('Add'),
                             ),
                           ),
                         ],
@@ -239,7 +239,8 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                     );
                   },
                 ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -280,7 +281,7 @@ class _GradientButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 52,
+      height: 48,
       decoration: BoxDecoration(
         gradient: onPressed == null ? null : AppGradients.primary,
         color: onPressed == null ? Colors.white10 : null,
@@ -299,8 +300,10 @@ class _GradientButton extends StatelessWidget {
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
           foregroundColor: Colors.white,
+          padding: EdgeInsets.zero,
+          minimumSize: const Size.fromHeight(48),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, letterSpacing: 0.2),
         ),
         child: child,
       ),
@@ -316,14 +319,16 @@ class _SecondaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 52,
+      height: 48,
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white70,
           side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          padding: EdgeInsets.zero,
+          minimumSize: const Size.fromHeight(48),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
         child: child,
       ),
@@ -427,7 +432,7 @@ class _FileTabState extends State<_FileTab> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             width: double.infinity,
-            height: 120,
+            height: 110,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.02),
               borderRadius: BorderRadius.circular(20),
@@ -442,35 +447,35 @@ class _FileTabState extends State<_FileTab> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Icon(Icons.cloud_upload_outlined, color: Color(0xFF6C63FF), size: 32),
+                        child: const Icon(Icons.cloud_upload_outlined, color: Color(0xFF6C63FF), size: 28),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       const Text(
                         'Choose .torrent file',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 15,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       const Text(
                         'Browse your internal storage',
                         style: TextStyle(
                           color: Colors.white38,
-                          fontSize: 12,
+                          fontSize: 11,
                         ),
                       ),
                     ],
                   ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         _SequentialRow(value: widget.sequential, onChanged: widget.onSequentialChanged),
       ],
     );
@@ -500,7 +505,7 @@ class _SequentialRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(16),
@@ -509,8 +514,14 @@ class _SequentialRow extends StatelessWidget {
         children: [
           const Icon(Icons.auto_awesome_motion_rounded, size: 20, color: Colors.white38),
           const SizedBox(width: 12),
-          const Text('Sequential download', style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500)),
-          const Spacer(),
+          const Expanded(
+            child: Text(
+              'Sequential download',
+              style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
           Switch(
             value: value,
             onChanged: onChanged,

@@ -105,6 +105,16 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
       theme: AppTheme.dark,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.dark,
+      builder: (context, child) {
+        final mq = MediaQuery.of(context);
+        return MediaQuery(
+          data: mq.copyWith(
+            // Hard-lock text scale to 1.0 to completely ignore system font size settings
+            textScaler: TextScaler.noScaling,
+          ),
+          child: child!,
+        );
+      },
       home: const SplashScreen(),
     );
   }

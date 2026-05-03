@@ -30,9 +30,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final torrentsAsync = ref.watch(torrentNotifierProvider);
 
-    return Scaffold(
-      extendBody: true,
-      appBar: _buildAppBar(context, ref, torrentsAsync),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        // Optionally show a "Press again to exit" snackbar here
+      },
+      child: Scaffold(
+        extendBody: true,
+        appBar: _buildAppBar(context, ref, torrentsAsync),
       body: torrentsAsync.when(
         loading: () => const Center(
           child: CircularProgressIndicator(
@@ -71,8 +77,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   PreferredSizeWidget _buildAppBar(
     BuildContext context,
@@ -86,6 +93,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         torrents.where((t) => t.state == TorrentState.downloading).length;
 
     return AppBar(
+      automaticallyImplyLeading: false,
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -94,38 +102,41 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             AnimatedOpacity(
               opacity: active > 0 ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 300),
-              child: Row(
-                children: [
-                  const Icon(Icons.arrow_downward_rounded,
-                      size: 10, color: Color(0xFF6C63FF)),
-                  const SizedBox(width: 2),
-                  Text(
-                    SpeedFormatter.format(totalDown),
-                    style: const TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF6C63FF),
-                        fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(width: 6),
-                  const Icon(Icons.arrow_upward_rounded,
-                      size: 10, color: Color(0xFF50FA7B)),
-                  const SizedBox(width: 2),
-                  Text(
-                    SpeedFormatter.format(totalUp),
-                    style: const TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF50FA7B),
-                        fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '$active active',
-                    style: const TextStyle(
-                        fontSize: 11,
-                        color: Colors.white38,
-                        fontWeight: FontWeight.normal),
-                  ),
-                ],
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    const Icon(Icons.arrow_downward_rounded,
+                        size: 10, color: Color(0xFF6C63FF)),
+                    const SizedBox(width: 2),
+                    Text(
+                      SpeedFormatter.format(totalDown),
+                      style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF6C63FF),
+                          fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(width: 6),
+                    const Icon(Icons.arrow_upward_rounded,
+                        size: 10, color: Color(0xFF50FA7B)),
+                    const SizedBox(width: 2),
+                    Text(
+                      SpeedFormatter.format(totalUp),
+                      style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF50FA7B),
+                          fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$active active',
+                      style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.white38,
+                          fontWeight: FontWeight.normal),
+                    ),
+                  ],
+                ),
               ),
             ),
         ],

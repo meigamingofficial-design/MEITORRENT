@@ -46,6 +46,9 @@ class TorrentsTable extends Table {
 
 
 
+  /// Fast-resume binary buffer from libtorrent.
+  BlobColumn get resumeData => blob().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }

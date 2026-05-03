@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:collection/collection.dart';
+
 import 'package:drift/drift.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -54,6 +56,9 @@ class TorrentRepositoryImpl implements TorrentRepository {
   /// by the engine for a few frames. (Ghost prevention)
   final Set<String> _deletedIds = {};
 
+  /// Cache of the last emitted statuses to allow emergency saves during lifecycle events.
+  List<TorrentStatus> _lastStatuses = [];
+
   // ─── Stream ───────────────────────────────────────────────────────
 
   @override
@@ -82,31 +87,73 @@ class TorrentRepositoryImpl implements TorrentRepository {
       _deletedIds.removeWhere((id) => !engineIds.contains(id) && !dbIds.contains(id));
 
       // 5. Identify torrents that are in DB but NOT in live engine.
-      //    These are completed torrents we skipped during restoration.
+      //    Filter out ones that have matching magnet/file in live set to avoid duplication (Hardening #3)
       final liveIds = liveStatuses.map((s) => s.id).toSet();
+      final liveMagnets =
+          liveStatuses.map((s) => s.magnetUri).whereType<String>().toSet();
+      final liveFiles =
+          liveStatuses.map((s) => s.torrentFilePath).whereType<String>().toSet();
+
       final engineSkipped = dbTorrents
           .where((t) => !liveIds.contains(t.id))
           .where((t) => !_deletedIds.contains(t.id))
-          .toList();
+          .where((t) {
+        if (t.magnetUri != null && liveMagnets.contains(t.magnetUri)) {
+          return false;
+        }
+        if (t.torrentFilePath != null && liveFiles.contains(t.torrentFilePath)) {
+          return false;
+        }
+        return true;
+      }).toList();
 
       if (engineSkipped.length <
           dbTorrents.where((t) => !liveIds.contains(t.id)).length) {
         AppLogger.d('[Repo] Filtered deleted ghosts from engine-skipped list');
       }
 
-      // 6. Merge live statuses with DB-only completed statuses
-      final merged = [...liveStatuses, ...engineSkipped];
+      // 6. Merge live statuses with DB-only completed statuses.
+      // Priority: Live engine statuses come first.
+      final initialMerged = [...liveStatuses, ...engineSkipped];
 
-      // 7. Preserve addedAt from cache and ensure completed torrents have finished state
+      // 7. Global Deduplication: Ensure only one entry per source exists (Hardening #4).
+      // This prevents duplicates if the same magnet is added twice with different IDs.
+      final merged = <TorrentStatus>[];
+      final seenMagnets = <String>{};
+      final seenFiles = <String>{};
+
+      for (final s in initialMerged) {
+        if (s.magnetUri != null) {
+          if (seenMagnets.contains(s.magnetUri)) continue;
+          seenMagnets.add(s.magnetUri!);
+        } else if (s.torrentFilePath != null) {
+          if (seenFiles.contains(s.torrentFilePath)) continue;
+          seenFiles.add(s.torrentFilePath!);
+        }
+        merged.add(s);
+      }
+
+      // 8. Preserve addedAt from cache and ensure completed torrents have finished state
       final corrected = merged
           .where((s) => !_deletedIds.contains(s.id)) // Last-second guard
           .map((s) {
         var status = s;
-        final persisted = dbById[s.id];
+
+        // 1. Find the persisted record.
+        // Try by ID first, then fallback to Magnet/File Path to handle ID sync races.
+        var persisted = dbById[s.id];
+        if (persisted == null) {
+          if (s.magnetUri != null) {
+            persisted = dbTorrents.firstWhereOrNull((t) => t.magnetUri == s.magnetUri);
+          } else if (s.torrentFilePath != null) {
+            persisted = dbTorrents.firstWhereOrNull((t) => t.torrentFilePath == s.torrentFilePath);
+          }
+        }
 
         if (persisted != null) {
           status = _mergePersistedFields(status, persisted);
         }
+
         final cached = _addedAtCache[s.id];
         if (cached != null) {
           status = status.copyWith(addedAt: cached);
@@ -127,6 +174,19 @@ class TorrentRepositoryImpl implements TorrentRepository {
       }).toList();
 
       _scheduleDbWrite(corrected);
+
+      // 🔥 Critical Optimization: If any torrent just finished, flush immediately
+      // to ensure the "Hard Lock" is persisted before a potential app close.
+      final hasNewCompletion = corrected.any((s) {
+        final old = dbById[s.id];
+        return s.isCompleted && (old == null || !old.isCompleted);
+      });
+      if (hasNewCompletion) {
+        AppLogger.i('[Repo] Torrent completed — flushing DB immediately');
+        _flushDbWrite();
+      }
+
+      _lastStatuses = corrected;
       await _checkDiskSpace(corrected);
       return corrected;
     });
@@ -136,13 +196,50 @@ class TorrentRepositoryImpl implements TorrentRepository {
     TorrentStatus live,
     TorrentStatus persisted,
   ) {
+    // 🛡️ Progress Preservation: Favor the higher progress value between the live
+    // engine and the persisted snapshot while the engine is still warming up.
+    // This prevents the "Jump to 0%" effect on cold starts.
+
+    // 🧱 HARD LOCK: Completed torrents should NEVER go backwards to 0% or Checking.
+    if (persisted.isCompleted) {
+      return live.copyWith(
+        progress: 1.0,
+        downloadedBytes: persisted.totalSize,
+        totalSize: persisted.totalSize,
+        state: TorrentState.finished,
+      );
+    }
+    final isWarmingUp = live.state == TorrentState.downloadingMetadata ||
+        live.state == TorrentState.checkingFiles ||
+        live.state == TorrentState.checkingResume ||
+        live.state == TorrentState.unknown ||
+        live.progress < 0.05; // 🔥 more forgiving threshold
+
+    final mergedProgress = (isWarmingUp && persisted.progress > live.progress)
+        ? persisted.progress
+        : live.progress;
+
+    final mergedDownloaded =
+        (isWarmingUp && persisted.downloadedBytes > live.downloadedBytes)
+            ? persisted.downloadedBytes
+            : live.downloadedBytes;
+
+    final mergedTotal = (live.totalSize == 0 && persisted.totalSize > 0)
+        ? persisted.totalSize
+        : live.totalSize;
+
     return live.copyWith(
       magnetUri: live.magnetUri ?? persisted.magnetUri,
       torrentFilePath: live.torrentFilePath ?? persisted.torrentFilePath,
       isSequentialDownload:
           live.isSequentialDownload || persisted.isSequentialDownload,
       savePath: live.savePath.isEmpty ? persisted.savePath : live.savePath,
-      name: live.name == 'Torrent #${live.id}' ? persisted.name : live.name,
+      name: (live.name == 'Torrent #${live.id}' || live.name.isEmpty)
+          ? persisted.name
+          : live.name,
+      progress: mergedProgress,
+      downloadedBytes: mergedDownloaded,
+      totalSize: mergedTotal,
     );
   }
 
@@ -165,6 +262,14 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
   @override
   Future<String> addMagnet(String uri, {String? savePath}) async {
+    // ── Duplicate prevention — Engine check ─────────────────────────
+    final existingEngineId = _engine.findIdByMagnet(uri);
+    if (existingEngineId != null) {
+      AppLogger.i('[Repo] Magnet already in engine ($existingEngineId)');
+      _engineActiveIds.add(existingEngineId);
+      return existingEngineId.toString();
+    }
+
     // ── Duplicate prevention — in-memory guard ──────────────────────
     // Key on the magnet URI to prevent race between deep-link and restore.
     final key = 'magnet:$uri';
@@ -231,6 +336,14 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
   @override
   Future<String> addTorrentFile(String filePath, {String? savePath}) async {
+    // ── Duplicate prevention — Engine check ─────────────────────────
+    final existingEngineId = _engine.findIdByFile(filePath);
+    if (existingEngineId != null) {
+      AppLogger.i('[Repo] File already in engine ($existingEngineId)');
+      _engineActiveIds.add(existingEngineId);
+      return existingEngineId.toString();
+    }
+
     final key = 'file:$filePath';
     if (_addingKeys.contains(key)) {
       AppLogger.w('[Repo] Already adding file — skipping duplicate: $key');
@@ -291,6 +404,14 @@ class TorrentRepositoryImpl implements TorrentRepository {
   Future<void> pauseTorrent(String id) async {
     final intId = int.tryParse(id);
     if (intId != null && _isLiveInEngine(intId)) {
+      // Pro-tip: save resume data immediately on pause for perfect state preservation
+      final data = _engine.getResumeDataSafe(intId);
+      if (data != null) {
+        await _db.upsertTorrent(TorrentsTableCompanion(
+          id: Value(id),
+          resumeData: Value(data),
+        ));
+      }
       _engine.pause(intId);
     }
     await _updateFlags(id, isPaused: true);
@@ -300,28 +421,78 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
   @override
   Future<void> resumeTorrent(String id) async {
+    var targetId = id;
     final intId = int.tryParse(id);
+
+    // 1. Check if it's already live in engine by ID
     if (intId != null && _isLiveInEngine(intId)) {
-      // Engine has it — just resume
       _engine.resume(intId);
     } else {
-      // Engine doesn't have it (was a skipped completed torrent).
-      // Re-add to engine so libtorrent can seed / continue.
       final stored = await _db.getTorrentById(id);
       if (stored != null) {
         final t = TorrentModel.fromRow(stored);
-        int? newId;
+
+        // 2. Check if it's already live in engine by Source (Hardening #5)
+        int? existingId;
         if (t.magnetUri != null) {
-          newId = _engine.addMagnet(t.magnetUri!, t.savePath);
+          existingId = _engine.findIdByMagnet(t.magnetUri!);
         } else if (t.torrentFilePath != null) {
-          newId = _engine.addTorrentFile(t.torrentFilePath!, t.savePath);
+          existingId = _engine.findIdByFile(t.torrentFilePath!);
         }
-        if (newId != null) _engineActiveIds.add(newId);
+
+        if (existingId != null) {
+          AppLogger.i('[Repo] Found existing engine ID $existingId for $id');
+          _engine.resume(existingId);
+          _engineActiveIds.add(existingId);
+          targetId = existingId.toString();
+          // Still sync the ID in DB if they differ
+          if (targetId != id) {
+            await _db.deleteTorrentById(id);
+            await _db.upsertTorrent(
+              TorrentModel.toCompanion(t.copyWith(id: targetId)),
+            );
+          }
+        } else {
+          // 3. Truly missing from engine -> Re-add
+          int? newId;
+          if (t.magnetUri != null) {
+            newId = _engine.addMagnet(t.magnetUri!, t.savePath);
+          } else if (t.torrentFilePath != null) {
+            newId = _engine.addTorrentFile(t.torrentFilePath!, t.savePath);
+          }
+
+          if (newId != null) {
+            _engineActiveIds.add(newId);
+            targetId = newId.toString();
+
+            // Use fast-resume if available
+            if (t.resumeData != null && t.resumeData!.isNotEmpty) {
+              try {
+                // If the engine wrapper doesn't support it yet, this might fail/throw
+                _engine.addMagnetWithResume(t.magnetUri!, t.savePath, t.resumeData!);
+                AppLogger.i('[Repo] Resumed with fast-resume: $id');
+              } catch (_) {
+                _engine.resume(newId);
+              }
+            } else {
+              _engine.resume(newId);
+            }
+
+            if (targetId != id) {
+              AppLogger.i('[Repo] Syncing ID on resume: $id → $targetId');
+              await _db.deleteTorrentById(id);
+              await _db.upsertTorrent(
+                TorrentModel.toCompanion(t.copyWith(id: targetId)),
+              );
+            }
+          }
+        }
       }
     }
-    await _updateFlags(id, isPaused: false);
-    await _updateState(id, TorrentState.downloading);
-    await _flushDbWrite(); // Ensure immediate persistence
+
+    await _updateFlags(targetId, isPaused: false);
+    await _updateState(targetId, TorrentState.downloading);
+    await _flushDbWrite();
   }
 
   @override
@@ -377,9 +548,43 @@ class TorrentRepositoryImpl implements TorrentRepository {
             ? _engine.addMagnet(t.magnetUri!, t.savePath)
             : _engine.addTorrentFile(t.torrentFilePath!, t.savePath);
         _engineActiveIds.add(newId);
-        _engine.forceRecheck(newId);
+
+        if (t.resumeData != null && t.resumeData!.isNotEmpty) {
+          try {
+            _engine.addMagnetWithResume(t.magnetUri ?? '', t.savePath, t.resumeData!);
+          } catch (_) {
+            _engine.forceRecheck(newId);
+          }
+        } else {
+          _engine.forceRecheck(newId);
+        }
       }
     }
+  }
+
+  @override
+  Future<void> forceSaveAllResumeData() async {
+    if (_lastStatuses.isEmpty) return;
+
+    AppLogger.i('[Repo] Emergency save: capturing full status for ${_lastStatuses.length} torrents…');
+    
+    final companions = <TorrentsTableCompanion>[];
+    for (final s in _lastStatuses) {
+      final intId = int.tryParse(s.id);
+      Uint8List? resume;
+      if (intId != null) {
+        resume = _engine.getResumeDataSafe(intId);
+      }
+      
+      // Merge resume data into the companion if available
+      final baseCompanion = TorrentModel.toCompanion(s);
+      companions.add(baseCompanion.copyWith(
+        resumeData: resume != null ? Value(resume) : const Value.absent(),
+      ));
+    }
+    
+    await _db.batchUpdateTorrents(companions);
+    await _flushDbWrite();
   }
 
   /// Reliable engine-presence check using the live-set of engine IDs.
@@ -478,7 +683,40 @@ class TorrentRepositoryImpl implements TorrentRepository {
     _dbWriteTimer?.cancel();
     _dbWriteTimer = Timer(AppConstants.dbWriteInterval, () async {
       try {
-        final companions = statuses.map(TorrentModel.toCompanion).toList();
+        final dbTorrents = await getStoredTorrents();
+        final dbById = {for (final t in dbTorrents) t.id: t};
+
+        final enrichedStatuses = <TorrentStatus>[];
+        for (final s in statuses) {
+          var status = s;
+          final persisted = dbById[s.id];
+
+          if (persisted != null) {
+            // 🧱 ANTI-REGRESSION: Never overwrite a completed state with an uncompleted one.
+            // Never overwrite high progress with low progress during engine transitions.
+            final isCompleted = persisted.isCompleted || status.isCompleted;
+            final progress = (persisted.isCompleted) ? 1.0 : (status.progress > persisted.progress ? status.progress : persisted.progress);
+
+            status = status.copyWith(
+              isCompleted: isCompleted,
+              progress: progress,
+            );
+          }
+
+          final intId = int.tryParse(s.id);
+          if (intId != null &&
+              !status.isCompleted &&
+              status.progress > 0.02 &&
+              status.downloadSpeed == 0) {
+            final resume = _engine.getResumeDataSafe(intId);
+            if (resume != null) {
+              status = status.copyWith(resumeData: resume);
+            }
+          }
+          enrichedStatuses.add(status);
+        }
+
+        final companions = enrichedStatuses.map(TorrentModel.toCompanion).toList();
         await _db.batchUpdateTorrents(companions);
         AppLogger.d(
             '[Repo] DB snapshot written (${companions.length} entries)');

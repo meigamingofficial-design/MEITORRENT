@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:drift/drift.dart';
 
 import '../../data/database/app_database.dart';
+import '../../data/models/torrent_model.dart';
 import '../../domain/entities/torrent_status.dart';
 import '../../domain/repositories/torrent_repository.dart';
 import 'logger_service.dart';
@@ -40,8 +42,10 @@ class EngineProcessManager {
     _started = true;
 
     AppLogger.i(
-        '[ProcessManager] Restoring ${storedTorrents.length} torrents…');
-    await _restoreAndValidate(storedTorrents, database);
+        '[ProcessManager] Restoring ${storedTorrents.length} torrents (background)…');
+    // Start restoration without blocking the caller (SplashScreen)
+    // to prevent UI freezes on cold-start with many torrents.
+    unawaited(_restoreAndValidate(storedTorrents, database));
   }
 
   bool get isStarted => _started;
@@ -51,48 +55,84 @@ class EngineProcessManager {
     List<TorrentStatus> stored,
     AppDatabase db,
   ) async {
-    for (final t in stored) {
+    // Process in parallel batches of 5 to balance speed and stability.
+    const batchSize = 5;
+    for (var i = 0; i < stored.length; i += batchSize) {
+      final end =
+          (i + batchSize < stored.length) ? i + batchSize : stored.length;
+      final batch = stored.sublist(i, end);
+
       try {
-        await _restoreSingleTorrent(t, db);
-      } catch (e, st) {
-        AppLogger.e(
-          '[ProcessManager] Failed to restore torrent ${t.id}',
-          error: e,
-          stack: st,
-        );
+        await Future.wait(batch.map((t) => _restoreSingleTorrent(t, db)));
+      } catch (e) {
+        AppLogger.e('[ProcessManager] Batch restoration error', error: e);
       }
     }
+    AppLogger.i('[ProcessManager] Restoration complete');
   }
 
   Future<void> _restoreSingleTorrent(TorrentStatus t, AppDatabase db) async {
     final filesExist = await _verifyFilesExist(t);
     int? engineId;
 
-    // 1. 🛡️ Restoration: Re-add to engine
-    if ((t.magnetUri ?? '').isNotEmpty) {
-      engineId = _engine.addMagnet(t.magnetUri!, t.savePath);
-    } else if ((t.torrentFilePath ?? '').isNotEmpty) {
-      engineId = _engine.addTorrentFile(t.torrentFilePath!, t.savePath);
+    var actuallyUsedFastResume = false;
+    final hasValidResume = t.resumeData != null && 
+                          t.resumeData!.length > 100 && 
+                          Directory(t.savePath).existsSync() &&
+                          t.totalSize > 0;
+
+    if (hasValidResume) {
+      try {
+        if ((t.magnetUri ?? '').isNotEmpty) {
+          engineId = _engine.addMagnetWithResume(
+              t.magnetUri!, t.savePath, t.resumeData!);
+        } else if ((t.torrentFilePath ?? '').isNotEmpty) {
+          engineId = _engine.addTorrentFileWithResume(
+              t.torrentFilePath!, t.savePath, t.resumeData!);
+        }
+        AppLogger.i('[ProcessManager] Restored "${t.name}" with fast-resume (id $engineId)');
+        actuallyUsedFastResume = true;
+      } catch (e) {
+        AppLogger.w('[ProcessManager] Fast-resume failed for "${t.name}", falling back to recheck: $e');
+        // Fallback to normal add
+        if ((t.magnetUri ?? '').isNotEmpty) {
+          engineId = _engine.addMagnet(t.magnetUri!, t.savePath);
+        } else if ((t.torrentFilePath ?? '').isNotEmpty) {
+          engineId = _engine.addTorrentFile(t.torrentFilePath!, t.savePath);
+        }
+      }
+    } else {
+      // No resume data available → normal add
+      if ((t.magnetUri ?? '').isNotEmpty) {
+        engineId = _engine.addMagnet(t.magnetUri!, t.savePath);
+      } else if ((t.torrentFilePath ?? '').isNotEmpty) {
+        engineId = _engine.addTorrentFile(t.torrentFilePath!, t.savePath);
+      }
     }
 
     if (engineId != null) {
-      // 2. ⏸️ Apply Paused State
-      if (t.isPaused) {
-        _engine.pause(engineId);
-        AppLogger.i(
-            '[ProcessManager] Restored "${t.name}" as PAUSED (engine id $engineId)');
-      } else {
-        AppLogger.i(
-            '[ProcessManager] Restored "${t.name}" (engine id $engineId)');
+      final newId = engineId.toString();
+
+      // 2. 🆔 ID Sync
+      if (newId != t.id) {
+        AppLogger.i('[ProcessManager] Syncing ID for "${t.name}": ${t.id} → $newId');
+        await db.deleteTorrentById(t.id);
+        await db.upsertTorrent(TorrentModel.toCompanion(t.copyWith(id: newId)));
       }
 
-      // 3. 🔍 Sync with Disk: If files exist, force a recheck to restore progress quickly.
-      if (filesExist) {
-        _engine.forceRecheck(engineId);
-        AppLogger.d(
-            '[ProcessManager] Triggered recheck for "${t.name}" to sync with disk');
+      // 3. ⏸️ Apply Paused State
+      if (t.isPaused) {
+        _engine.pause(engineId);
+        AppLogger.i('[ProcessManager] Restored "${t.name}" as PAUSED');
       }
-    } else {
+
+      // 4. 🔍 Sync with Disk (Fallback/Completion Logic)
+      if (!actuallyUsedFastResume && filesExist) {
+        _engine.forceRecheck(engineId);
+        AppLogger.d('[ProcessManager] Triggered fallback recheck for "${t.name}"');
+      }
+    }
+ else {
       await db.upsertTorrent(
         TorrentsTableCompanion(
           id: Value(t.id),

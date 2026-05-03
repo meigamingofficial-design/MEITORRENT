@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:open_filex/open_filex.dart';
 
 import 'logger_service.dart';
 import 'storage_service.dart';
@@ -23,25 +22,27 @@ class FolderService {
     required String name,
   }) async {
     try {
-      final directFile = File('$savePath/$name');
-      if (directFile.existsSync()) {
-        await _openFile(directFile.path);
-        return;
-      }
-
-      final directFolder = Directory('$savePath/$name');
+      final targetPath = (savePath.isEmpty) ? await StorageService.instance.getDownloadPath() : savePath;
+      final directFolder = Directory('$targetPath/$name');
+      
       if (directFolder.existsSync()) {
         await openDownloadFolder(directFolder.path);
-        return;
+      } else {
+        final parentDir = Directory(targetPath);
+        if (parentDir.existsSync()) {
+          await openDownloadFolder(targetPath);
+        } else {
+          // Final fallback: try to open the root download folder at least
+          await openDownloadFolder();
+        }
       }
-
-      await openDownloadFolder(savePath);
     } catch (e, st) {
       AppLogger.e(
         '[Folder] Failed to open download target',
         error: e,
         stack: st,
       );
+      rethrow;
     }
   }
 
@@ -52,13 +53,6 @@ class FolderService {
       final path = (specificPath != null && specificPath.trim().isNotEmpty)
           ? specificPath
           : fallbackPath;
-
-      // If the caller accidentally passes a file path, open the file directly.
-      final file = File(path);
-      if (file.existsSync()) {
-        await _openFile(file.path);
-        return;
-      }
 
       // Ensure the base app directory exists so the file manager has something to show
       await StorageService.instance.ensureDirectoryExists();
@@ -87,18 +81,7 @@ class FolderService {
     } catch (e, st) {
       AppLogger.e('[Folder] Failed to open download folder',
           error: e, stack: st);
+      rethrow;
     }
-  }
-
-  Future<void> _openFile(String path) async {
-    final result = await OpenFilex.open(path);
-    if (result.type == ResultType.done) {
-      AppLogger.i('[Folder] Successfully opened file: $path');
-      return;
-    }
-
-    AppLogger.w(
-      '[Folder] Failed to open file directly: $path (${result.type}: ${result.message})',
-    );
   }
 }

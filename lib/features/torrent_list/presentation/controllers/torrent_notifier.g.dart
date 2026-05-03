@@ -39,7 +39,7 @@ final torrentRepositoryProvider = Provider<TorrentRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TorrentRepositoryRef = ProviderRef<TorrentRepository>;
-String _$torrentNotifierHash() => r'9b7b5fb7b84ddadad179050ec0d11a805aa452f0';
+String _$torrentNotifierHash() => r'cf0bc2ca7532a507b4a82dafc7f56a553771bd35';
 
 /// Central state manager for all torrent operations.
 ///

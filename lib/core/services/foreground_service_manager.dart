@@ -4,8 +4,11 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../../core/utils/speed_formatter.dart';
 import '../../domain/entities/torrent_status.dart';
+import '../native/libtorrent_flutter_base.dart' as lt;
+import '../native/models.dart' as lt_models;
 import 'logger_service.dart';
 import 'notification_service.dart';
+import 'torrent_engine_service.dart';
 
 // ─── Top-level entry point (required by flutter_foreground_task) ──────────────
 
@@ -15,41 +18,88 @@ void torrentServiceCallback() {
   FlutterForegroundTask.setTaskHandler(TorrentTaskHandler());
 }
 
-// ─── Task handler ─────────────────────────────────────────────────────────────
-
 /// Handles foreground service lifecycle events.
-///
-/// Uses PUSH-based notification updates:
-/// The main isolate pushes state via [FlutterForegroundTask.sendDataToTask],
-/// rather than polling on [onRepeatEvent].
 class TorrentTaskHandler extends TaskHandler {
+  int? _sessionAddress;
+  String? _savePath;
+  Timer? _pollingTimer;
+
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     AppLogger.i('[FGService] Started at $timestamp via $starter');
-  }
-
-  /// Called every 30s as a liveness heartbeat only — real updates come via data.
-  @override
-  void onRepeatEvent(DateTime timestamp) {
-    // Intentionally minimal — only serves as a liveness heartbeat.
   }
 
   /// Called when the main isolate pushes data via [FlutterForegroundTask.sendDataToTask].
   @override
   void onReceiveData(Object data) {
     if (data is Map<String, dynamic>) {
+      // 1. Update notification text
       final title = data['title'] as String? ?? 'Meitorrent';
       final text = data['text'] as String? ?? '';
+      
       FlutterForegroundTask.updateService(
         notificationTitle: title,
         notificationText: text,
       );
-      AppLogger.d('[FGService] Summary notification updated: $text');
+
+      // 2. Capture session address and save path for background polling
+      final addr = data['sessionAddress'] as int?;
+      final path = data['savePath'] as String?;
+
+      if (addr != null && addr != _sessionAddress) {
+        _sessionAddress = addr;
+        _savePath = path;
+        _startBackgroundPolling();
+      }
     }
+  }
+
+  void _startBackgroundPolling() {
+    _pollingTimer?.cancel();
+    if (_sessionAddress == null) return;
+
+    AppLogger.i('[FGService] Attaching to native engine at 0x${_sessionAddress!.toRadixString(16)}');
+    
+    // Initialize our local engine instance in THIS isolate using the shared pointer
+    lt.LibtorrentFlutter.attach(
+      sessionAddress: _sessionAddress!,
+      defaultSavePath: _savePath,
+      pollInterval: const Duration(seconds: 1),
+    );
+
+    // Update notification from our own polling too
+    _pollingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      final engine = lt.LibtorrentFlutter.instanceInternal;
+      if (engine == null) return;
+
+      final torrents = engine.torrents.values.toList();
+      if (torrents.isEmpty) return;
+
+      // Simple summary for notification
+      final active = torrents.where((t) => t.state.isActive).toList();
+      final String text;
+      if (active.isNotEmpty) {
+        final totalDown = active.fold<int>(0, (s, t) => s + t.downloadRate);
+        text = '${active.length} active · ↓ ${SpeedFormatter.format(totalDown)}';
+      } else {
+        text = 'Ready to download';
+      }
+
+      FlutterForegroundTask.updateService(
+        notificationTitle: 'Meitorrent',
+        notificationText: text,
+      );
+    });
+  }
+
+  @override
+  void onRepeatEvent(DateTime timestamp) {
+    // Optional: could do additional polling or cleanup here
   }
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
+    _pollingTimer?.cancel();
     AppLogger.i('[FGService] Destroyed at $timestamp (timeout=$isTimeout)');
   }
 }
@@ -92,7 +142,7 @@ class ForegroundServiceManager {
   }
 
   // ── Pending state (queued before service is ready) ────────────────────────
-  Map<String, String>? _pendingData;
+  Map<String, dynamic>? _pendingData;
 
   /// Starts the foreground service if not already running.
   Future<void> startService() async {
@@ -188,7 +238,12 @@ class ForegroundServiceManager {
       text = 'Ready to download';
     }
 
-    final payload = <String, String>{'title': title, 'text': text};
+    final payload = <String, dynamic>{
+      'title': title,
+      'text': text,
+      'sessionAddress': TorrentEngineService.instance.sessionAddress,
+      'savePath': TorrentEngineService.instance.defaultDownloadPath,
+    };
 
     if (!_serviceStarted) {
       // ── Queue for when service comes up ──────────────────────────────

@@ -120,7 +120,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                 alpha: isFinished ? 0.82 : 1.0,
                               ),
                               fontWeight: FontWeight.w700,
-                              fontSize: 14.5,
+                              fontSize: 14,
                               letterSpacing: 0.1,
                             ),
                           ),
@@ -219,9 +219,24 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
   /// Opens the torrent's folder, preferring the per-torrent subfolder when it
   /// exists, or the concrete downloaded file for single-file torrents.
   void _openFolder(TorrentStatus status) {
-    FolderService.instance.openDownloadTarget(
-      savePath: status.savePath,
-      name: status.name,
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      FolderService.instance.openDownloadTarget(
+        savePath: status.savePath,
+        name: status.name,
+      );
+    } catch (e) {
+      _showError(messenger, 'Failed to open folder: $e');
+    }
+  }
+
+  void _showError(ScaffoldMessengerState messenger, String message) {
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFFFF5555),
+        duration: const Duration(seconds: 3),
+      ),
     );
   }
 
@@ -342,7 +357,7 @@ class _GradientPercentText extends StatelessWidget {
           return Text(
             '${(value * 100).toStringAsFixed(0)}%',
             style: const TextStyle(
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.5,
               color: Colors.white, // overridden by ShaderMask
@@ -384,7 +399,7 @@ class _GradientProgressBar extends StatelessWidget {
         return ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: SizedBox(
-            height: 7,
+            height: 6,
             child: Stack(
               children: [
                 // Track
@@ -523,7 +538,7 @@ class _AnimatedStateBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
       decoration: BoxDecoration(
         color: _color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
@@ -533,7 +548,7 @@ class _AnimatedStateBadge extends StatelessWidget {
         duration: const Duration(milliseconds: 250),
         style: TextStyle(
           color: _color,
-          fontSize: 10,
+          fontSize: 9,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.3,
         ),
@@ -784,7 +799,7 @@ class _CompletedBanner extends StatelessWidget {
     return GestureDetector(
       onTap: onOpenFolder,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
           color: const Color(0xFF50FA7B).withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(8),
@@ -801,7 +816,7 @@ class _CompletedBanner extends StatelessWidget {
                 'Download complete  ·  Tap to open',
                 style: TextStyle(
                   color: Color(0xFF50FA7B),
-                  fontSize: 11,
+                  fontSize: 10.5,
                   fontWeight: FontWeight.w500,
                 ),
               ),

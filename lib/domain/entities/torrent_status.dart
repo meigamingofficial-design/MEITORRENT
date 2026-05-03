@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:equatable/equatable.dart';
 
 /// Represents the possible states of a torrent.
@@ -100,6 +102,7 @@ class TorrentStatus extends Equatable {
   final bool isPaused;
   final bool isCompleted;
   final bool isSequentialDownload;
+  final Uint8List? resumeData;
 
   const TorrentStatus({
     required this.id,
@@ -123,6 +126,7 @@ class TorrentStatus extends Equatable {
     this.isPaused = false,
     this.isCompleted = false,
     this.isSequentialDownload = false,
+    this.resumeData,
   });
 
   @override
@@ -148,6 +152,7 @@ class TorrentStatus extends Equatable {
         isPaused,
         isCompleted,
         isSequentialDownload,
+        resumeData,
       ];
 
   /// Usesprops for deep equality comparison.
@@ -173,7 +178,18 @@ class TorrentStatus extends Equatable {
         torrentFilePath == other.torrentFilePath &&
         isPaused == other.isPaused &&
         isCompleted == other.isCompleted &&
-        isSequentialDownload == other.isSequentialDownload;
+        isSequentialDownload == other.isSequentialDownload &&
+        _listEquals(resumeData, other.resumeData);
+  }
+
+  bool _listEquals(Uint8List? a, Uint8List? b) {
+    if (a == null && b == null) return true;
+    if (a == null || b == null) return false;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   TorrentStatus copyWith({
@@ -198,6 +214,7 @@ class TorrentStatus extends Equatable {
     bool? isPaused,
     bool? isCompleted,
     bool? isSequentialDownload,
+    Uint8List? resumeData,
   }) {
     return TorrentStatus(
       id: id ?? this.id,
@@ -221,6 +238,7 @@ class TorrentStatus extends Equatable {
       isPaused: isPaused ?? this.isPaused,
       isCompleted: isCompleted ?? this.isCompleted,
       isSequentialDownload: isSequentialDownload ?? this.isSequentialDownload,
+      resumeData: resumeData ?? this.resumeData,
     );
   }
 }

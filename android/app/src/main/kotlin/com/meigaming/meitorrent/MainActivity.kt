@@ -79,6 +79,10 @@ class MainActivity : FlutterActivity() {
      * Opens a folder in the system file manager using Play Store–compliant
      * DocumentsProvider URIs with multiple fallback strategies.
      */
+    /**
+     * Opens a folder in the system file manager using Play Store–compliant
+     * DocumentsProvider URIs with multiple fallback strategies for ALL Android versions.
+     */
     private fun openFolder(path: String, result: MethodChannel.Result) {
         try {
             val dir = File(path)
@@ -86,9 +90,6 @@ class MainActivity : FlutterActivity() {
                 dir.mkdirs()
             }
 
-            // On modern Android (11+), the most reliable way to open a specific folder
-            // is using the DocumentsProvider URI via the system Files app.
-            
             val rootPath = Environment.getExternalStorageDirectory().absolutePath
             val relativePath = if (path.startsWith(rootPath)) {
                 path.substring(rootPath.length).trimStart('/')
@@ -96,25 +97,45 @@ class MainActivity : FlutterActivity() {
                 path
             }
 
-            // Strategy 1: DocumentsProvider exact path (Best for Android 11+)
-            try {
-                val encodedPath = Uri.encode(relativePath)
-                val uri = Uri.parse("content://com.android.externalstorage.documents/document/primary:$encodedPath")
-                
-                val intent = Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(uri, "vnd.android.document/directory")
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            // Strategy 1: DocumentsContract (Standard for Android 11+ / API 30+)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                try {
+                    val authority = "com.android.externalstorage.documents"
+                    val documentId = "primary:$relativePath"
+                    val uri = android.provider.DocumentsContract.buildDocumentUri(authority, documentId)
+                    
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        addCategory(Intent.CATEGORY_DEFAULT)
+                        setDataAndType(uri, "vnd.android.document/directory")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    
+                    startActivity(intent)
+                    result.success("exact_modern")
+                    return
+                } catch (e: Exception) {
+                    android.util.Log.w("MeiTorrent", "Strategy 1 failed: ${e.message}")
                 }
-                
-                startActivity(intent)
-                result.success("exact")
-                return
-            } catch (e: Exception) {
-                android.util.Log.w("MeiTorrent", "Strategy 1 (Exact) failed: ${e.message}")
             }
 
-            // Strategy 2: Open the root of the Download folder as a fallback
+            // Strategy 2: Legacy File Path (For Android 9 and below)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                try {
+                    val uri = Uri.fromFile(dir)
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(uri, "resource/folder")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(intent)
+                    result.success("legacy_path")
+                    return
+                } catch (e: Exception) {
+                    android.util.Log.w("MeiTorrent", "Strategy 2 failed: ${e.message}")
+                }
+            }
+
+            // Strategy 3: Root Download Folder (High Compatibility)
             try {
                 val uri = Uri.parse("content://com.android.externalstorage.documents/document/primary:Download")
                 val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -125,10 +146,10 @@ class MainActivity : FlutterActivity() {
                 result.success("fallback_root")
                 return
             } catch (e: Exception) {
-                android.util.Log.w("MeiTorrent", "Strategy 2 (Root) failed: ${e.message}")
+                android.util.Log.w("MeiTorrent", "Strategy 3 failed: ${e.message}")
             }
 
-            // Strategy 3: Generic Document Tree (Last resort)
+            // Strategy 4: System Picker (Last resort, works on all versions 21+)
             try {
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
