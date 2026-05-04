@@ -176,7 +176,7 @@ class _OemPromptSheet extends StatelessWidget {
                           icon: const Icon(Icons.open_in_new, size: 18),
                           label: const Text('Open Battery Settings'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6C63FF),
+                            backgroundColor: const Color(0xFF00B894),
                             foregroundColor: Colors.white,
                           ),
                         ),
@@ -209,7 +209,7 @@ class _Step extends StatelessWidget {
             width: 24,
             height: 24,
             decoration: const BoxDecoration(
-              color: Color(0xFF6C63FF),
+              color: Color(0xFF00B894),
               shape: BoxShape.circle,
             ),
             child: Center(

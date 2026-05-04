@@ -15,61 +15,64 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        children: [
-          // ── Speed Limits ──────────────────────────────────────────
-          const _SectionHeader(title: 'Speed Limits'),
-          _SpeedLimitTile(
-            icon: Icons.arrow_downward_rounded,
-            iconColor: const Color(0xFF6C63FF),
-            label: 'Download Limit',
-            currentBps: config.downloadLimit,
-            onChanged: notifier.setDownloadLimit,
-          ),
-          _SpeedLimitTile(
-            icon: Icons.arrow_upward_rounded,
-            iconColor: const Color(0xFF50FA7B),
-            label: 'Upload Limit',
-            currentBps: config.uploadLimit,
-            onChanged: notifier.setUploadLimit,
-          ),
-
-          // ── Network ───────────────────────────────────────────────
-          const _SectionHeader(title: 'Network'),
-          _SwitchTile(
-            icon: Icons.wifi,
-            label: 'Wi-Fi Only Mode',
-            subtitle: 'Pause downloads on mobile data',
-            value: config.wifiOnlyMode,
-            onChanged: notifier.setWifiOnly,
-          ),
-          _SwitchTile(
-            icon: Icons.hub_outlined,
-            label: 'DHT',
-            subtitle: 'Distributed peer discovery',
-            value: config.dhtEnabled,
-            onChanged: notifier.setDht,
-          ),
-          _SwitchTile(
-            icon: Icons.swap_horiz_rounded,
-            label: 'PEX',
-            subtitle: 'Peer exchange protocol',
-            value: config.pexEnabled,
-            onChanged: notifier.setPex,
-          ),
-
-          // ── Connections ───────────────────────────────────────────
-          const _SectionHeader(title: 'Connections'),
-          _ConnectionsTile(
-            current: config.maxGlobalConnections,
-            onChanged: notifier.setMaxConnections,
-          ),
-
-          // ── About ─────────────────────────────────────────────────
-          const _SectionHeader(title: 'About'),
-          _AboutTile(),
-        ],
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          children: [
+            // ── Speed Limits ──────────────────────────────────────────
+            const _SectionHeader(title: 'Speed Limits'),
+            _SpeedLimitTile(
+              icon: Icons.arrow_downward_rounded,
+              iconColor: const Color(0xFF00B894),
+              label: 'Download Limit',
+              currentBps: config.downloadLimit,
+              onChanged: notifier.setDownloadLimit,
+            ),
+            _SpeedLimitTile(
+              icon: Icons.arrow_upward_rounded,
+              iconColor: const Color(0xFF2ECC71),
+              label: 'Upload Limit',
+              currentBps: config.uploadLimit,
+              onChanged: notifier.setUploadLimit,
+            ),
+  
+            // ── Network ───────────────────────────────────────────────
+            const _SectionHeader(title: 'Network'),
+            _SwitchTile(
+              icon: Icons.wifi,
+              label: 'Wi-Fi Only Mode',
+              subtitle: 'Pause downloads on mobile data',
+              value: config.wifiOnlyMode,
+              onChanged: notifier.setWifiOnly,
+            ),
+            _SwitchTile(
+              icon: Icons.hub_outlined,
+              label: 'DHT',
+              subtitle: 'Distributed peer discovery',
+              value: config.dhtEnabled,
+              onChanged: notifier.setDht,
+            ),
+            _SwitchTile(
+              icon: Icons.swap_horiz_rounded,
+              label: 'PEX',
+              subtitle: 'Peer exchange protocol',
+              value: config.pexEnabled,
+              onChanged: notifier.setPex,
+            ),
+  
+            // ── Connections ───────────────────────────────────────────
+            const _SectionHeader(title: 'Connections'),
+            _ConnectionsTile(
+              current: config.maxGlobalConnections,
+              onChanged: notifier.setMaxConnections,
+            ),
+  
+            // ── About ─────────────────────────────────────────────────
+            const _SectionHeader(title: 'About'),
+            _AboutTile(),
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }
@@ -88,7 +91,7 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         title.toUpperCase(),
         style: const TextStyle(
-          color: Color(0xFF6C63FF),
+          color: Color(0xFF00B894),
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.2,
@@ -148,8 +151,8 @@ class _SpeedLimitTile extends StatelessWidget {
       builder: (_) => Container(
         margin: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A2E),
-          borderRadius: BorderRadius.circular(20),
+          color: const Color(0xFF111721),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(color: Colors.white10),
         ),
         child: Column(
@@ -166,9 +169,9 @@ class _SpeedLimitTile extends StatelessWidget {
               return ListTile(
                 title: Text(_presetLabels[i],
                     style: TextStyle(
-                        color: selected ? const Color(0xFF6C63FF) : Colors.white70,
+                        color: selected ? const Color(0xFF00B894) : Colors.white70,
                         fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
-                trailing: selected ? const Icon(Icons.check, color: Color(0xFF6C63FF), size: 18) : null,
+                trailing: selected ? const Icon(Icons.check, color: Color(0xFF00B894), size: 18) : null,
                 onTap: () {
                   onChanged(bps);
                   Navigator.pop(context);
@@ -252,8 +255,8 @@ class _ConnectionsTile extends StatelessWidget {
         builder: (_) => Container(
           margin: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A1A2E),
-            borderRadius: BorderRadius.circular(20),
+            color: const Color(0xFF111721),
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(color: Colors.white10),
           ),
           child: Column(
@@ -269,9 +272,9 @@ class _ConnectionsTile extends StatelessWidget {
                 return ListTile(
                   title: Text('$n peers',
                       style: TextStyle(
-                          color: selected ? const Color(0xFF6C63FF) : Colors.white70,
+                          color: selected ? const Color(0xFF00B894) : Colors.white70,
                           fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
-                  trailing: selected ? const Icon(Icons.check, color: Color(0xFF6C63FF), size: 18) : null,
+                  trailing: selected ? const Icon(Icons.check, color: Color(0xFF00B894), size: 18) : null,
                   onTap: () {
                     onChanged(n);
                     Navigator.pop(context);
@@ -298,7 +301,7 @@ class _AboutTile extends StatelessWidget {
         height: 40,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF6C63FF), Color(0xFF9D4EDD)],
+            colors: [Color(0xFF00B894), Color(0xFF00A382)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

@@ -196,6 +196,8 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
 
 @riverpod
 class SelectedTorrents extends _$SelectedTorrents {
+  bool _manualMode = false;
+
   @override
   Set<String> build() => {};
 
@@ -205,15 +207,23 @@ class SelectedTorrents extends _$SelectedTorrents {
     } else {
       state = {...state, id};
     }
+    if (state.isEmpty) _manualMode = false;
+  }
+
+  void enterSelectionMode() {
+    _manualMode = true;
+    ref.notifyListeners();
   }
 
   void selectAll(List<String> ids) {
     state = Set.from(ids);
+    _manualMode = true;
   }
 
   void clear() {
     state = {};
+    _manualMode = false;
   }
 
-  bool get isSelectionMode => state.isNotEmpty;
+  bool get isSelectionMode => _manualMode || state.isNotEmpty;
 }

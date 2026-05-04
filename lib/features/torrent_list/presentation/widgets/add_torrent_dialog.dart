@@ -61,8 +61,8 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
       child: Container(
         margin: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFF16162A).withValues(alpha: 0.95),
-          borderRadius: BorderRadius.circular(28),
+          color: const Color(0xFF111721).withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           boxShadow: [
             BoxShadow(
@@ -73,7 +73,7 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(24),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: SingleChildScrollView(
@@ -102,7 +102,7 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF6C63FF).withValues(alpha: 0.15),
+                              color: const Color(0xFF00B894).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: ShaderMask(
@@ -141,11 +141,11 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                             gradient: AppGradients.primary,
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF6C63FF).withValues(alpha: 0.3),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
+                                BoxShadow(
+                                  color: const Color(0xFF00B894).withValues(alpha: 0.3),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
                             ],
                           ),
                           indicatorSize: TabBarIndicatorSize.tab,
@@ -172,7 +172,7 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
 
                       // ── Tab views ────────────────────────────────────────────
                       SizedBox(
-                        height: 195,
+                        height: 210,
                         child: TabBarView(
                           controller: _tabController,
                           physics: const NeverScrollableScrollPhysics(),
@@ -288,7 +288,7 @@ class _GradientButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: onPressed == null ? null : [
           BoxShadow(
-            color: const Color(0xFF6C63FF).withValues(alpha: 0.3),
+            color: const Color(0xFF00B894).withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -359,20 +359,34 @@ class _MagnetTab extends StatelessWidget {
       key: formKey,
       child: Column(
         children: [
-          TextFormField(
-            controller: controller,
-            maxLines: 3,
+          SizedBox(
+            height: 100,
+            child: TextFormField(
+              controller: controller,
+              maxLines: null,
+              minLines: null,
+              expands: true,
+              textAlign: TextAlign.center,
+              textAlignVertical: TextAlignVertical.center,
             style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
             decoration: InputDecoration(
-              hintText: 'magnet:?xt=urn:btih:…',
+              hintText: 'Paste magnet link here',
               hintStyle: const TextStyle(color: Colors.white24),
-              prefixIcon: const Icon(Icons.link_rounded, color: Colors.white38, size: 20),
-              suffixIcon: Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: IconButton(
-                  icon: const Icon(Icons.content_paste_rounded, color: Color(0xFF6C63FF), size: 20),
-                  onPressed: onPasteFromClipboard,
-                ),
+              prefixIcon: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [Icon(Icons.link_rounded, color: Colors.white38, size: 20)],
+              ),
+              suffixIcon: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: IconButton(
+                      icon: const Icon(Icons.content_paste_rounded, color: Color(0xFF00B894), size: 20),
+                      onPressed: onPasteFromClipboard,
+                    ),
+                  ),
+                ],
               ),
               filled: true,
               fillColor: Colors.black26,
@@ -386,15 +400,17 @@ class _MagnetTab extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 1.5),
+                borderSide: const BorderSide(color: Color(0xFF00B894), width: 1.5),
               ),
-              contentPadding: const EdgeInsets.all(16),
+              isDense: true,
+              contentPadding: EdgeInsets.zero,
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'Paste a magnet link';
               return null;
             },
           ),
+        ),
           const SizedBox(height: 16),
           _SequentialRow(value: sequential, onChanged: onSequentialChanged),
         ],
@@ -437,22 +453,22 @@ class _FileTabState extends State<_FileTab> {
               color: Colors.white.withValues(alpha: 0.02),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: _picking ? const Color(0xFF6C63FF) : Colors.white.withValues(alpha: 0.08),
+                color: _picking ? const Color(0xFF00B894) : Colors.white.withValues(alpha: 0.08),
                 width: 1.5,
               ),
             ),
             child: _picking
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF6C63FF), strokeWidth: 2))
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF00B894), strokeWidth: 2))
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
+                          color: const Color(0xFF00B894).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Icon(Icons.cloud_upload_outlined, color: Color(0xFF6C63FF), size: 28),
+                        child: const Icon(Icons.cloud_upload_outlined, color: Color(0xFF00B894), size: 28),
                       ),
                       const SizedBox(height: 8),
                       const Text(
@@ -525,8 +541,8 @@ class _SequentialRow extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: const Color(0xFF6C63FF),
-            activeTrackColor: const Color(0xFF6C63FF).withValues(alpha: 0.5),
+            activeThumbColor: const Color(0xFF00B894),
+            activeTrackColor: const Color(0xFF00B894).withValues(alpha: 0.5),
           ),
         ],
       ),

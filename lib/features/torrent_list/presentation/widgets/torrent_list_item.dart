@@ -82,8 +82,10 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
     final isFinished = isEffectivelyComplete;
     final hasError = status.state == TorrentState.error;
 
-    final isSelected = ref.watch(selectedTorrentsProvider).contains(widget.torrentId);
-    final isSelectionMode = ref.watch(selectedTorrentsProvider.notifier).isSelectionMode;
+    final isSelected =
+        ref.watch(selectedTorrentsProvider).contains(widget.torrentId);
+    final isSelectionMode =
+        ref.watch(selectedTorrentsProvider.notifier).isSelectionMode;
 
     return FadeTransition(
       opacity: _fadeAnim,
@@ -99,7 +101,9 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
             child: InkWell(
               onTap: () {
                 if (isSelectionMode) {
-                  ref.read(selectedTorrentsProvider.notifier).toggle(widget.torrentId);
+                  ref
+                      .read(selectedTorrentsProvider.notifier)
+                      .toggle(widget.torrentId);
                   HapticFeedback.lightImpact();
                 } else {
                   _showOptions(context, ref, status);
@@ -107,133 +111,162 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
               },
               onLongPress: () {
                 HapticFeedback.mediumImpact();
-                ref.read(selectedTorrentsProvider.notifier).toggle(widget.torrentId);
+                ref
+                    .read(selectedTorrentsProvider.notifier)
+                    .toggle(widget.torrentId);
               },
-              borderRadius: BorderRadius.circular(20),
-              splashColor: const Color(0xFF6C63FF).withValues(alpha: 0.12),
-              highlightColor: const Color(0xFF6C63FF).withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(24),
+              splashColor: const Color(0xFF00B894).withValues(alpha: 0.12),
+              highlightColor: const Color(0xFF00B894).withValues(alpha: 0.06),
               child: Stack(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ── Header ──────────────────────────────────────────
-                    Row(
+                  AnimatedPadding(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOutCubic,
+                    padding: EdgeInsets.fromLTRB(isSelectionMode ? 48 : 16, 14, 12, 14),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Text(
-                            status.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Colors.white.withValues(
-                                alpha: isFinished ? 0.82 : 1.0,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                status.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  letterSpacing: -0.2,
+                                ),
                               ),
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                              letterSpacing: 0.1,
                             ),
-                          ),
+                            const SizedBox(width: 8),
+                            _AnimatedStateBadge(state: status.state),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        _AnimatedStateBadge(state: status.state),
-                      ],
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // ── Progress section ─────────────────────────────────
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        // Large percentage
-                        _GradientPercentText(
-                          progress: status.progress,
-                          state: status.state,
-                        ),
-                        const SizedBox(width: 12),
-                        // Progress bar
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: _GradientProgressBar(
-                              progress: status.progress,
-                              state: status.state,
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Icon(Icons.arrow_downward_rounded, color: Theme.of(context).colorScheme.primary, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              SpeedFormatter.format(status.downloadSpeed.toInt()),
+                              style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
                             ),
+                            const SizedBox(width: 12),
+                            const Icon(Icons.people_outline_rounded, color: Colors.white38, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              status.peers.toString(),
+                              style: const TextStyle(color: Colors.white38, fontSize: 12),
+                            ),
+                            const Spacer(),
+                            Text(
+                              '${(status.progress * 100).toStringAsFixed(1)}%',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Stack(
+                          children: [
+                            Container(
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            FractionallySizedBox(
+                              widthFactor: status.progress.clamp(0.0, 1.0),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 600),
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  gradient: AppGradients.primary,
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: isActive ? [
+                                    BoxShadow(
+                                      color: const Color(0xFF00B894).withValues(alpha: 0.4),
+                                      blurRadius: 10,
+                                      spreadRadius: 1,
+                                    ),
+                                  ] : null,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Text(
+                              '${SizeFormatter.format(status.downloadedBytes)} / '
+                              '${SizeFormatter.format(status.totalSize)}',
+                              style: TextStyle(
+                                color: Colors.white.withValues(
+                                  alpha: isFinished ? 0.20 : 0.30,
+                                ),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const Spacer(),
+                            _ActionButtons(status: status),
+                          ],
+                        ),
+                        if (isFinished) ...[
+                          const SizedBox(height: 12),
+                          _CompletedBanner(
+                            onOpenFolder: () => _openFolder(status),
                           ),
-                        ),
+                        ],
                       ],
                     ),
-
-                    const SizedBox(height: 10),
-
-                    // ── Info row ─────────────────────────────────────────
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _InfoRow(status: status),
+                  ),
+                  if (isSelectionMode)
+                    Positioned(
+                      top: 14,
+                      left: 12,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: isSelected ? const Color(0xFF00B894) : Colors.white.withValues(alpha: 0.05),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected ? Colors.white : Colors.white24,
+                            width: 1.5,
+                          ),
+                          boxShadow: isSelected ? [
+                            BoxShadow(
+                              color: const Color(0xFF00B894).withValues(alpha: 0.3),
+                              blurRadius: 8,
+                            )
+                          ] : null,
                         ),
-                        const SizedBox(width: 8),
-                        // ── Action buttons ───────────────────────────────
-                        _ActionButtons(status: status),
-                      ],
-                    ),
-
-                    // ── Error message ────────────────────────────────────
-                    if (hasError && status.errorMessage != null) ...[
-                      const SizedBox(height: 8),
-                      _ErrorBanner(message: status.errorMessage!),
-                    ],
-
-                    const SizedBox(height: 6),
-
-                    // ── Footer: size progress ────────────────────────────
-                    Text(
-                      '${SizeFormatter.format(status.downloadedBytes)} / '
-                      '${SizeFormatter.format(status.totalSize)}',
-                      style: TextStyle(
-                        color: Colors.white.withValues(
-                          alpha: isFinished ? 0.30 : 0.38,
+                        child: Icon(
+                          Icons.check,
+                          color: isSelected ? Colors.white : Colors.transparent,
+                          size: 14,
                         ),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
                       ),
                     ),
-
-                    // ── UX: completed call-to-action banner ─────────────
-                    if (isFinished) ...[
-                      const SizedBox(height: 8),
-                      _CompletedBanner(
-                        onOpenFolder: () => _openFolder(status),
-                      ),
-                    ],
-                  ],
-                ),
+                ],
               ),
-              if (isSelected)
-                Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF6C63FF),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.check, color: Colors.white, size: 14),
-                    ),
-                ),
-              ],
             ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   void _showOptions(BuildContext context, WidgetRef ref, TorrentStatus status) {
     showModalBottomSheet<void>(
@@ -244,8 +277,6 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
     );
   }
 
-  /// Opens the torrent's folder, preferring the per-torrent subfolder when it
-  /// exists, or the concrete downloaded file for single-file torrents.
   void _openFolder(TorrentStatus status) {
     final messenger = ScaffoldMessenger.of(context);
     try {
@@ -286,8 +317,6 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
       );
 }
 
-// ─── Glassmorphism Card Shell ────────────────────────────────────────────────
-
 class _GlassCard extends StatelessWidget {
   const _GlassCard({
     required this.child,
@@ -305,12 +334,13 @@ class _GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
     final borderColor = isSelected
-        ? const Color(0xFF6C63FF)
+        ? primaryColor
         : hasError
             ? const Color(0x80FF5555)
             : isActive
-                ? const Color(0x806C63FF)
+                ? primaryColor.withValues(alpha: 0.5)
                 : const Color(0x1AFFFFFF);
 
     final borderWidth = isSelected || isActive ? 1.5 : 1.0;
@@ -318,14 +348,18 @@ class _GlassCard extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 350),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: isSelected ? const Color(0xFF6C63FF).withValues(alpha: 0.15) : null,
+        borderRadius: BorderRadius.circular(24),
+        color:
+            isSelected ? primaryColor.withValues(alpha: 0.15) : null,
         gradient: isSelected
             ? null
             : LinearGradient(
                 colors: hasError
-                    ? [const Color(0x1AFF5555), const Color(0x0DFF5555)]
-                    : [const Color(0x1A6C63FF), const Color(0x0D48B0FF)],
+                    ? [const Color(0x1AFF5252), const Color(0x0DFF5252)]
+                    : [
+                        primaryColor.withValues(alpha: 0.1),
+                        const Color(0xFF080C14).withValues(alpha: 0.1)
+                      ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -333,7 +367,7 @@ class _GlassCard extends StatelessWidget {
         boxShadow: isActive
             ? [
                 BoxShadow(
-                  color: const Color(0xFF6C63FF).withValues(alpha: 0.18),
+                  color: primaryColor.withValues(alpha: 0.18),
                   blurRadius: 18,
                   spreadRadius: 0,
                   offset: const Offset(0, 4),
@@ -349,7 +383,7 @@ class _GlassCard extends StatelessWidget {
               ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: child,
@@ -358,189 +392,6 @@ class _GlassCard extends StatelessWidget {
     );
   }
 }
-
-// ─── Gradient Percent Text ────────────────────────────────────────────────────
-
-class _GradientPercentText extends StatelessWidget {
-  const _GradientPercentText({required this.progress, required this.state});
-  final double progress;
-  final TorrentState state;
-
-  LinearGradient get _gradient {
-    switch (state) {
-      case TorrentState.seeding:
-        return AppGradients.seeding;
-      case TorrentState.error:
-        return AppGradients.error;
-      case TorrentState.paused:
-        return AppGradients.paused;
-      default:
-        return AppGradients.primary;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ShaderMask(
-      shaderCallback: (bounds) => _gradient.createShader(bounds),
-      blendMode: BlendMode.srcIn,
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0, end: progress.clamp(0.0, 1.0)),
-        duration: const Duration(milliseconds: 600),
-        curve: Curves.easeOut,
-        builder: (_, value, __) {
-          return Text(
-            '${(value * 100).toStringAsFixed(0)}%',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
-              color: Colors.white, // overridden by ShaderMask
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ─── Gradient Progress Bar ───────────────────────────────────────────────────
-
-class _GradientProgressBar extends StatelessWidget {
-  const _GradientProgressBar({required this.progress, required this.state});
-  final double progress;
-  final TorrentState state;
-
-  LinearGradient get _gradient {
-    switch (state) {
-      case TorrentState.seeding:
-        return AppGradients.seeding;
-      case TorrentState.error:
-        return AppGradients.error;
-      case TorrentState.paused:
-        return AppGradients.paused;
-      default:
-        return AppGradients.primary;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: progress.clamp(0.0, 1.0)),
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeOut,
-      builder: (_, value, __) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: SizedBox(
-            height: 6,
-            child: Stack(
-              children: [
-                // Track
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.07),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                // Fill
-                FractionallySizedBox(
-                  widthFactor: value,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: _gradient,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF6C63FF).withValues(alpha: 0.4),
-                          blurRadius: 6,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ─── Info Row ────────────────────────────────────────────────────────────────
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.status});
-  final TorrentStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 4,
-      children: [
-        if (status.downloadSpeed > 0)
-          _InfoChip(
-            icon: Icons.arrow_downward_rounded,
-            iconColor: const Color(0xFF6C63FF),
-            label: SpeedFormatter.format(status.downloadSpeed),
-          ),
-        if (status.uploadSpeed > 0)
-          _InfoChip(
-            icon: Icons.arrow_upward_rounded,
-            iconColor: const Color(0xFF50FA7B),
-            label: SpeedFormatter.format(status.uploadSpeed),
-          ),
-        _InfoChip(
-          icon: Icons.people_outline_rounded,
-          iconColor: Colors.white38,
-          label: '${status.seeds}S / ${status.peers}P',
-        ),
-        if (status.etaSeconds != null &&
-            status.state == TorrentState.downloading)
-          _InfoChip(
-            icon: Icons.timer_outlined,
-            iconColor: Colors.white38,
-            label: SpeedFormatter.formatEta(status.etaSeconds),
-          ),
-      ],
-    );
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  const _InfoChip({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-  });
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 11, color: iconColor),
-        const SizedBox(width: 2),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.55),
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Animated State Badge ────────────────────────────────────────────────────
 
 class _AnimatedStateBadge extends StatelessWidget {
   const _AnimatedStateBadge({required this.state});
@@ -573,27 +424,24 @@ class _AnimatedStateBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: _color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _color.withValues(alpha: 0.45), width: 1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _color.withValues(alpha: 0.3), width: 1),
       ),
-      child: AnimatedDefaultTextStyle(
-        duration: const Duration(milliseconds: 250),
+      child: Text(
+        state.displayName.toUpperCase(),
         style: TextStyle(
           color: _color,
-          fontSize: 9,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.3,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.5,
         ),
-        child: Text(state.displayName.toUpperCase()),
       ),
     );
   }
 }
-
-// ─── Action Buttons ──────────────────────────────────────────────────────────
 
 class _ActionButtons extends ConsumerWidget {
   const _ActionButtons({required this.status});
@@ -611,16 +459,15 @@ class _ActionButtons extends ConsumerWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // ── Play / Pause toggle ────────────────────────────────────────
         if (isPaused || isStopped)
           _CircleIconButton(
             icon: Icons.play_arrow_rounded,
-            color: const Color(0xFF6C63FF),
+            color: const Color(0xFF00B894),
             onTap: () async {
               try {
                 await notifier.resumeTorrent(status.id);
               } catch (e) {
-                _showError(messenger, 'Failed to resume: $e');
+                _showErrorSnackBar(messenger, 'Failed to resume: $e');
               }
             },
             tooltip: 'Resume',
@@ -633,12 +480,11 @@ class _ActionButtons extends ConsumerWidget {
               try {
                 await notifier.pauseTorrent(status.id);
               } catch (e) {
-                _showError(messenger, 'Failed to pause: $e');
+                _showErrorSnackBar(messenger, 'Failed to pause: $e');
               }
             },
             tooltip: 'Pause',
           ),
-        // ── Stop button ───────────────────────────────────────────────
         if (!isStopped)
           _CircleIconButton(
             icon: Icons.stop_rounded,
@@ -647,16 +493,15 @@ class _ActionButtons extends ConsumerWidget {
               try {
                 await notifier.stopTorrent(status.id);
               } catch (e) {
-                _showError(messenger, 'Failed to stop: $e');
+                _showErrorSnackBar(messenger, 'Failed to stop: $e');
               }
             },
             tooltip: 'Stop',
           ),
-        // ── Open completed target ──────────────────────────────────────
         if (isDone)
           _CircleIconButton(
             icon: Icons.folder_open_rounded,
-            color: const Color(0xFF50FA7B),
+            color: const Color(0xFF2ECC71),
             onTap: () async {
               try {
                 await FolderService.instance.openDownloadTarget(
@@ -664,7 +509,7 @@ class _ActionButtons extends ConsumerWidget {
                   name: status.name,
                 );
               } catch (e) {
-                _showError(messenger, 'Failed to open download: $e');
+                _showErrorSnackBar(messenger, 'Failed to open download: $e');
               }
             },
             tooltip: 'Open download',
@@ -680,7 +525,7 @@ class _ActionButtons extends ConsumerWidget {
     );
   }
 
-  void _showError(ScaffoldMessengerState messenger, String message) {
+  void _showErrorSnackBar(ScaffoldMessengerState messenger, String message) {
     messenger.showSnackBar(
       SnackBar(
         content: Text(message, style: const TextStyle(color: Colors.white)),
@@ -692,23 +537,14 @@ class _ActionButtons extends ConsumerWidget {
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
     final notifier = ref.read(torrentNotifierProvider.notifier);
-    final messenger = ScaffoldMessenger.of(context);
     final result = await showDialog<_DeleteChoice>(
       context: context,
       builder: (_) => _DeleteDialog(torrentName: status.name),
     );
     if (result == _DeleteChoice.removeOnly) {
-      try {
-        await notifier.deleteTorrent(status.id);
-      } catch (e) {
-        _showError(messenger, 'Failed to delete: $e');
-      }
+      notifier.deleteTorrent(status.id);
     } else if (result == _DeleteChoice.removeWithFiles) {
-      try {
-        await notifier.deleteTorrent(status.id, deleteFiles: true);
-      } catch (e) {
-        _showError(messenger, 'Failed to delete: $e');
-      }
+      notifier.deleteTorrent(status.id, deleteFiles: true);
     }
   }
 }
@@ -746,8 +582,6 @@ class _CircleIconButton extends StatelessWidget {
     );
   }
 }
-
-// ─── Delete Dialog ───────────────────────────────────────────────────────────
 
 enum _DeleteChoice { removeOnly, removeWithFiles }
 
@@ -800,45 +634,6 @@ class _DeleteDialog extends StatelessWidget {
   }
 }
 
-// ─── Error Banner ────────────────────────────────────────────────────────────
-
-class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({required this.message});
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFF5555).withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
-        border:
-            Border.all(color: const Color(0xFFFF5555).withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.error_outline_rounded,
-              color: Color(0xFFFF5555), size: 14),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              message,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Color(0xFFFF8888), fontSize: 11),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Completed Banner ─────────────────────────────────────────────────────────
-
-/// UX call-to-action strip shown on finished/seeding cards.
-/// Tapping opens the download folder directly from the card body.
 class _CompletedBanner extends StatelessWidget {
   const _CompletedBanner({required this.onOpenFolder});
   final VoidCallback onOpenFolder;
@@ -850,36 +645,34 @@ class _CompletedBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: const Color(0xFF50FA7B).withValues(alpha: 0.10),
+          color: const Color(0xFF2ECC71).withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-              color: const Color(0xFF50FA7B).withValues(alpha: 0.28)),
+              color: const Color(0xFF2ECC71).withValues(alpha: 0.28)),
         ),
         child: const Row(
           children: [
             Icon(Icons.check_circle_outline_rounded,
-                color: Color(0xFF50FA7B), size: 13),
+                color: Color(0xFF2ECC71), size: 13),
             SizedBox(width: 6),
             Expanded(
               child: Text(
                 'Download complete  ·  Tap to open',
                 style: TextStyle(
-                  color: Color(0xFF50FA7B),
+                  color: Color(0xFF2ECC71),
                   fontSize: 10.5,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ),
             Icon(Icons.chevron_right_rounded,
-                color: Color(0xFF50FA7B), size: 15),
+                color: Color(0xFF2ECC71), size: 15),
           ],
         ),
       ),
     );
   }
 }
-
-// ─── Torrent Options Sheet ────────────────────────────────────────────────────
 
 class _TorrentOptionsSheet extends StatelessWidget {
   const _TorrentOptionsSheet({required this.status, required this.ref});
@@ -892,7 +685,6 @@ class _TorrentOptionsSheet extends StatelessWidget {
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final isPaused = status.state == TorrentState.paused;
-    final isFinished = status.isEffectivelyComplete;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -902,7 +694,7 @@ class _TorrentOptionsSheet extends StatelessWidget {
         border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6C63FF).withValues(alpha: 0.12),
+            color: const Color(0xFF00B894).withValues(alpha: 0.12),
             blurRadius: 32,
             offset: const Offset(0, -4),
           ),
@@ -911,7 +703,6 @@ class _TorrentOptionsSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle bar
           Container(
             margin: const EdgeInsets.only(top: 12),
             width: 36,
@@ -921,7 +712,6 @@ class _TorrentOptionsSheet extends StatelessWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          // Torrent name header
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
             child: Row(
@@ -964,11 +754,10 @@ class _TorrentOptionsSheet extends StatelessWidget {
             ),
           ),
           const Divider(color: Colors.white12, height: 24),
-          // ── Actions ────────────────────────────────────────────────
           if (isPaused)
             _OptionTile(
               icon: Icons.play_arrow_rounded,
-              iconColor: const Color(0xFF6C63FF),
+              iconColor: const Color(0xFF00B894),
               label: 'Resume Download',
               onTap: () async {
                 navigator.pop();
@@ -978,7 +767,8 @@ class _TorrentOptionsSheet extends StatelessWidget {
                   _showErrorSnackBar(messenger, 'Failed to resume: $e');
                 }
               },
-            ),
+            )
+          else
             _OptionTile(
               icon: Icons.pause_rounded,
               iconColor: Colors.white70,
@@ -992,111 +782,27 @@ class _TorrentOptionsSheet extends StatelessWidget {
                 }
               },
             ),
-          if (status.state != TorrentState.stopped)
-            _OptionTile(
-              icon: Icons.stop_rounded,
-              iconColor: Colors.white70,
-              label: 'Stop Download',
-              onTap: () async {
-                navigator.pop();
-                try {
-                  await notifier.stopTorrent(status.id);
-                } catch (e) {
-                  _showErrorSnackBar(messenger, 'Failed to stop: $e');
-                }
-              },
-            ),
-          if (isFinished)
-            _OptionTile(
-              icon: Icons.folder_open_rounded,
-              iconColor: const Color(0xFF50FA7B),
-              label: 'Open Download',
-              onTap: () async {
-                navigator.pop();
-                try {
-                  await FolderService.instance.openDownloadTarget(
-                    savePath: status.savePath,
-                    name: status.name,
-                  );
-                } catch (e) {
-                  _showErrorSnackBar(messenger, 'Failed to open download: $e');
-                }
-              },
-            ),
-          _OptionTile(
-            icon: Icons.refresh_rounded,
-            iconColor: Colors.white54,
-            label: 'Force Recheck',
-            onTap: () async {
-              navigator.pop();
-              try {
-                await ref
-                    .read(torrentRepositoryProvider)
-                    .recheckTorrent(status.id);
-              } catch (e) {
-                _showErrorSnackBar(messenger, 'Failed to recheck: $e');
-              }
-            },
-          ),
-          _OptionTile(
-            icon: Icons.info_outline_rounded,
-            iconColor: Colors.white54,
-            label: 'Properties',
-            onTap: () async {
-              navigator.pop();
-              _showProperties(context);
-            },
-          ),
-          const Divider(color: Colors.white12, height: 8),
           _OptionTile(
             icon: Icons.delete_outline_rounded,
             iconColor: const Color(0xFFFF5555),
             label: 'Remove Torrent',
             onTap: () async {
               navigator.pop();
-              _confirmDelete(context);
-            },
-          ),
-          _OptionTile(
-            icon: Icons.delete_forever_rounded,
-            iconColor: const Color(0xFFFF5555),
-            label: 'Remove + Delete Files',
-            onTap: () async {
-              navigator.pop();
-              try {
-                await notifier.deleteTorrent(status.id, deleteFiles: true);
-              } catch (e) {
-                _showErrorSnackBar(messenger, 'Failed to delete: $e');
+              final result = await showDialog<_DeleteChoice>(
+                context: context,
+                builder: (_) => _DeleteDialog(torrentName: status.name),
+              );
+              if (result == _DeleteChoice.removeOnly) {
+                notifier.deleteTorrent(status.id);
+              } else if (result == _DeleteChoice.removeWithFiles) {
+                notifier.deleteTorrent(status.id, deleteFiles: true);
               }
             },
           ),
-          SizedBox(height: 12 + MediaQuery.of(context).padding.bottom),
+          const SizedBox(height: 12),
         ],
       ),
     );
-  }
-
-  void _confirmDelete(BuildContext context) {
-    final notifier = ref.read(torrentNotifierProvider.notifier);
-    final messenger = ScaffoldMessenger.of(context);
-    showDialog<_DeleteChoice>(
-      context: context,
-      builder: (_) => _DeleteDialog(torrentName: status.name),
-    ).then((result) async {
-      if (result == _DeleteChoice.removeOnly) {
-        try {
-          await notifier.deleteTorrent(status.id);
-        } catch (e) {
-          _showErrorSnackBar(messenger, 'Failed to delete: $e');
-        }
-      } else if (result == _DeleteChoice.removeWithFiles) {
-        try {
-          await notifier.deleteTorrent(status.id, deleteFiles: true);
-        } catch (e) {
-          _showErrorSnackBar(messenger, 'Failed to delete: $e');
-        }
-      }
-    });
   }
 
   void _showErrorSnackBar(ScaffoldMessengerState messenger, String message) {
@@ -1105,43 +811,6 @@ class _TorrentOptionsSheet extends StatelessWidget {
         content: Text(message, style: const TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFFFF5555),
         duration: const Duration(seconds: 3),
-      ),
-    );
-  }
-
-  void _showProperties(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E30),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Properties',
-            style: TextStyle(color: Colors.white, fontSize: 17)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _PropRow('Name', status.name),
-            _PropRow('State', status.state.displayName),
-            _PropRow(
-                'Progress', '${(status.progress * 100).toStringAsFixed(2)}%'),
-            _PropRow('Size', SizeFormatter.format(status.totalSize)),
-            _PropRow(
-                'Downloaded', SizeFormatter.format(status.downloadedBytes)),
-            _PropRow('Upload', SizeFormatter.format(status.uploadedBytes)),
-            _PropRow('Ratio', status.ratio.toStringAsFixed(2)),
-            _PropRow('Seeds / Peers', '${status.seeds} / ${status.peers}'),
-            _PropRow('Save Path', status.savePath),
-            _PropRow(
-                'Added', status.addedAt.toLocal().toString().substring(0, 16)),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child:
-                const Text('Close', style: TextStyle(color: Color(0xFF6C63FF))),
-          ),
-        ],
       ),
     );
   }
@@ -1179,36 +848,6 @@ class _OptionTile extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _PropRow extends StatelessWidget {
-  const _PropRow(this.label, this.value);
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 90,
-            child: Text(label,
-                style: const TextStyle(
-                    color: Colors.white38,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600)),
-          ),
-          Expanded(
-            child: Text(value,
-                style: const TextStyle(color: Colors.white70, fontSize: 12)),
-          ),
-        ],
       ),
     );
   }

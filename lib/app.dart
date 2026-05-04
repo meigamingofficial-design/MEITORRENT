@@ -74,12 +74,12 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
               content: const Row(
                 children: [
                   Icon(Icons.check_circle_rounded,
-                      color: Color(0xFF50FA7B), size: 18),
+                      color: Color(0xFF2ECC71), size: 18),
                   SizedBox(width: 10),
                   Text('Torrent added from browser'),
                 ],
               ),
-              backgroundColor: const Color(0xFF1A1A2E),
+              backgroundColor: const Color(0xFF111721),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
