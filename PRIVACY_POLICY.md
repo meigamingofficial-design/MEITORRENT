@@ -1,26 +1,37 @@
 # Privacy Policy – Meitorrent
 
-**Last Updated:** May 05, 2026
+**Last Updated:** May 07, 2026
 
-Meitorrent is designed with privacy in mind. We do not collect, store, or share any personal information on any central servers.
+Meitorrent is built, published, and maintained by **MeiGamingOfficial** ("we", "our", or "us"). Meitorrent is designed with privacy as a fundamental priority. We do not collect, transmit, store, or share any personal information, usage data, or download logs. All torrent metadata and downloads are stored purely locally on your own device.
 
-### 1. Data Collection
-- **Personal Information:** We do not collect names, emails, phone numbers, or account information. No account is required to use the app.
-- **Usage Data:** We do not track your app usage, search history, or download history.
-- **Analytics:** We do not use any third-party analytics or tracking tools.
+---
 
-### 2. Networking and Peer-to-Peer (P2P)
-Meitorrent is a BitTorrent client. To function, it connects directly to other users (peers). 
-- **IP Address Visibility:** When you download or upload a torrent, your IP address is visible to other peers in the swarm. This is a technical requirement of the BitTorrent protocol. 
-- **Data Transfer:** Data is transferred directly between you and other peers. We do not facilitate or witness these transfers.
+### 1. Zero Data Collection & Safety Compliance
+- **No Personal Data:** We do not collect names, email addresses, phone numbers, location data, or device identifiers. No user account registration is required to use Meitorrent.
+- **No Tracking or Analytics:** We do not track your app usage, search history, file lists, or download logs. We do not use any third-party analytics or behavioral tracking SDKs.
+- **Data Deletion:** Since we do not collect any user data on any central servers, we have no user data to delete or manage. All your downloaded content and app state are managed locally on your device and can be removed at any time by clearing the app data or uninstalling the app.
+
+### 2. Networking and Peer-to-Peer (P2P) Communication
+Meitorrent is a BitTorrent file-transfer client. To function, it facilitates direct peer-to-peer (P2P) connections between your device and other users (peers) in the network.
+- **IP Address Visibility:** When actively downloading or uploading a torrent, your public IP address is visible to other participants (peers) in the same torrent swarm. This is an immutable technical requirement of the BitTorrent protocol itself.
+- **Direct Data Transfer:** All payload bytes are transferred directly between your device and other peers. We do not host, broker, facilitate, or witness these file transfers.
 
 ### 3. Third-Party Services
-- **Google Fonts:** The app uses Google Fonts to provide a better visual experience. Fonts may be fetched from Google's servers, which may log technical information such as your IP address in accordance with [Google's Privacy Policy](https://policies.google.com/privacy).
+- **Google Fonts:** Meitorrent uses Google Fonts to display a premium visual user interface. Fonts are fetched from Google's servers, which may log basic technical parameters (such as your public IP address) strictly for serving the assets, in compliance with [Google's Privacy Policy](https://policies.google.com/privacy).
 
-### 4. Device Permissions
-- **Storage:** The app requires access to your device storage to save and manage the files you choose to download.
-- **Internet:** Required to connect to the BitTorrent network.
-- **Foreground Service:** Used to keep downloads running in the background.
+### 4. Android Device Permissions & Usage Disclosures
+To provide a reliable file-transfer utility, Meitorrent requires the following system permissions, which are strictly limited to technical functionality:
+- **INTERNET & Network State (`android.permission.INTERNET`, `ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE`):** Required to connect to trackers, DHT, peer exchanges, and peers over the BitTorrent network.
+- **Storage/Media Access:** Used strictly to save downloaded torrent files to your chosen local directory and to read `.torrent` files you open with the app.
+- **Foreground Service (`android.permission.FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_DATA_SYNC`):** Used to run a background data-synchronization service. This keeps your active torrent downloads running reliably when the app is placed in the background or when your screen is locked. A persistent status notification is shown to you during this activity.
+- **Notifications (`android.permission.POST_NOTIFICATIONS`):** Used on Android 13+ to display the real-time download progress bar in your device’s status notification tray.
+- **Battery Optimization Settings:** Used to prompt you to exclude Meitorrent from aggressive system battery savers, preventing your downloads from being terminated prematurely when the device goes to sleep.
 
-### 5. Contact
-If you have any questions, please contact us at: **meigaming.official@gmail.com**
+---
+
+### 5. Legal & Contact Information
+For any privacy questions, license inquiries, or support requests regarding Meitorrent, please contact us at:
+
+**MeiGamingOfficial**  
+Email: **meigaming.official@gmail.com**  
+GitHub: [https://github.com/meigamingofficial-design](https://github.com/meigamingofficial-design)

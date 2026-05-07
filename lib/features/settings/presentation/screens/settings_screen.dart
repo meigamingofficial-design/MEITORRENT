@@ -429,29 +429,30 @@ class _LegalDetailScreen extends StatelessWidget {
 }
 
 const _privacyPolicy = '''
-Meitorrent is designed with privacy in mind. We do not collect, store, or share any personal information on any central servers.
+Meitorrent is built, published, and maintained by MeiGamingOfficial. We respect your privacy completely and designed the app to function without collecting any user data.
 
-• Data Collection: We do not collect names, emails, or account information.
-• P2P Networking: As a BitTorrent client, your IP address is visible to other peers in the swarm. This is a technical requirement of the protocol.
-• Third-Party Services: We use Google Fonts, which may fetch assets from Google servers.
-• Storage: Accessed only to manage the files you choose to download.
+• Zero Personal Data: No registration or account is required. We do not collect names, emails, or device identifiers.
+• Zero Tracking: We do not track search, download, or usage histories.
+• P2P Swarm Visibility: As a BitTorrent client, your IP address is visible to other peers downloading or seeding the same torrent. This is a protocol requirement.
+• Permissions Used: Network/Internet (to connect to peers), Storage/Media Access (to save download files), Foreground Service (to keep downloads active in the background), and Notifications (to display real-time download speed in the notification bar).
 
-For full details, visit our hosted policy at meigaming.github.io/meitorrent/PRIVACY_POLICY
+For full details, visit our hosted policy at:
+meigaming.github.io/meitorrent/PRIVACY_POLICY
 ''';
 
 const _termsAndConditions = '''
-By using Meitorrent, you agree to the following:
+By downloading, installing, or using Meitorrent, you agree to the following terms established by MeiGamingOfficial:
 
-• Proper Use: You are solely responsible for the content you download or share.
-• Copyright: You must not use this app for illegal distribution of copyrighted material.
-• Tool Only: Meitorrent is a tool for P2P transfer; we do not host or provide any content.
-• Liability: The developer is not responsible for any misuse or legal consequences.
+• Proper Use: You are solely and fully responsible for all files you choose to download or share.
+• Copyright Compliance: You must not use this app to download or share copyrighted materials without legal authorization.
+• Utility Tool Only: Meitorrent is a tool for P2P transfer; MeiGamingOfficial does not host, curate, or provide any torrent links or content.
+• Liability Limitation: MeiGamingOfficial is not responsible for any misuse, data loss, or legal consequences arising from using this software.
 
 The app is provided "AS IS" without warranties of any kind.
 ''';
 
 const _licenses = '''
-Meitorrent is built using several open-source components.
+Meitorrent is built using several open-source components:
 
 ## libtorrent
 This app is powered by libtorrent (BSD 3-clause). The Flutter wrapper and this application are subject to the GNU General Public License v3.0 (GPLv3).
@@ -465,7 +466,7 @@ This app is powered by libtorrent (BSD 3-clause). The Flutter wrapper and this a
 - permission_handler (MIT)
 - connectivity_plus (BSD 3-clause)
 
-The full text of the GPLv3 and other licenses are available in the root of our repository.
+The full GPLv3 copy is available in the root LICENSE file of our repository.
 ''';
 
 // ─── Battery Optimization Tile ───────────────────────────────────────────────
