@@ -88,17 +88,17 @@ class SettingsScreen extends ConsumerWidget {
             const _LegalTile(
               icon: Icons.privacy_tip_outlined,
               label: 'Privacy Policy',
-              content: _privacyPolicy,
+              assetPath: 'PRIVACY_POLICY.md',
             ),
             const _LegalTile(
               icon: Icons.description_outlined,
               label: 'Terms & Conditions',
-              content: _termsAndConditions,
+              assetPath: 'TERMS.md',
             ),
             const _LegalTile(
               icon: Icons.gavel_outlined,
               label: 'Open Source Licenses',
-              content: _licenses,
+              assetPath: 'LICENSES.md',
             ),
             const SizedBox(height: 40),
           ],
@@ -372,10 +372,14 @@ class _AboutTile extends StatelessWidget {
 }
 
 class _LegalTile extends StatelessWidget {
-  const _LegalTile({required this.icon, required this.label, required this.content});
+  const _LegalTile({
+    required this.icon,
+    required this.label,
+    required this.assetPath,
+  });
   final IconData icon;
   final String label;
-  final String content;
+  final String assetPath;
 
   @override
   Widget build(BuildContext context) {
@@ -391,11 +395,24 @@ class _LegalTile extends StatelessWidget {
       ),
       title: Text(label, style: const TextStyle(color: Colors.white, fontSize: 14)),
       trailing: const Icon(Icons.chevron_right, color: Colors.white24),
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => _LegalDetailScreen(title: label, content: content),
-        ),
-      ),
+      onTap: () async {
+        try {
+          final content = await DefaultAssetBundle.of(context).loadString(assetPath);
+          if (context.mounted) {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => _LegalDetailScreen(title: label, content: content),
+              ),
+            );
+          }
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error loading $label: $e')),
+            );
+          }
+        }
+      },
     );
   }
 }
@@ -427,47 +444,6 @@ class _LegalDetailScreen extends StatelessWidget {
     );
   }
 }
-
-const _privacyPolicy = '''
-Meitorrent is built, published, and maintained by MeiGamingOfficial. We respect your privacy completely and designed the app to function without collecting any user data.
-
-• Zero Personal Data: No registration or account is required. We do not collect names, emails, or device identifiers.
-• Zero Tracking: We do not track search, download, or usage histories.
-• P2P Swarm Visibility: As a BitTorrent client, your IP address is visible to other peers downloading or seeding the same torrent. This is a protocol requirement.
-• Permissions Used: Network/Internet (to connect to peers), Storage/Media Access (to save download files), Foreground Service (to keep downloads active in the background), and Notifications (to display real-time download speed in the notification bar).
-
-For full details, visit our hosted policy at:
-meigaming.github.io/meitorrent/PRIVACY_POLICY
-''';
-
-const _termsAndConditions = '''
-By downloading, installing, or using Meitorrent, you agree to the following terms established by MeiGamingOfficial:
-
-• Proper Use: You are solely and fully responsible for all files you choose to download or share.
-• Copyright Compliance: You must not use this app to download or share copyrighted materials without legal authorization.
-• Utility Tool Only: Meitorrent is a tool for P2P transfer; MeiGamingOfficial does not host, curate, or provide any torrent links or content.
-• Liability Limitation: MeiGamingOfficial is not responsible for any misuse, data loss, or legal consequences arising from using this software.
-
-The app is provided "AS IS" without warranties of any kind.
-''';
-
-const _licenses = '''
-Meitorrent is built using several open-source components:
-
-## libtorrent
-This app is powered by libtorrent (BSD 3-clause). The Flutter wrapper and this application are subject to the GNU General Public License v3.0 (GPLv3).
-
-## Other Components
-- flutter_foreground_task (MIT)
-- drift (MIT)
-- flutter_riverpod (MIT)
-- google_fonts (Apache 2.0)
-- path_provider (BSD 3-clause)
-- permission_handler (MIT)
-- connectivity_plus (BSD 3-clause)
-
-The full GPLv3 copy is available in the root LICENSE file of our repository.
-''';
 
 // ─── Battery Optimization Tile ───────────────────────────────────────────────
 
