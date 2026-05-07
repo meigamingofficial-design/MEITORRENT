@@ -186,21 +186,43 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                             ),
                             FractionallySizedBox(
                               widthFactor: status.progress.clamp(0.0, 1.0),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 600),
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  gradient: AppGradients.primary,
-                                  borderRadius: BorderRadius.circular(10),
-                                  boxShadow: isActive ? [
-                                    BoxShadow(
-                                      color: const Color(0xFF00B894).withValues(alpha: 0.4),
-                                      blurRadius: 10,
-                                      spreadRadius: 1,
+                              child: isFinished 
+                                ? TweenAnimationBuilder<double>(
+                                    tween: Tween(begin: 0.4, end: 0.8),
+                                    duration: const Duration(milliseconds: 1500),
+                                    builder: (context, value, child) {
+                                      return Container(
+                                        height: 6,
+                                        decoration: BoxDecoration(
+                                          gradient: AppGradients.primary,
+                                          borderRadius: BorderRadius.circular(10),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF00B894).withValues(alpha: value),
+                                              blurRadius: 12,
+                                              spreadRadius: 2,
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                    onEnd: () {}, // Not needed as it will rebuild on state change or we could use a custom controller if we wanted infinite loop without state change, but state changes often enough in torrents. Actually, let's use a Repeatable animation for better effect.
+                                  )
+                                : AnimatedContainer(
+                                    duration: const Duration(milliseconds: 600),
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      gradient: AppGradients.primary,
+                                      borderRadius: BorderRadius.circular(10),
+                                      boxShadow: isActive ? [
+                                        BoxShadow(
+                                          color: const Color(0xFF00B894).withValues(alpha: 0.4),
+                                          blurRadius: 10,
+                                          spreadRadius: 1,
+                                        ),
+                                      ] : null,
                                     ),
-                                  ] : null,
-                                ),
-                              ),
+                                  ),
                             ),
                           ],
                         ),
@@ -474,8 +496,8 @@ class _ActionButtons extends ConsumerWidget {
           )
         else
           _CircleIconButton(
-            icon: Icons.pause_rounded,
-            color: Colors.white70,
+            icon: isDone ? Icons.check_circle_outline_rounded : Icons.pause_rounded,
+            color: isDone ? const Color(0xFF2ECC71) : Colors.white70,
             onTap: () async {
               try {
                 await notifier.pauseTorrent(status.id);
@@ -483,7 +505,7 @@ class _ActionButtons extends ConsumerWidget {
                 _showErrorSnackBar(messenger, 'Failed to pause: $e');
               }
             },
-            tooltip: 'Pause',
+            tooltip: isDone ? 'Stop Seeding' : 'Pause',
           ),
         if (!isStopped)
           _CircleIconButton(
@@ -498,10 +520,10 @@ class _ActionButtons extends ConsumerWidget {
             },
             tooltip: 'Stop',
           ),
-        if (isDone)
+        if (!isDone)
           _CircleIconButton(
             icon: Icons.folder_open_rounded,
-            color: const Color(0xFF2ECC71),
+            color: Colors.white30,
             onTap: () async {
               try {
                 await FolderService.instance.openDownloadTarget(
@@ -509,15 +531,15 @@ class _ActionButtons extends ConsumerWidget {
                   name: status.name,
                 );
               } catch (e) {
-                _showErrorSnackBar(messenger, 'Failed to open download: $e');
+                _showErrorSnackBar(messenger, 'Failed to open folder: $e');
               }
             },
-            tooltip: 'Open download',
+            tooltip: 'Open folder',
           ),
         const SizedBox(width: 4),
         _CircleIconButton(
           icon: Icons.delete_outline_rounded,
-          color: Colors.white30,
+          color: const Color(0xFFFF5555).withValues(alpha: 0.7),
           onTap: () => _confirmDelete(context, ref),
           tooltip: 'Delete',
         ),
@@ -684,7 +706,7 @@ class _TorrentOptionsSheet extends StatelessWidget {
     final notifier = ref.read(torrentNotifierProvider.notifier);
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final isPaused = status.state == TorrentState.paused;
+    final isPaused = status.isPaused;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),

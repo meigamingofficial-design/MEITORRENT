@@ -1,6 +1,7 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'logger_service.dart';
 
@@ -38,7 +39,17 @@ class OemBatteryGuard {
 
   static const _platform = MethodChannel('com.meigaming.meitorrent/oem');
 
-  Future<void> promptIfNeeded(BuildContext context) async {
+  /// Returns whether a given manufacturer is a known OEM with custom battery savers.
+  bool isSupportedOem(String manufacturer) {
+    return _oemIntents.containsKey(manufacturer.toLowerCase());
+  }
+
+  /// Returns the custom OS name for a given manufacturer.
+  String? getOemName(String manufacturer) {
+    return _oemNames[manufacturer.toLowerCase()];
+  }
+
+  Future<void> promptIfNeeded(BuildContext context, {bool force = false}) async {
     final androidInfo = await DeviceInfoPlugin().androidInfo;
     final manufacturer = androidInfo.manufacturer.toLowerCase();
 
@@ -46,6 +57,13 @@ class OemBatteryGuard {
     final oemName = _oemNames[manufacturer];
 
     if (intent != null && oemName != null) {
+      if (!force) {
+        final prefs = await SharedPreferences.getInstance();
+        final shown = prefs.getBool('meitorrent_oem_prompt_shown') ?? false;
+        if (shown) return;
+        await prefs.setBool('meitorrent_oem_prompt_shown', true);
+      }
+
       AppLogger.i('[OemGuard] Detected OEM: $oemName ($manufacturer)');
       if (context.mounted) {
         _showOemBottomSheet(context, oemName, intent);

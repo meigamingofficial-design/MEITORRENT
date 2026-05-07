@@ -118,17 +118,21 @@ class NotificationService {
     // ── Show / update notification ───────────────────────────────────
     final notifId = _notificationId(status.id);
 
+    final isFinished = status.state == TorrentState.finished;
+    
     final androidDetails = AndroidNotificationDetails(
       'torrent_individual',
       'Torrent Progress',
       channelDescription: 'Individual progress for each torrent',
-      importance: Importance.low,
-      priority: Priority.low,
+      importance: isFinished ? Importance.high : Importance.low,
+      priority: isFinished ? Priority.high : Priority.low,
       showProgress: showProgress,
       maxProgress: 100,
       progress: progress,
       onlyAlertOnce: true,
       autoCancel: false,
+      enableVibration: isFinished,
+      playSound: isFinished,
       // Keep ongoing only while actively downloading/checking — not for
       // completed or paused torrents so the user can dismiss them.
       ongoing: status.state.isActive,

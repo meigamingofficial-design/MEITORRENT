@@ -54,15 +54,9 @@ void main() {
       expect(base.deepEquals(changed), isFalse);
     });
 
-    test('tiny progress delta within tolerance is equal', () {
-      // 0.0001 tolerance — within threshold
+    test('progress requires strict double equality', () {
       final almost = base.copyWith(progress: 0.5 + 0.000099);
-      expect(base.deepEquals(almost), isTrue);
-    });
-
-    test('progress delta beyond tolerance triggers inequality', () {
-      final beyond = base.copyWith(progress: 0.5 + 0.001);
-      expect(base.deepEquals(beyond), isFalse);
+      expect(base.deepEquals(almost), isFalse);
     });
   });
 

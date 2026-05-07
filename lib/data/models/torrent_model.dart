@@ -14,7 +14,9 @@ class TorrentModel {
   static TorrentStatus fromRow(TorrentsTableData row) {
     final state = _parseState(row.state);
     final isComplete =
-        state == TorrentState.finished || state == TorrentState.seeding;
+        state == TorrentState.finished ||
+        state == TorrentState.seeding ||
+        row.isCompleted;
 
     // If the torrent is logically complete, clamp values so the UI is correct
     // even if the DB wrote stale 0-bytes before the engine updated them.

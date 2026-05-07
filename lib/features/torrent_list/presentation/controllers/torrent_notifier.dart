@@ -11,6 +11,7 @@ import '../../../../data/database/app_database.dart';
 import '../../../../data/repositories/torrent_repository_impl.dart';
 import '../../../../domain/entities/torrent_status.dart';
 import '../../../../domain/repositories/torrent_repository.dart';
+import '../../../settings/presentation/controllers/settings_notifier.dart';
 
 part 'torrent_notifier.g.dart';
 
@@ -61,6 +62,17 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
         state = AsyncValue.data(statuses);
         // Push notification update (Hardening #5)
         ForegroundServiceManager.instance.pushUpdate(statuses);
+
+        // ── Auto-pause seeding if setting enabled ─────────────────────
+        final config = ref.read(settingsNotifierProvider);
+        if (config.stopSeedingWhenFinished) {
+          for (final torrent in statuses) {
+            if (torrent.state == TorrentState.finished && !torrent.isPaused) {
+              pauseTorrent(torrent.id);
+              AppLogger.i('[Notifier] Auto-paused finished torrent: ${torrent.id}');
+            }
+          }
+        }
       },
       onError: (Object e, StackTrace st) {
         state = AsyncValue.error(e, st);

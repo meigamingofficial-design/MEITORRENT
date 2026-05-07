@@ -125,11 +125,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (notifPerm != NotificationPermission.granted) {
       await FlutterForegroundTask.requestNotificationPermission();
     }
-
-    // Battery optimization exemption
-    if (!await FlutterForegroundTask.isIgnoringBatteryOptimizations) {
-      await FlutterForegroundTask.requestIgnoreBatteryOptimization();
-    }
   }
 
   void _setStatus(String text) {
@@ -216,7 +211,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   ),
                 ),
                 const SizedBox(height: 32),
-  
+
                 // App name
                 AnimatedBuilder(
                   animation: _logoOpacity,
@@ -244,9 +239,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     ),
                   ),
                 ),
-  
+
                 const SizedBox(height: 60),
-  
+
                 // Status indicator
                 if (!_hasError) ...[
                   const SizedBox(
@@ -263,7 +258,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     child: Text(
                       _statusText,
                       key: ValueKey(_statusText),
-                      style: const TextStyle(color: Colors.white38, fontSize: 13),
+                      style:
+                          const TextStyle(color: Colors.white38, fontSize: 13),
                     ),
                   ),
                 ] else ...[
@@ -275,8 +271,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     child: Text(
                       _statusText,
                       textAlign: TextAlign.center,
-                      style:
-                          const TextStyle(color: Color(0xFFFF5555), fontSize: 13),
+                      style: const TextStyle(
+                          color: Color(0xFFFF5555), fontSize: 13),
                     ),
                   ),
                   const SizedBox(height: 20),

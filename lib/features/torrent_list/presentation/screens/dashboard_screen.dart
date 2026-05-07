@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/services/oem_battery_guard.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../domain/entities/torrent_status.dart';
 import '../../../settings/presentation/screens/settings_screen.dart';
@@ -20,9 +21,37 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   String? _newlyAddedId;
+  int _zeroSpeedTicks = 0;
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<List<TorrentStatus>>>(torrentNotifierProvider, (prev, next) {
+      final prevTorrents = prev?.valueOrNull ?? [];
+      final nextTorrents = next.valueOrNull ?? [];
+
+      // 1. Event-Driven Contextual Trigger on First Active Torrent Added
+      if (prevTorrents.isEmpty && nextTorrents.isNotEmpty) {
+        OemBatteryGuard.instance.promptIfNeeded(context);
+      }
+
+      // 2. Failure Detection Loop (Agonistic Speed Throttling)
+      final activeDownloading = nextTorrents.where((t) => t.state.isActive && !t.state.isFinished).toList();
+      if (activeDownloading.isNotEmpty) {
+        final totalSpeed = activeDownloading.fold<int>(0, (s, t) => s + t.downloadSpeed);
+        if (totalSpeed == 0) {
+          _zeroSpeedTicks++;
+          if (_zeroSpeedTicks >= 15) { // ~15 consecutive updates with zero speed
+            _zeroSpeedTicks = 0;
+            _showBackgroundWarningPrompt(context);
+          }
+        } else {
+          _zeroSpeedTicks = 0;
+        }
+      } else {
+        _zeroSpeedTicks = 0;
+      }
+    });
+
     final torrentsAsync = ref.watch(torrentNotifierProvider);
 
     return PopScope(
@@ -401,6 +430,91 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: const Text('Remove + Files'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showBackgroundWarningPrompt(BuildContext context) {
+    if (!mounted) return;
+    
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF111721),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFFFB86C).withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFB86C).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.bolt_rounded, color: Color(0xFFFFB86C), size: 20),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Sluggish Download Speeds?',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Your downloads may be throttled or paused by system battery limits. Whitelisting Meitorrent helps keep transfers active when the screen is locked.',
+              style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.4),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white38,
+                      side: const BorderSide(color: Colors.white10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Not Now', style: TextStyle(fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF00B894),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+                      );
+                    },
+                    child: const Text('Optimize Speed', style: TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

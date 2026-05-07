@@ -72,7 +72,7 @@ extension TorrentStatusX on TorrentStatus {
     if (state == TorrentState.seeding) {
       return true;
     }
-    if (progress >= 0.999) {
+    if (progress >= 1.0) {
       return true;
     }
     if (totalSize > 0 && downloadedBytes >= totalSize) {

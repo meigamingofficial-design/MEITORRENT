@@ -64,6 +64,7 @@ class EngineConfig {
     this.pexEnabled = true,
     this.lsdEnabled = true,
     this.wifiOnlyMode = false,
+    this.stopSeedingWhenFinished = true,
   });
 
   /// bytes/sec, 0 = unlimited
@@ -78,6 +79,7 @@ class EngineConfig {
   final bool pexEnabled;
   final bool lsdEnabled;
   final bool wifiOnlyMode;
+  final bool stopSeedingWhenFinished;
 
   EngineConfig copyWith({
     int? downloadLimit,
@@ -88,6 +90,7 @@ class EngineConfig {
     bool? pexEnabled,
     bool? lsdEnabled,
     bool? wifiOnlyMode,
+    bool? stopSeedingWhenFinished,
   }) {
     return EngineConfig(
       downloadLimit: downloadLimit ?? this.downloadLimit,
@@ -98,6 +101,7 @@ class EngineConfig {
       pexEnabled: pexEnabled ?? this.pexEnabled,
       lsdEnabled: lsdEnabled ?? this.lsdEnabled,
       wifiOnlyMode: wifiOnlyMode ?? this.wifiOnlyMode,
+      stopSeedingWhenFinished: stopSeedingWhenFinished ?? this.stopSeedingWhenFinished,
     );
   }
 
@@ -112,7 +116,8 @@ class EngineConfig {
           dhtEnabled == other.dhtEnabled &&
           pexEnabled == other.pexEnabled &&
           lsdEnabled == other.lsdEnabled &&
-          wifiOnlyMode == other.wifiOnlyMode;
+          wifiOnlyMode == other.wifiOnlyMode &&
+          stopSeedingWhenFinished == other.stopSeedingWhenFinished;
 
   @override
   int get hashCode => Object.hash(
@@ -124,5 +129,6 @@ class EngineConfig {
         pexEnabled,
         lsdEnabled,
         wifiOnlyMode,
+        stopSeedingWhenFinished,
       );
 }

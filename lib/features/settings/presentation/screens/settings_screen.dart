@@ -1,5 +1,9 @@
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/services/oem_battery_guard.dart';
 
 import '../../../../core/utils/speed_formatter.dart';
 import '../controllers/settings_notifier.dart';
@@ -46,6 +50,13 @@ class SettingsScreen extends ConsumerWidget {
               onChanged: notifier.setWifiOnly,
             ),
             _SwitchTile(
+              icon: Icons.cloud_off_rounded,
+              label: 'Stop Seeding',
+              subtitle: 'Pause torrent when 100% complete',
+              value: config.stopSeedingWhenFinished,
+              onChanged: notifier.setStopSeeding,
+            ),
+            _SwitchTile(
               icon: Icons.hub_outlined,
               label: 'DHT',
               subtitle: 'Distributed peer discovery',
@@ -66,6 +77,10 @@ class SettingsScreen extends ConsumerWidget {
               current: config.maxGlobalConnections,
               onChanged: notifier.setMaxConnections,
             ),
+  
+            // ── Performance ───────────────────────────────────────────
+            const _SectionHeader(title: 'Performance'),
+            const _BatteryOptimizationTile(),
   
             // ── About ─────────────────────────────────────────────────
             const _SectionHeader(title: 'About'),
@@ -427,3 +442,181 @@ This app is powered by libtorrent (BSD 3-clause). The Flutter wrapper and this a
 
 The full text of the GPLv3 and other licenses are available in the root of our repository.
 ''';
+
+// ─── Battery Optimization Tile ───────────────────────────────────────────────
+
+class _BatteryOptimizationTile extends StatefulWidget {
+  const _BatteryOptimizationTile();
+
+  @override
+  State<_BatteryOptimizationTile> createState() => _BatteryOptimizationTileState();
+}
+
+class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile> with WidgetsBindingObserver {
+  bool _isIgnored = false;
+  bool _isLoading = false;
+  bool _showOemPrompt = false;
+  String _oemName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkStatus();
+    _checkOem();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkStatus();
+    }
+  }
+
+  Future<void> _checkStatus() async {
+    final status = await FlutterForegroundTask.isIgnoringBatteryOptimizations;
+    if (mounted) {
+      setState(() {
+        _isIgnored = status;
+      });
+    }
+  }
+
+  Future<void> _checkOem() async {
+    try {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      final manufacturer = androidInfo.manufacturer.toLowerCase();
+      
+      const oems = {
+        'xiaomi': 'Xiaomi', 'redmi': 'Redmi', 'poco': 'POCO',
+        'oppo': 'Oppo', 'realme': 'Realme', 'oneplus': 'OnePlus',
+        'vivo': 'Vivo', 'huawei': 'Huawei', 'honor': 'Honor',
+        'samsung': 'Samsung'
+      };
+      
+      if (oems.containsKey(manufacturer) && mounted) {
+        setState(() {
+          _showOemPrompt = true;
+          _oemName = oems[manufacturer]!;
+        });
+      }
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListTile(
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              _isIgnored ? Icons.battery_charging_full_rounded : Icons.battery_alert_rounded,
+              color: _isIgnored ? const Color(0xFF00B894) : const Color(0xFFFFB86C),
+              size: 20,
+            ),
+          ),
+          title: const Text('Ignore Battery Optimizations', style: TextStyle(color: Colors.white, fontSize: 14)),
+          subtitle: Text(
+            _isIgnored
+                ? 'Battery optimizations are disabled'
+                : 'Helps keep torrent downloads active when the app is in the background or screen is off',
+            style: const TextStyle(color: Colors.white38, fontSize: 12),
+          ),
+          trailing: _isLoading
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF00B894)),
+                )
+              : Switch(
+                  value: _isIgnored,
+                  onChanged: (value) async {
+                    setState(() => _isLoading = true);
+                    if (value) {
+                      await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+                    } else {
+                      await FlutterForegroundTask.openIgnoreBatteryOptimizationSettings();
+                    }
+                    await _checkStatus();
+                    if (mounted) {
+                      setState(() => _isLoading = false);
+                    }
+                  },
+                ),
+        ),
+        if (_showOemPrompt)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(72, 0, 16, 12),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFB86C).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFFFB86C).withValues(alpha: 0.15)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.info_outline, color: Color(0xFFFFB86C), size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Detected $_oemName Device',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Your device enforces custom battery restrictions. For stable downloads, please set Meitorrent to "Unrestricted" and enable "Auto-start".',
+                    style: TextStyle(color: Colors.white60, fontSize: 11, height: 1.3),
+                  ),
+                  const SizedBox(height: 10),
+                  InkWell(
+                    onTap: () => OemBatteryGuard.instance.promptIfNeeded(context, force: true),
+                    borderRadius: BorderRadius.circular(6),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Configure OEM Settings',
+                            style: TextStyle(
+                              color: Color(0xFF00B894),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(width: 4),
+                          Icon(Icons.arrow_forward_rounded, color: Color(0xFF00B894), size: 12),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}

@@ -206,7 +206,9 @@ class TorrentRepositoryImpl implements TorrentRepository {
         progress: 1.0,
         downloadedBytes: persisted.totalSize,
         totalSize: persisted.totalSize,
-        state: TorrentState.finished,
+        state: live.state == TorrentState.seeding
+            ? TorrentState.seeding
+            : TorrentState.finished,
       );
     }
     final isWarmingUp = live.state == TorrentState.downloadingMetadata ||
@@ -800,11 +802,13 @@ class TorrentRepositoryImpl implements TorrentRepository {
   Future<void> _updateState(String id, TorrentState state) async {
     final row = await _db.getTorrentById(id);
     if (row != null) {
+      final oldModel = TorrentModel.fromRow(row);
       await _db.upsertTorrent(
-        TorrentModel.toCompanion(TorrentModel.fromRow(row).copyWith(
+        TorrentModel.toCompanion(oldModel.copyWith(
           state: state,
-          isCompleted:
-              state == TorrentState.finished || state == TorrentState.seeding,
+          isCompleted: oldModel.isCompleted ||
+              state == TorrentState.finished ||
+              state == TorrentState.seeding,
         )),
       );
     }
@@ -827,7 +831,12 @@ class TorrentRepositoryImpl implements TorrentRepository {
   String _nameFromMagnet(String uri) {
     final dn = RegExp(r'[&?]dn=([^&]+)').firstMatch(uri);
     if (dn != null) {
-      return Uri.decodeComponent(dn.group(1)!);
+      final rawName = dn.group(1)!;
+      try {
+        return Uri.decodeComponent(rawName);
+      } catch (_) {
+        return rawName;
+      }
     }
     return uri.substring(0, uri.length.clamp(0, 20));
   }

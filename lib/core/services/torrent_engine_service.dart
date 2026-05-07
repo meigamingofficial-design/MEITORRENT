@@ -173,6 +173,7 @@ class TorrentEngineService {
 
   /// Apply speed limits via BtConfig
   void applyConfig(EngineConfig config) {
+    if (!_initialized) return;
     _engine.setDownloadLimit(config.downloadLimit);
     _engine.setUploadLimit(config.uploadLimit);
   }
@@ -235,10 +236,10 @@ class TorrentEngineService {
   }
 
   bool _isActuallyComplete(lt.TorrentInfo info, double progress) {
-    if (progress >= 0.999) {
+    if (info.totalWanted > 0 && info.totalDone >= info.totalWanted) {
       return true;
     }
-    return info.totalWanted > 0 && info.totalDone >= info.totalWanted;
+    return progress >= 1.0;
   }
 
   domain.TorrentState _mapState(
@@ -258,8 +259,7 @@ class TorrentEngineService {
     // 2. Verified Completion: If we are 100% done, favor finished/seeding
     // This prevents "Allocating" or "Downloading" from flickering at 100%.
     if (isActuallyComplete) {
-      if (isPaused) return domain.TorrentState.paused;
-      if (raw == lt.TorrentState.seeding) return domain.TorrentState.seeding;
+      if (raw == lt.TorrentState.seeding && !isPaused) return domain.TorrentState.seeding;
       return domain.TorrentState.finished;
     }
 
@@ -281,15 +281,12 @@ class TorrentEngineService {
 
     // 5. Active Seeding (redundant but safe)
     if (raw == lt.TorrentState.seeding) {
-      if (isPaused) return domain.TorrentState.paused;
+      if (isPaused) return domain.TorrentState.finished;
       return domain.TorrentState.seeding;
     }
 
     // 6. Native Completed states (fallback if isActuallyComplete was somehow false)
     if (raw == lt.TorrentState.finished || isFinished) {
-      // Respect paused state even if engine reports finished
-      if (isPaused) return domain.TorrentState.paused;
-
       if (isActuallyComplete) return domain.TorrentState.finished;
 
       // Handle premature completion
