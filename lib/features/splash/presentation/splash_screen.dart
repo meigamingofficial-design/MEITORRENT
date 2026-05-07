@@ -144,146 +144,185 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       child: Scaffold(
         backgroundColor: const Color(0xFF0F0F1A),
         body: SafeArea(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Logo with glow
-                AnimatedBuilder(
-                  animation: _logoController,
-                  builder: (context, child) => Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Glow backdrop
-                      Container(
-                        width: 140,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF00B894).withValues(
-                                alpha: 0.6 * _glowOpacity.value,
-                              ),
-                              blurRadius: 60,
-                              spreadRadius: 20,
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Logo
-                      Transform.scale(
-                        scale: _logoScale.value,
-                        child: Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                const Color(0xFF00B894)
-                                    .withValues(alpha: _logoOpacity.value),
-                                const Color(0xFF9D4EDD)
-                                    .withValues(alpha: _logoOpacity.value),
+          child: Stack(
+            children: [
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Logo with glow
+                    AnimatedBuilder(
+                      animation: _logoController,
+                      builder: (context, child) => Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Glow backdrop
+                          Container(
+                            width: 140,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF00B894).withValues(
+                                    alpha: 0.6 * _glowOpacity.value,
+                                  ),
+                                  blurRadius: 60,
+                                  spreadRadius: 20,
+                                ),
                               ],
                             ),
-                            borderRadius: BorderRadius.circular(28),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF00B894).withValues(
-                                  alpha: 0.4 * _logoOpacity.value,
+                          ),
+                          // Logo
+                          Transform.scale(
+                            scale: _logoScale.value,
+                            child: Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    const Color(0xFF00B894)
+                                        .withValues(alpha: _logoOpacity.value),
+                                    const Color(0xFF9D4EDD)
+                                        .withValues(alpha: _logoOpacity.value),
+                                  ],
                                 ),
-                                blurRadius: 20,
-                                offset: const Offset(0, 8),
+                                borderRadius: BorderRadius.circular(28),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF00B894).withValues(
+                                      alpha: 0.4 * _logoOpacity.value,
+                                    ),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
                               ),
-                            ],
+                              child: Icon(
+                                Icons.download_rounded,
+                                color: Colors.white
+                                    .withValues(alpha: _logoOpacity.value),
+                                size: 52,
+                              ),
+                            ),
                           ),
-                          child: Icon(
-                            Icons.download_rounded,
-                            color: Colors.white
-                                .withValues(alpha: _logoOpacity.value),
-                            size: 52,
-                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // App name
+                    AnimatedBuilder(
+                      animation: _logoOpacity,
+                      builder: (_, __) => Text(
+                        'Meitorrent',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white.withValues(alpha: _logoOpacity.value),
+                          letterSpacing: -0.5,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // App name
-                AnimatedBuilder(
-                  animation: _logoOpacity,
-                  builder: (_, __) => Text(
-                    'Meitorrent',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white.withValues(alpha: _logoOpacity.value),
-                      letterSpacing: -0.5,
                     ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                AnimatedBuilder(
-                  animation: _logoOpacity,
-                  builder: (_, __) => Text(
-                    'Fast. Private. Reliable.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withValues(
-                        alpha: _logoOpacity.value * 0.54,
+                    const SizedBox(height: 8),
+                    AnimatedBuilder(
+                      animation: _logoOpacity,
+                      builder: (_, __) => Text(
+                        'Fast. Private. Reliable.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withValues(
+                            alpha: _logoOpacity.value * 0.54,
+                          ),
+                          letterSpacing: 1.2,
+                        ),
                       ),
-                      letterSpacing: 1.2,
+                    ),
+
+                    const SizedBox(height: 60),
+
+                    // Status indicator
+                    if (!_hasError) ...[
+                      const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFF00B894),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: Text(
+                          _statusText,
+                          key: ValueKey(_statusText),
+                          style:
+                              const TextStyle(color: Colors.white38, fontSize: 13),
+                        ),
+                      ),
+                    ] else ...[
+                      const Icon(Icons.error_outline,
+                          color: Color(0xFFFF5555), size: 32),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                        child: Text(
+                          _statusText,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              color: Color(0xFFFF5555), fontSize: 13),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        onPressed: _boot,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Positioned(
+                bottom: 24,
+                left: 0,
+                right: 0,
+                child: AnimatedBuilder(
+                  animation: _logoOpacity,
+                  builder: (_, __) => Opacity(
+                    opacity: _logoOpacity.value * 0.4,
+                    child: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'from',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            letterSpacing: 2,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'MeiGamingOfficial',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            letterSpacing: 1.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 60),
-
-                // Status indicator
-                if (!_hasError) ...[
-                  const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Color(0xFF00B894),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: Text(
-                      _statusText,
-                      key: ValueKey(_statusText),
-                      style:
-                          const TextStyle(color: Colors.white38, fontSize: 13),
-                    ),
-                  ),
-                ] else ...[
-                  const Icon(Icons.error_outline,
-                      color: Color(0xFFFF5555), size: 32),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: Text(
-                      _statusText,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          color: Color(0xFFFF5555), fontSize: 13),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton.icon(
-                    onPressed: _boot,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
-                  ),
-                ],
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

@@ -339,9 +339,34 @@ class _AboutTile extends StatelessWidget {
         ),
         child: const Icon(Icons.download_rounded, color: Colors.white, size: 20),
       ),
-      title: const Text('Meitorrent', style: TextStyle(color: Colors.white, fontSize: 14)),
-      subtitle: const Text('v1.0.0 · Fast. Private. Reliable.',
-          style: TextStyle(color: Colors.white38, fontSize: 12)),
+      title: const Text(
+        'Meitorrent',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      subtitle: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(height: 2),
+          Text(
+            'v1.0.0 · Fast. Private. Reliable.',
+            style: TextStyle(color: Colors.white38, fontSize: 11),
+          ),
+          SizedBox(height: 1),
+          Text(
+            'Designed & Developed by MeiGamingOfficial',
+            style: TextStyle(
+              color: Color(0xFF00B894),
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
