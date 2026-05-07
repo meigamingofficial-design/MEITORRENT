@@ -15,41 +15,56 @@ void main() {
       SharedPreferences.setMockInitialValues({});
 
       // Stub DeviceInfoPlugin & FlutterForegroundTask platform channels to avoid MissingPluginException
-      const MethodChannel('plugins.flutter.io/device_info')
-          .setMockMethodCallHandler((MethodCall methodCall) async {
-        return <String, dynamic>{
-          'manufacturer': 'Xiaomi',
-          'model': 'Mi 11',
-          'brand': 'Xiaomi',
-          'isPhysicalDevice': true,
-          'version': <String, dynamic>{'sdkInt': 30},
-        };
-      });
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('plugins.flutter.io/device_info'),
+        (MethodCall methodCall) async {
+          return <String, dynamic>{
+            'manufacturer': 'Xiaomi',
+            'model': 'Mi 11',
+            'brand': 'Xiaomi',
+            'isPhysicalDevice': true,
+            'version': <String, dynamic>{'sdkInt': 30},
+          };
+        },
+      );
 
-      const MethodChannel('dev.fluttercommunity.plus/device_info')
-          .setMockMethodCallHandler((MethodCall methodCall) async {
-        return <String, dynamic>{
-          'manufacturer': 'Xiaomi',
-          'model': 'Mi 11',
-          'brand': 'Xiaomi',
-          'isPhysicalDevice': true,
-          'version': <String, dynamic>{'sdkInt': 30},
-        };
-      });
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('dev.fluttercommunity.plus/device_info'),
+        (MethodCall methodCall) async {
+          return <String, dynamic>{
+            'manufacturer': 'Xiaomi',
+            'model': 'Mi 11',
+            'brand': 'Xiaomi',
+            'isPhysicalDevice': true,
+            'version': <String, dynamic>{'sdkInt': 30},
+          };
+        },
+      );
 
-      const MethodChannel('com.pravera.flutter_foreground_task/methods')
-          .setMockMethodCallHandler((MethodCall methodCall) async {
-        if (methodCall.method == 'isIgnoringBatteryOptimizations') {
-          return false; // Optimizations not yet ignored
-        }
-        return null;
-      });
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('com.pravera.flutter_foreground_task/methods'),
+        (MethodCall methodCall) async {
+          if (methodCall.method == 'isIgnoringBatteryOptimizations') {
+            return false; // Optimizations not yet ignored
+          }
+          return null;
+        },
+      );
     });
 
     tearDown(() {
-      const MethodChannel('plugins.flutter.io/device_info').setMockMethodCallHandler(null);
-      const MethodChannel('dev.fluttercommunity.plus/device_info').setMockMethodCallHandler(null);
-      const MethodChannel('com.pravera.flutter_foreground_task/methods').setMockMethodCallHandler(null);
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('plugins.flutter.io/device_info'),
+        null,
+      );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('dev.fluttercommunity.plus/device_info'),
+        null,
+      );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('com.pravera.flutter_foreground_task/methods'),
+        null,
+      );
     });
 
     testWidgets('should render SettingsScreen and display Battery Optimization Tile', (WidgetTester tester) async {
