@@ -34,4 +34,4 @@ For any questions, legal notices, or code licensing inquiries, please contact us
 
 **MeiGamingOfficial**  
 Email: **meigaming.official@gmail.com**  
-GitHub: [https://github.com/meigamingofficial-design](https://github.com/meigamingofficial-design)
+GitHub: https://github.com/meigamingofficial-design

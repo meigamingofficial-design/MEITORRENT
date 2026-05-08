@@ -17,7 +17,7 @@ Meitorrent is a BitTorrent file-transfer client. To function, it facilitates dir
 - **Direct Data Transfer:** All payload bytes are transferred directly between your device and other peers. We do not host, broker, facilitate, or witness these file transfers.
 
 ### 3. Third-Party Services
-- **Google Fonts:** Meitorrent uses Google Fonts to display a premium visual user interface. Fonts are fetched from Google's servers, which may log basic technical parameters (such as your public IP address) strictly for serving the assets, in compliance with [Google's Privacy Policy](https://policies.google.com/privacy).
+- **Google Fonts:** Meitorrent uses Google Fonts to display a premium visual user interface. Fonts are fetched from Google's servers, which may log basic technical parameters (such as your public IP address) strictly for serving the assets, in compliance with Google's Privacy Policy (https://policies.google.com/privacy).
 
 ### 4. Android Device Permissions & Usage Disclosures
 To provide a reliable file-transfer utility, Meitorrent requires the following system permissions, which are strictly limited to technical functionality:
@@ -34,4 +34,4 @@ For any privacy questions, license inquiries, or support requests regarding Meit
 
 **MeiGamingOfficial**  
 Email: **meigaming.official@gmail.com**  
-GitHub: [https://github.com/meigamingofficial-design](https://github.com/meigamingofficial-design)
+GitHub: https://github.com/meigamingofficial-design
