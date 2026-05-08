@@ -30,13 +30,13 @@ void main() async {
   // Capture cold-start magnet link (if the app was opened via magnet:// URI)
   final initialMagnet = await DeepLinkService.instance.initialize();
 
-  // Dark system UI
+  // Light system UI — parchment background
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Color(0xFF0F0F1A),
-      systemNavigationBarIconBrightness: Brightness.light,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: Color(0xFFFAF6EE),
+      systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
 

@@ -1,47 +1,98 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Meitorrent design system — dark premium theme.
+// ─────────────────────────────────────────────────────────────────
+// Meitorrent Design System — Japanese Sumi-e Parchment Theme
+//
+// Palette extracted from the icon:
+//   • Background  : #FAF6EE  (warm ivory parchment)
+//   • Surface     : #FDF9F2  (soft paper white)
+//   • Primary     : #D63031  (crimson rising-sun red)
+//   • Ink/Text    : #1A1A1A  (sumi-e charcoal black)
+//   • Secondary   : #27AE60  (bamboo green — seeding)
+//   • Amber/Warn  : #D35400  (autumn orange — paused)
+//   • Error       : #C0392B  (deep crimson — errors)
+// ─────────────────────────────────────────────────────────────────
 class AppTheme {
   AppTheme._();
 
-  static const _seedColor = Color(0xFF00B894);
-  static const _backgroundColor = Color(0xFF080C14);
-  static const _surfaceColor = Color(0xFF121826);
+  // ── Raw palette constants ──────────────────────────────────────
+  static const _crimson       = Color(0xFFD63031); // Rising-sun red
+  static const _parchment     = Color(0xFFFAF6EE); // Ivory canvas
+  static const _paperWhite    = Color(0xFFFDF9F2); // Card surface
+  static const _inkBlack      = Color(0xFF1A1A1A); // Sumi-e ink
+  static const _bamboo        = Color(0xFF27AE60); // Bamboo green
+  static const _autumnOrange  = Color(0xFFD35400); // Autumn orange
+  static const _deepCrimson   = Color(0xFFC0392B); // Error red
+  static const _inkGrey       = Color(0xFF5D5D5D); // Secondary text
+  static const _inkFaded      = Color(0xFFE8E0D4); // Dividers / borders
 
-  static final ColorScheme _darkScheme = ColorScheme.fromSeed(
-    seedColor: _seedColor,
-    brightness: Brightness.dark,
-  ).copyWith(
-    surface: _surfaceColor,
-    onSurface: const Color(0xFFF0F4F8),
-    surfaceContainerHighest: const Color(0xFF1B2333),
-    primary: _seedColor,
-    secondary: const Color(0xFF2ECC71),
-    error: const Color(0xFFEF4444),
-    tertiary: const Color(0xFF55EFC4),
+  // ── Dark palette ───────────────────────────────────────────────
+  static const _darkInk       = Color(0xFF121212); // Background
+  static const _darkSurface   = Color(0xFF1E1E1E); // Surface
+  static const _boneWhite     = Color(0xFFE0E0E0); // Primary text
+  static const _fadedWhite    = Color(0xFF9E9E9E); // Secondary text
+  static const _darkBorder    = Color(0xFF2C2C2C); // Borders
+
+  // ── Color Scheme ──────────────────────────────────────────────
+  static const ColorScheme _scheme = ColorScheme(
+    brightness: Brightness.light,
+    primary: _crimson,
+    onPrimary: Colors.white,
+    primaryContainer: Color(0xFFFFDADA),
+    onPrimaryContainer: Color(0xFF8B0000),
+    secondary: _bamboo,
+    onSecondary: Colors.white,
+    secondaryContainer: Color(0xFFD4EDDA),
+    onSecondaryContainer: Color(0xFF145A32),
+    tertiary: _autumnOrange,
+    onTertiary: Colors.white,
+    tertiaryContainer: Color(0xFFFFE4CC),
+    onTertiaryContainer: Color(0xFF7B3100),
+    error: _deepCrimson,
+    onError: Colors.white,
+    errorContainer: Color(0xFFFFDAD6),
+    onErrorContainer: Color(0xFF8B0000),
+    surface: _paperWhite,
+    onSurface: _inkBlack,
+    surfaceContainerHighest: _inkFaded,
+    outline: Color(0xFFCCC4BA),
+    outlineVariant: Color(0xFFE8E0D4),
+    shadow: Color(0xFF000000),
+    scrim: Color(0xFF000000),
+    inverseSurface: _inkBlack,
+    onInverseSurface: _parchment,
+    inversePrimary: Color(0xFFFFB3B3),
   );
 
-  static ThemeData get dark {
+  // ── Public ThemeData ──────────────────────────────────────────
+  static ThemeData get light {
     return ThemeData(
       useMaterial3: true,
-      colorScheme: _darkScheme,
-      scaffoldBackgroundColor: _backgroundColor,
+      colorScheme: _scheme,
+      scaffoldBackgroundColor: _parchment,
+
+      // Outfit font — modern yet warm
       textTheme: GoogleFonts.outfitTextTheme(
-        ThemeData.dark().textTheme.apply(
-          bodyColor: const Color(0xFFF0F4F8),
-          displayColor: const Color(0xFFF0F4F8),
+        ThemeData.light().textTheme.apply(
+          bodyColor: _inkBlack,
+          displayColor: _inkBlack,
         ),
       ),
+
+      // ── Card ──────────────────────────────────────────────────
       cardTheme: CardThemeData(
-        color: _surfaceColor,
+        color: _paperWhite,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: Colors.white10),
+          side: const BorderSide(color: Color(0xFFE8E0D4), width: 1),
         ),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        shadowColor: Colors.transparent,
       ),
+
+      // ── AppBar ────────────────────────────────────────────────
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
@@ -50,141 +101,260 @@ class AppTheme {
         titleTextStyle: GoogleFonts.outfit(
           fontSize: 24,
           fontWeight: FontWeight.w800,
-          color: const Color(0xFFF0F4F8),
+          color: _inkBlack,
           letterSpacing: -0.5,
         ),
-        iconTheme: const IconThemeData(color: Color(0xFFF0F4F8)),
+        iconTheme: const IconThemeData(color: _inkBlack),
       ),
+
+      // ── FAB ───────────────────────────────────────────────────
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: _seedColor,
+        backgroundColor: _crimson,
         foregroundColor: Colors.white,
-        elevation: 8,
+        elevation: 4,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
       ),
+
+      // ── Elevated Button ───────────────────────────────────────
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: _seedColor,
+          backgroundColor: _crimson,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           textStyle: GoogleFonts.outfit(fontWeight: FontWeight.w700),
+          elevation: 0,
         ),
       ),
+
+      // ── Outlined Button ───────────────────────────────────────
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Colors.white24),
-          foregroundColor: Colors.white70,
+          side: const BorderSide(color: Color(0xFFCCC4BA)),
+          foregroundColor: _inkGrey,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
         ),
       ),
+
+      // ── Text Button ───────────────────────────────────────────
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: _inkGrey,
+        ),
+      ),
+
+      // ── Input ─────────────────────────────────────────────────
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF121826),
+        fillColor: const Color(0xFFF4EDE0),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.white12),
+          borderSide: const BorderSide(color: Color(0xFFDDD5C8)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: _seedColor, width: 1.5),
+          borderSide: const BorderSide(color: _crimson, width: 1.5),
         ),
-        hintStyle: const TextStyle(color: Colors.white30),
+        hintStyle: TextStyle(color: _inkBlack.withValues(alpha: 0.35)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
+
+      // ── SnackBar ──────────────────────────────────────────────
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: const Color(0xFF1B2333),
-        contentTextStyle: GoogleFonts.outfit(color: Colors.white),
+        backgroundColor: _inkBlack,
+        contentTextStyle: GoogleFonts.outfit(color: const Color(0xFFFAF6EE)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         behavior: SnackBarBehavior.floating,
       ),
+
+      // ── Divider ───────────────────────────────────────────────
       dividerTheme: const DividerThemeData(
-        color: Colors.white10,
+        color: Color(0xFFE8E0D4),
         thickness: 1,
       ),
+
+      // ── Switch ────────────────────────────────────────────────
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
-              ? _seedColor
-              : Colors.white38,
+              ? _crimson
+              : const Color(0xFFCCC4BA),
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
-              ? _seedColor.withValues(alpha: 0.3)
-              : Colors.white12,
+              ? _crimson.withValues(alpha: 0.25)
+              : const Color(0xFFE8E0D4),
         ),
       ),
+
+      // ── Popup Menu ────────────────────────────────────────────
+      popupMenuTheme: PopupMenuThemeData(
+        color: _paperWhite,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE8E0D4)),
+        ),
+        elevation: 4,
+        shadowColor: Colors.black12,
+      ),
+
+      // ── Dialog ────────────────────────────────────────────────
+      dialogTheme: DialogThemeData(
+        backgroundColor: _paperWhite,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 8,
+      ),
+
+      // ── Progress Indicator ────────────────────────────────────
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: _crimson,
+      ),
+    );
+  }
+
+  /// Dark Sumi-e Theme — Deep Ink & Bone White
+  static ThemeData get dark {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: const ColorScheme.dark(
+        primary: _crimson,
+        surface: _darkInk,
+        onSurface: _boneWhite,
+        surfaceContainer: _darkSurface,
+        onSurfaceVariant: _fadedWhite,
+        outline: _darkBorder,
+      ),
+      scaffoldBackgroundColor: _darkInk,
+      textTheme: GoogleFonts.outfitTextTheme(const TextTheme()).copyWith(
+        displayLarge: const TextStyle(color: _boneWhite, fontWeight: FontWeight.w800),
+        titleLarge: const TextStyle(color: _boneWhite, fontWeight: FontWeight.w700),
+        bodyMedium: const TextStyle(color: _boneWhite),
+        bodySmall: const TextStyle(color: _fadedWhite),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        iconTheme: IconThemeData(color: _boneWhite),
+        titleTextStyle: TextStyle(
+          color: _boneWhite,
+          fontSize: 20,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: _darkSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: _darkBorder),
+        ),
+      ),
+      dividerTheme: const DividerThemeData(color: _darkBorder, thickness: 1),
     );
   }
 }
 
-/// Semantic color palette — maps TorrentState to accent colors.
+// ─────────────────────────────────────────────────────────────────
+// Semantic colors — torrent state accent colours
+// ─────────────────────────────────────────────────────────────────
 class AppColors {
   AppColors._();
 
-  static const downloading = Color(0xFF00B894);
-  static const seeding = Color(0xFF2ECC71);
-  static const paused = Color(0xFFF59E0B);
-  static const error = Color(0xFFEF4444);
-  static const finished = Color(0xFF55EFC4);
-  static const unknown = Color(0xFF6B7280);
-  static const metadata = Color(0xFFBDC3C7);
-  static const checking = Color(0xFFBDC3C7);
+  // ── Theme-Aware Semantic Colors ──────────────────────────────────
+  static Color surface(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.light ? paperWhite : darkSurface;
+
+  static Color background(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.light ? parchment : darkBackground;
+
+  static Color text(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.light ? inkBlack : const Color(0xFFE0E0E0);
+
+  static Color textSecondary(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.light ? inkGrey : const Color(0xFF9E9E9E);
+
+  static Color border(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.light ? inkFaded : const Color(0xFF2C2C2C);
+
+  // ── Static Palette ───────────────────────────────────────────────
+  static const parchment      = Color(0xFFFAF6EE); // light background
+  static const paperWhite     = Color(0xFFFDF9F2); // light surface
+  static const darkBackground = Color(0xFF121212); // dark background
+  static const darkSurface    = Color(0xFF1E1E1E); // dark surface
+  
+  static const inputFill      = Color(0xFFF4EDE0); // text field fill (light)
+  static const inkBlack       = Color(0xFF1A1A1A); // primary text (light)
+  static const inkGrey        = Color(0xFF5D5D5D); // secondary text (light)
+  static const inkFaded       = Color(0xFFE8E0D4); // borders / dividers (light)
+
+  // ── Torrent state colours (Static across themes) ──────────────────
+  static const downloading    = Color(0xFFD63031); // crimson red
+  static const downloadingDark= Color(0xFFC23616); // deep crimson
+  static const seeding        = Color(0xFF27AE60); // bamboo green
+  static const paused         = Color(0xFFD35400); // autumn orange
+  static const error          = Color(0xFFC0392B); // deep crimson
+  static const finished       = Color(0xFF1E8449); // forest green
+  static const unknown        = Color(0xFF8E8E8E); // slate grey
+  static const metadata       = Color(0xFF9E9E9E); 
+  static const checking       = Color(0xFF9E9E9E);
 }
 
-/// Reusable gradient definitions for the premium glassmorphism UI.
+// ─────────────────────────────────────────────────────────────────
+// Gradient definitions
+// ─────────────────────────────────────────────────────────────────
 class AppGradients {
   AppGradients._();
 
-  /// Primary Emerald → Deep Mint gradient.
+  /// Primary crimson gradient (FAB, CTAs).
   static const primary = LinearGradient(
-    colors: [Color(0xFF00B894), Color(0xFF00A382)],
+    colors: [Color(0xFFE84118), Color(0xFFC23616)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Seeding gradient — Green → Soft Mint.
+  /// Seeding gradient — bamboo green.
   static const seeding = LinearGradient(
-    colors: [Color(0xFF00B894), Color(0xFF55EFC4)],
+    colors: [Color(0xFF2ECC71), Color(0xFF27AE60)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Error gradient — Red → Deep Red.
+  /// Error gradient.
   static const error = LinearGradient(
-    colors: [Color(0xFFFF5252), Color(0xFFD32F2F)],
+    colors: [Color(0xFFE74C3C), Color(0xFFC0392B)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Paused gradient — Amber → Orange.
+  /// Paused gradient — autumn orange.
   static const paused = LinearGradient(
-    colors: [Color(0xFFFFB86C), Color(0xFFF59E0B)],
+    colors: [Color(0xFFF39C12), Color(0xFFD35400)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Glassmorphism card surface with subtle Emerald tint.
+  /// Subtle crimson card tint.
   static const cardSurface = LinearGradient(
-    colors: [Color(0x1A00B894), Color(0x0A00A382)],
+    colors: [Color(0x08D63031), Color(0x04C23616)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Active glow border gradient.
+  /// Active selection / border gradient.
   static const activeBorder = LinearGradient(
-    colors: [Color(0x8000B894), Color(0x4055EFC4)],
+    colors: [Color(0x40D63031), Color(0x20C23616)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 }
-

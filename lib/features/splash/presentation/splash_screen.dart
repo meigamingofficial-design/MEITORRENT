@@ -10,6 +10,7 @@ import '../../../core/services/logger_service.dart';
 import '../../../data/models/torrent_model.dart';
 import '../../torrent_list/presentation/controllers/torrent_notifier.dart';
 import '../../torrent_list/presentation/screens/dashboard_screen.dart';
+import '../../../core/theme/app_theme.dart';
 
 /// Splash screen that orchestrates:
 /// 1. Permission requests (notifications, battery optimization)
@@ -142,7 +143,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: const Color(0xFF0F0F1A),
+        backgroundColor: AppColors.parchment,
         body: SafeArea(
           child: Stack(
             children: [
@@ -164,8 +165,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF00B894).withValues(
-                                    alpha: 0.6 * _glowOpacity.value,
+                                  color: AppColors.downloading.withValues(
+                                    alpha: 0.5 * _glowOpacity.value,
                                   ),
                                   blurRadius: 60,
                                   spreadRadius: 20,
@@ -184,17 +185,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                   colors: [
-                                    const Color(0xFF00B894)
+                                    AppColors.downloading
                                         .withValues(alpha: _logoOpacity.value),
-                                    const Color(0xFF9D4EDD)
+                                    AppColors.downloadingDark
                                         .withValues(alpha: _logoOpacity.value),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(28),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF00B894).withValues(
-                                      alpha: 0.4 * _logoOpacity.value,
+                                    color: AppColors.downloading.withValues(
+                                      alpha: 0.35 * _logoOpacity.value,
                                     ),
                                     blurRadius: 20,
                                     offset: const Offset(0, 8),
@@ -222,7 +223,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white.withValues(alpha: _logoOpacity.value),
+                          color: AppColors.inkBlack
+                              .withValues(alpha: _logoOpacity.value),
                           letterSpacing: -0.5,
                         ),
                       ),
@@ -234,8 +236,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         'Fast. Private. Reliable.',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.white.withValues(
-                            alpha: _logoOpacity.value * 0.54,
+                          color: AppColors.inkGrey.withValues(
+                            alpha: _logoOpacity.value * 0.7,
                           ),
                           letterSpacing: 1.2,
                         ),
@@ -251,7 +253,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         height: 24,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Color(0xFF00B894),
+                          color: AppColors.downloading,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -260,13 +262,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         child: Text(
                           _statusText,
                           key: ValueKey(_statusText),
-                          style:
-                              const TextStyle(color: Colors.white38, fontSize: 13),
+                          style: const TextStyle(
+                              color: AppColors.inkGrey, fontSize: 13),
                         ),
                       ),
                     ] else ...[
                       const Icon(Icons.error_outline,
-                          color: Color(0xFFFF5555), size: 32),
+                          color: AppColors.error, size: 32),
                       const SizedBox(height: 12),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -274,7 +276,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           _statusText,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
-                              color: Color(0xFFFF5555), fontSize: 13),
+                              color: AppColors.error, fontSize: 13),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -301,7 +303,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         Text(
                           'from',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: AppColors.inkGrey,
                             fontSize: 10,
                             letterSpacing: 2,
                             fontWeight: FontWeight.w500,
@@ -311,7 +313,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         Text(
                           'MeiGamingOfficial',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: AppColors.inkBlack,
                             fontSize: 13,
                             letterSpacing: 1.5,
                             fontWeight: FontWeight.w700,

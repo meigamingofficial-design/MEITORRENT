@@ -7,6 +7,8 @@ import '../../../../core/services/oem_battery_guard.dart';
 
 import '../../../../core/utils/speed_formatter.dart';
 import '../controllers/settings_notifier.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/theme_service.dart';
 
 /// Settings screen — engine configuration, speed limits, protocol toggles.
 class SettingsScreen extends ConsumerWidget {
@@ -16,6 +18,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(settingsNotifierProvider);
     final notifier = ref.read(settingsNotifierProvider.notifier);
+    final isDark = ref.isDarkMode;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
@@ -23,18 +26,28 @@ class SettingsScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.symmetric(vertical: 8),
           children: [
+            // ── Appearance ────────────────────────────────────────────
+            const _SectionHeader(title: 'Appearance'),
+            _SwitchTile(
+              icon: Icons.dark_mode_outlined,
+              label: 'Dark Mode',
+              subtitle: 'Use a darker sumi-e aesthetic',
+              value: isDark,
+              onChanged: (_) async => ref.read(themeServiceProvider.notifier).toggle(),
+            ),
+
             // ── Speed Limits ──────────────────────────────────────────
             const _SectionHeader(title: 'Speed Limits'),
             _SpeedLimitTile(
               icon: Icons.arrow_downward_rounded,
-              iconColor: const Color(0xFF00B894),
+              iconColor: AppColors.downloading,
               label: 'Download Limit',
               currentBps: config.downloadLimit,
               onChanged: notifier.setDownloadLimit,
             ),
             _SpeedLimitTile(
               icon: Icons.arrow_upward_rounded,
-              iconColor: const Color(0xFF2ECC71),
+              iconColor: AppColors.seeding,
               label: 'Upload Limit',
               currentBps: config.uploadLimit,
               onChanged: notifier.setUploadLimit,
@@ -121,7 +134,7 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         title.toUpperCase(),
         style: const TextStyle(
-          color: Color(0xFF00B894),
+          color: AppColors.downloading,
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.2,
@@ -167,9 +180,9 @@ class _SpeedLimitTile extends StatelessWidget {
         ),
         child: Icon(icon, color: iconColor, size: 20),
       ),
-      title: Text(label, style: const TextStyle(color: Colors.white, fontSize: 14)),
-      subtitle: Text(displayLabel, style: const TextStyle(color: Colors.white38, fontSize: 12)),
-      trailing: const Icon(Icons.chevron_right, color: Colors.white24),
+      title: Text(label, style: const TextStyle(fontSize: 14)),
+      subtitle: Text(displayLabel, style: const TextStyle(color: AppColors.inkGrey, fontSize: 12)),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.inkFaded),
       onTap: () => _showPicker(context),
     );
   }
@@ -181,9 +194,9 @@ class _SpeedLimitTile extends StatelessWidget {
       builder: (_) => Container(
         margin: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFF111721),
+          color: AppColors.paperWhite,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white10),
+          border: Border.all(color: AppColors.inkFaded),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -191,7 +204,7 @@ class _SpeedLimitTile extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(20),
               child: Text(label,
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+                  style: const TextStyle(color: AppColors.inkBlack, fontSize: 16, fontWeight: FontWeight.w700)),
             ),
             ...List.generate(_presets.length, (i) {
               final bps = _presets[i] * 1024;
@@ -199,9 +212,9 @@ class _SpeedLimitTile extends StatelessWidget {
               return ListTile(
                 title: Text(_presetLabels[i],
                     style: TextStyle(
-                        color: selected ? const Color(0xFF00B894) : Colors.white70,
+                        color: selected ? AppColors.downloading : AppColors.inkGrey,
                         fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
-                trailing: selected ? const Icon(Icons.check, color: Color(0xFF00B894), size: 18) : null,
+                trailing: selected ? const Icon(Icons.check, color: AppColors.downloading, size: 18) : null,
                 onTap: () {
                   onChanged(bps);
                   Navigator.pop(context);
@@ -240,13 +253,13 @@ class _SwitchTile extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: AppColors.inkFaded,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, color: Colors.white54, size: 20),
+        child: Icon(icon, color: AppColors.inkGrey, size: 20),
       ),
-      title: Text(label, style: const TextStyle(color: Colors.white, fontSize: 14)),
-      subtitle: Text(subtitle, style: const TextStyle(color: Colors.white38, fontSize: 12)),
+      title: Text(label, style: const TextStyle(fontSize: 14)),
+      subtitle: Text(subtitle, style: const TextStyle(color: AppColors.inkGrey, fontSize: 12)),
       trailing: Switch(
         value: value,
         onChanged: onChanged,
@@ -271,23 +284,23 @@ class _ConnectionsTile extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: AppColors.inkFaded,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: const Icon(Icons.people_outline, color: Colors.white54, size: 20),
+        child: const Icon(Icons.people_outline, color: AppColors.inkGrey, size: 20),
       ),
-      title: const Text('Max Connections', style: TextStyle(color: Colors.white, fontSize: 14)),
-      subtitle: Text('$current peers', style: const TextStyle(color: Colors.white38, fontSize: 12)),
-      trailing: const Icon(Icons.chevron_right, color: Colors.white24),
+      title: const Text('Max Connections', style: TextStyle(fontSize: 14)),
+      subtitle: Text('$current peers', style: const TextStyle(color: AppColors.inkGrey, fontSize: 12)),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.inkFaded),
       onTap: () => showModalBottomSheet<void>(
         context: context,
         backgroundColor: Colors.transparent,
         builder: (_) => Container(
           margin: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFF111721),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white10),
+            border: Border.all(color: AppColors.inkFaded),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -295,16 +308,16 @@ class _ConnectionsTile extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.all(20),
                 child: Text('Max Global Connections',
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+                    style: TextStyle(color: AppColors.inkBlack, fontSize: 16, fontWeight: FontWeight.w700)),
               ),
               ..._options.map((n) {
                 final selected = current == n;
                 return ListTile(
                   title: Text('$n peers',
                       style: TextStyle(
-                          color: selected ? const Color(0xFF00B894) : Colors.white70,
+                          color: selected ? AppColors.downloading : AppColors.inkGrey,
                           fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
-                  trailing: selected ? const Icon(Icons.check, color: Color(0xFF00B894), size: 18) : null,
+                  trailing: selected ? const Icon(Icons.check, color: AppColors.downloading, size: 18) : null,
                   onTap: () {
                     onChanged(n);
                     Navigator.pop(context);
@@ -331,7 +344,7 @@ class _AboutTile extends StatelessWidget {
         height: 40,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF00B894), Color(0xFF00A382)],
+            colors: [AppColors.downloading, Color(0xFFC23616)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -342,7 +355,6 @@ class _AboutTile extends StatelessWidget {
       title: const Text(
         'Meitorrent',
         style: TextStyle(
-          color: Colors.white,
           fontSize: 14,
           fontWeight: FontWeight.w700,
         ),
@@ -354,13 +366,13 @@ class _AboutTile extends StatelessWidget {
           SizedBox(height: 2),
           Text(
             'v1.0.0 · Fast. Private. Reliable.',
-            style: TextStyle(color: Colors.white38, fontSize: 11),
+            style: TextStyle(color: AppColors.inkGrey, fontSize: 11),
           ),
           SizedBox(height: 1),
           Text(
             'Designed & Developed by MeiGamingOfficial',
             style: TextStyle(
-              color: Color(0xFF00B894),
+              color: AppColors.downloading,
               fontSize: 10,
               fontWeight: FontWeight.w600,
             ),
@@ -388,13 +400,13 @@ class _LegalTile extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
+          color: AppColors.inkFaded,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, color: Colors.white54, size: 20),
+        child: Icon(icon, color: AppColors.inkGrey, size: 20),
       ),
-      title: Text(label, style: const TextStyle(color: Colors.white, fontSize: 14)),
-      trailing: const Icon(Icons.chevron_right, color: Colors.white24),
+      title: Text(label, style: const TextStyle(fontSize: 14)),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.inkFaded),
       onTap: () async {
         try {
           final content = await DefaultAssetBundle.of(context).loadString(assetPath);
@@ -434,7 +446,7 @@ class _LegalDetailScreen extends StatelessWidget {
         child: SelectableText(
           content,
           style: const TextStyle(
-            color: Colors.white70,
+            color: AppColors.inkBlack,
             fontSize: 14,
             height: 1.8,
             letterSpacing: 0.2,
@@ -521,27 +533,27 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile> with
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.06),
+              color: AppColors.inkFaded,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               _isIgnored ? Icons.battery_charging_full_rounded : Icons.battery_alert_rounded,
-              color: _isIgnored ? const Color(0xFF00B894) : const Color(0xFFFFB86C),
+              color: _isIgnored ? AppColors.seeding : AppColors.paused,
               size: 20,
             ),
           ),
-          title: const Text('Ignore Battery Optimizations', style: TextStyle(color: Colors.white, fontSize: 14)),
+          title: const Text('Ignore Battery Optimizations', style: TextStyle(fontSize: 14)),
           subtitle: Text(
             _isIgnored
                 ? 'Battery optimizations are disabled'
                 : 'Helps keep torrent downloads active when the app is in the background or screen is off',
-            style: const TextStyle(color: Colors.white38, fontSize: 12),
+            style: const TextStyle(color: AppColors.inkGrey, fontSize: 12),
           ),
           trailing: _isLoading
               ? const SizedBox(
                   width: 24,
                   height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF00B894)),
+                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.downloading),
                 )
               : Switch(
                   value: _isIgnored,
@@ -565,21 +577,21 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile> with
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFB86C).withValues(alpha: 0.08),
+                color: AppColors.paused.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFFFB86C).withValues(alpha: 0.15)),
+                border: Border.all(color: AppColors.paused.withValues(alpha: 0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.info_outline, color: Color(0xFFFFB86C), size: 16),
+                      const Icon(Icons.info_outline, color: AppColors.paused, size: 16),
                       const SizedBox(width: 8),
                       Text(
                         'Detected $_oemName Device',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.inkBlack,
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
@@ -589,7 +601,7 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile> with
                   const SizedBox(height: 6),
                   const Text(
                     'Your device enforces custom battery restrictions. For stable downloads, please set Meitorrent to "Unrestricted" and enable "Auto-start".',
-                    style: TextStyle(color: Colors.white60, fontSize: 11, height: 1.3),
+                    style: TextStyle(color: AppColors.inkGrey, fontSize: 11, height: 1.3),
                   ),
                   const SizedBox(height: 10),
                   InkWell(
@@ -603,13 +615,13 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile> with
                           Text(
                             'Configure OEM Settings',
                             style: TextStyle(
-                              color: Color(0xFF00B894),
+                              color: AppColors.downloading,
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           SizedBox(width: 4),
-                          Icon(Icons.arrow_forward_rounded, color: Color(0xFF00B894), size: 12),
+                          Icon(Icons.arrow_forward_rounded, color: AppColors.downloading, size: 12),
                         ],
                       ),
                     ),

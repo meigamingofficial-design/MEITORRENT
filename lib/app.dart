@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/services/deep_link_service.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_service.dart';
 import 'features/splash/presentation/splash_screen.dart';
 import 'features/torrent_list/presentation/controllers/torrent_notifier.dart';
 import 'features/torrent_list/presentation/widgets/add_torrent_dialog.dart';
@@ -68,7 +69,9 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
       builder: (_) => AddTorrentDialog(
         initialMagnetUri: magnetUri,
         onMagnetAdded: (uri, path) {
-          ref.read(torrentNotifierProvider.notifier).addMagnet(uri, savePath: path);
+          ref
+              .read(torrentNotifierProvider.notifier)
+              .addMagnet(uri, savePath: path);
           ScaffoldMessenger.of(ctx).showSnackBar(
             SnackBar(
               content: const Row(
@@ -79,7 +82,7 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
                   Text('Torrent added from browser'),
                 ],
               ),
-              backgroundColor: const Color(0xFF111721),
+              backgroundColor: AppColors.paperWhite,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
@@ -98,18 +101,23 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch the theme service. If it's still loading, default to light.
+    final themeMode = ref.watch(themeServiceProvider).valueOrNull ?? ThemeMode.light;
+
     return MaterialApp(
       title: 'Meitorrent',
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
+      
+      // Use our centralized theme definitions
+      theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.dark,
+      themeMode: themeMode,
+
       builder: (context, child) {
         final mq = MediaQuery.of(context);
         return MediaQuery(
           data: mq.copyWith(
-            // Hard-lock text scale to 1.0 to completely ignore system font size settings
             textScaler: TextScaler.noScaling,
           ),
           child: child!,

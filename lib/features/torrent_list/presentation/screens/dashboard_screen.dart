@@ -40,7 +40,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         final totalSpeed = activeDownloading.fold<int>(0, (s, t) => s + t.downloadSpeed);
         if (totalSpeed == 0) {
           _zeroSpeedTicks++;
-          if (_zeroSpeedTicks >= 15) { // ~15 consecutive updates with zero speed
+          if (_zeroSpeedTicks >= 15) {
             _zeroSpeedTicks = 0;
             _showBackgroundWarningPrompt(context);
           }
@@ -66,14 +66,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         body: torrentsAsync.when(
           loading: () => const Center(
             child: CircularProgressIndicator(
-              color: Color(0xFF00B894),
+              color: AppColors.downloading,
               strokeWidth: 2,
             ),
           ),
           error: (e, _) => _ErrorBody(error: e.toString()),
           data: (torrents) {
             if (torrents.isEmpty) return const SafeArea(child: EmptyStateWidget());
-            
+
             return SafeArea(
               bottom: false,
               child: CustomScrollView(
@@ -139,35 +139,38 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     if (isSelectionMode) {
       return PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight + 50), // Increased to allow for SafeArea
+        preferredSize: const Size.fromHeight(kToolbarHeight + 50),
         child: SafeArea(
           bottom: false,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF111721),
+              color: AppColors.paperWhite,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF00B894).withValues(alpha: 0.15),
+                  color: AppColors.downloading.withValues(alpha: 0.12),
                   blurRadius: 20,
                   offset: const Offset(0, 4),
                 ),
               ],
-              border: Border.all(color: const Color(0xFF00B894).withValues(alpha: 0.5), width: 1.5),
+              border: Border.all(
+                color: AppColors.downloading.withValues(alpha: 0.4),
+                width: 1.5,
+              ),
             ),
             child: AppBar(
               elevation: 0,
               backgroundColor: Colors.transparent,
               leading: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white70),
+                icon: const Icon(Icons.close, color: AppColors.inkGrey),
                 onPressed: () => ref.read(selectedTorrentsProvider.notifier).clear(),
               ),
               title: Text(
                 '${selectedIds.length} Selected',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.inkBlack,
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
@@ -209,7 +212,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 const SizedBox(width: 4),
                 _SelectionAction(
                   icon: Icons.delete_outline_rounded,
-                  color: const Color(0xFFEF4444),
+                  color: AppColors.error,
                   tooltip: 'Delete',
                   onPressed: () => _confirmDeleteMultiple(context, ref, selectedIds.toList()),
                 ),
@@ -237,7 +240,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert),
-          color: const Color(0xFF111721),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           onSelected: (v) {
             final notifier = ref.read(torrentNotifierProvider.notifier);
@@ -295,7 +297,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: _MenuItem(
                 icon: Icons.delete_outline_rounded,
                 label: 'Delete All',
-                color: Color(0xFFEF4444),
+                color: AppColors.error,
               ),
             ),
             const PopupMenuDivider(height: 1),
@@ -304,7 +306,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: _MenuItem(
                 icon: Icons.logout_rounded,
                 label: 'Exit App',
-                color: Colors.white60,
               ),
             ),
           ],
@@ -341,22 +342,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF111721),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Text('Exit Meitorrent?',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
         content: const Text(
           'Torrents will continue to download in the background.',
-          style: TextStyle(color: Colors.white70, fontSize: 14),
+          style: TextStyle(color: AppColors.inkGrey, fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white38)),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF00B894),
+              backgroundColor: AppColors.downloading,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
@@ -379,31 +379,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF111721),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Row(
           children: [
-            const Icon(Icons.delete_sweep_outlined,
-                color: Color(0xFFEF4444), size: 22),
+            const Icon(Icons.delete_sweep_outlined, color: AppColors.error, size: 22),
             const SizedBox(width: 10),
             Text(isAll ? 'Delete All Torrents?' : 'Delete Selected?',
-                style: const TextStyle(color: Colors.white, fontSize: 18)),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
           ],
         ),
         content: Text(
           isAll
               ? 'This will remove all torrents from your list.'
               : 'Remove ${ids.length} selected torrents?',
-          style: const TextStyle(color: Colors.white70, fontSize: 14),
+          style: const TextStyle(color: AppColors.inkGrey, fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white38)),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
+              backgroundColor: AppColors.error,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
             ),
@@ -416,7 +414,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFEF4444),
+              backgroundColor: AppColors.error,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
             ),
@@ -436,7 +434,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   void _showBackgroundWarningPrompt(BuildContext context) {
     if (!mounted) return;
-    
+
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -444,9 +442,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         margin: const EdgeInsets.all(16),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xFF111721),
+          color: AppColors.paperWhite,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFFFB86C).withValues(alpha: 0.2)),
+          border: Border.all(color: AppColors.paused.withValues(alpha: 0.25)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -457,16 +462,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFB86C).withValues(alpha: 0.1),
+                    color: AppColors.paused.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.bolt_rounded, color: Color(0xFFFFB86C), size: 20),
+                  child: const Icon(Icons.bolt_rounded, color: AppColors.paused, size: 20),
                 ),
                 const SizedBox(width: 12),
                 const Text(
                   'Sluggish Download Speeds?',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColors.inkBlack,
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                   ),
@@ -476,7 +481,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             const SizedBox(height: 12),
             const Text(
               'Your downloads may be throttled or paused by system battery limits. Whitelisting Meitorrent helps keep transfers active when the screen is locked.',
-              style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.4),
+              style: TextStyle(color: AppColors.inkGrey, fontSize: 13, height: 1.4),
             ),
             const SizedBox(height: 20),
             Row(
@@ -484,8 +489,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 Expanded(
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white38,
-                      side: const BorderSide(color: Colors.white10),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
@@ -497,7 +500,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 Expanded(
                   child: FilledButton(
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF00B894),
+                      backgroundColor: AppColors.downloading,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
@@ -546,7 +549,7 @@ class _SelectionAction extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             child: Container(
               padding: const EdgeInsets.all(8),
-              child: Icon(icon, color: color ?? Colors.white, size: 22),
+              child: Icon(icon, color: color ?? AppColors.inkBlack, size: 22),
             ),
           ),
         ),
@@ -572,13 +575,13 @@ class _CompactSpeedTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFF00B894).withValues(alpha: 0.1),
+          color: AppColors.downloading.withValues(alpha: 0.07),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF00B894).withValues(alpha: 0.1)),
+          border: Border.all(color: AppColors.downloading.withValues(alpha: 0.15)),
         ),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFF00B894), size: 16),
+            Icon(icon, color: AppColors.downloading, size: 16),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
@@ -587,14 +590,14 @@ class _CompactSpeedTile extends StatelessWidget {
                   Text(
                     value,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.inkBlack,
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   Text(
                     label,
-                    style: const TextStyle(color: Colors.white38, fontSize: 10),
+                    style: const TextStyle(color: AppColors.inkGrey, fontSize: 10),
                   ),
                 ],
               ),
@@ -614,15 +617,16 @@ class _MenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = color ?? AppColors.inkBlack;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: color ?? Colors.white.withValues(alpha: 0.7), size: 18),
+        Icon(icon, color: c.withValues(alpha: 0.75), size: 18),
         const SizedBox(width: 12),
         Text(
           label,
           style: TextStyle(
-            color: color ?? Colors.white.withValues(alpha: 0.9),
+            color: c,
             fontSize: 14,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.1,
@@ -682,7 +686,7 @@ class _GradientFABState extends State<_GradientFAB>
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF00B894).withValues(alpha: 0.4),
+                color: AppColors.downloading.withValues(alpha: 0.35),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -724,13 +728,12 @@ class _ErrorBody extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded,
-                color: Color(0xFFFF5555), size: 52),
+            const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 52),
             const SizedBox(height: 16),
             const Text(
               'Something went wrong',
               style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.inkBlack,
                   fontSize: 18,
                   fontWeight: FontWeight.w600),
             ),
@@ -738,7 +741,7 @@ class _ErrorBody extends StatelessWidget {
             Text(
               error,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white38, fontSize: 13),
+              style: const TextStyle(color: AppColors.inkGrey, fontSize: 13),
             ),
           ],
         ),

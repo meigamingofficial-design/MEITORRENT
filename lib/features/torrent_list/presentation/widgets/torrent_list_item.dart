@@ -116,8 +116,8 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                     .toggle(widget.torrentId);
               },
               borderRadius: BorderRadius.circular(24),
-              splashColor: const Color(0xFF00B894).withValues(alpha: 0.12),
-              highlightColor: const Color(0xFF00B894).withValues(alpha: 0.06),
+              splashColor: AppColors.downloading.withValues(alpha: 0.12),
+              highlightColor: AppColors.downloading.withValues(alpha: 0.06),
               child: Stack(
                 children: [
                   AnimatedPadding(
@@ -136,7 +136,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.inkBlack,
                                   fontWeight: FontWeight.w700,
                                   fontSize: 15,
                                   letterSpacing: -0.2,
@@ -154,14 +154,14 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                             const SizedBox(width: 4),
                             Text(
                               SpeedFormatter.format(status.downloadSpeed.toInt()),
-                              style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
+                              style: const TextStyle(color: AppColors.inkGrey, fontSize: 12, fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(width: 12),
-                            const Icon(Icons.people_outline_rounded, color: Colors.white38, size: 14),
+                            const Icon(Icons.people_outline_rounded, color: AppColors.inkGrey, size: 14),
                             const SizedBox(width: 4),
                             Text(
                               status.peers.toString(),
-                              style: const TextStyle(color: Colors.white38, fontSize: 12),
+                              style: const TextStyle(color: AppColors.inkGrey, fontSize: 12),
                             ),
                             const Spacer(),
                             Text(
@@ -180,7 +180,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                             Container(
                               height: 6,
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.05),
+                                color: AppColors.inkFaded,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
@@ -206,7 +206,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                         ),
                                       );
                                     },
-                                    onEnd: () {}, // Not needed as it will rebuild on state change or we could use a custom controller if we wanted infinite loop without state change, but state changes often enough in torrents. Actually, let's use a Repeatable animation for better effect.
+                                    onEnd: () {},
                                   )
                                 : AnimatedContainer(
                                     duration: const Duration(milliseconds: 600),
@@ -233,8 +233,8 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                               '${SizeFormatter.format(status.downloadedBytes)} / '
                               '${SizeFormatter.format(status.totalSize)}',
                               style: TextStyle(
-                                color: Colors.white.withValues(
-                                  alpha: isFinished ? 0.20 : 0.30,
+                                color: AppColors.inkGrey.withValues(
+                                  alpha: isFinished ? 0.50 : 0.75,
                                 ),
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
@@ -261,22 +261,22 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: isSelected ? const Color(0xFF00B894) : Colors.white.withValues(alpha: 0.05),
+                          color: isSelected ? AppColors.downloading : AppColors.inkFaded.withValues(alpha: 0.4),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: isSelected ? Colors.white : Colors.white24,
+                            color: isSelected ? AppColors.downloading : AppColors.inkFaded,
                             width: 1.5,
                           ),
                           boxShadow: isSelected ? [
                             BoxShadow(
-                              color: const Color(0xFF00B894).withValues(alpha: 0.3),
+                              color: AppColors.downloading.withValues(alpha: 0.3),
                               blurRadius: 8,
                             )
                           ] : null,
                         ),
                         child: Icon(
                           Icons.check,
-                          color: isSelected ? Colors.white : Colors.transparent,
+                          color: isSelected ? AppColors.paperWhite : Colors.transparent,
                           size: 14,
                         ),
                       ),
@@ -314,8 +314,8 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
   void _showError(ScaffoldMessengerState messenger, String message) {
     messenger.showSnackBar(
       SnackBar(
-        content: Text(message, style: const TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFFFF5555),
+        content: Text(message, style: const TextStyle(color: AppColors.paperWhite)),
+        backgroundColor: AppColors.error,
         duration: const Duration(seconds: 3),
       ),
     );
@@ -360,10 +360,10 @@ class _GlassCard extends StatelessWidget {
     final borderColor = isSelected
         ? primaryColor
         : hasError
-            ? const Color(0x80FF5555)
+            ? AppColors.error.withValues(alpha: 0.5)
             : isActive
-                ? primaryColor.withValues(alpha: 0.5)
-                : const Color(0x1AFFFFFF);
+                ? primaryColor.withValues(alpha: 0.45)
+                : AppColors.inkFaded;
 
     final borderWidth = isSelected || isActive ? 1.5 : 1.0;
 
@@ -371,16 +371,15 @@ class _GlassCard extends StatelessWidget {
       duration: const Duration(milliseconds: 350),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        color:
-            isSelected ? primaryColor.withValues(alpha: 0.15) : null,
+        color: isSelected ? primaryColor.withValues(alpha: 0.10) : null,
         gradient: isSelected
             ? null
             : LinearGradient(
                 colors: hasError
-                    ? [const Color(0x1AFF5252), const Color(0x0DFF5252)]
+                    ? [AppColors.error.withValues(alpha: 0.08), AppColors.error.withValues(alpha: 0.04)]
                     : [
-                        primaryColor.withValues(alpha: 0.1),
-                        const Color(0xFF080C14).withValues(alpha: 0.1)
+                        AppColors.paperWhite,
+                        AppColors.parchment,
                       ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -397,10 +396,10 @@ class _GlassCard extends StatelessWidget {
               ]
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.25),
-                  blurRadius: 10,
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 8,
                   spreadRadius: 0,
-                  offset: const Offset(0, 3),
+                  offset: const Offset(0, 2),
                 ),
               ],
       ),
@@ -484,7 +483,7 @@ class _ActionButtons extends ConsumerWidget {
         if (isPaused || isStopped)
           _CircleIconButton(
             icon: Icons.play_arrow_rounded,
-            color: const Color(0xFF00B894),
+            color: AppColors.seeding,
             onTap: () async {
               try {
                 await notifier.resumeTorrent(status.id);
@@ -497,7 +496,7 @@ class _ActionButtons extends ConsumerWidget {
         else
           _CircleIconButton(
             icon: isDone ? Icons.check_circle_outline_rounded : Icons.pause_rounded,
-            color: isDone ? const Color(0xFF2ECC71) : Colors.white70,
+            color: isDone ? AppColors.finished : AppColors.inkGrey,
             onTap: () async {
               try {
                 await notifier.pauseTorrent(status.id);
@@ -510,7 +509,7 @@ class _ActionButtons extends ConsumerWidget {
         if (!isStopped)
           _CircleIconButton(
             icon: Icons.stop_rounded,
-            color: Colors.white54,
+            color: AppColors.inkGrey,
             onTap: () async {
               try {
                 await notifier.stopTorrent(status.id);
@@ -523,7 +522,7 @@ class _ActionButtons extends ConsumerWidget {
         if (!isDone)
           _CircleIconButton(
             icon: Icons.folder_open_rounded,
-            color: Colors.white30,
+            color: AppColors.inkGrey,
             onTap: () async {
               try {
                 await FolderService.instance.openDownloadTarget(
@@ -539,7 +538,7 @@ class _ActionButtons extends ConsumerWidget {
         const SizedBox(width: 4),
         _CircleIconButton(
           icon: Icons.delete_outline_rounded,
-          color: const Color(0xFFFF5555).withValues(alpha: 0.7),
+          color: AppColors.error,
           onTap: () => _confirmDelete(context, ref),
           tooltip: 'Delete',
         ),
@@ -550,8 +549,8 @@ class _ActionButtons extends ConsumerWidget {
   void _showErrorSnackBar(ScaffoldMessengerState messenger, String message) {
     messenger.showSnackBar(
       SnackBar(
-        content: Text(message, style: const TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFFFF5555),
+        content: Text(message, style: const TextStyle(color: AppColors.paperWhite)),
+        backgroundColor: AppColors.error,
         duration: const Duration(seconds: 3),
       ),
     );
@@ -614,20 +613,17 @@ class _DeleteDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: const Color(0xFF1E1E30),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: const Row(
         children: [
-          Icon(Icons.delete_outline_rounded,
-              color: Color(0xFFFF5555), size: 22),
+          Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 22),
           SizedBox(width: 10),
-          Text('Remove Torrent',
-              style: TextStyle(color: Colors.white, fontSize: 17)),
+          Text('Remove Torrent', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
         ],
       ),
       content: Text(
         '"$torrentName"',
-        style: const TextStyle(color: Colors.white60, fontSize: 13),
+        style: const TextStyle(color: AppColors.inkGrey, fontSize: 13),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
@@ -635,20 +631,18 @@ class _DeleteDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: Colors.white38)),
+          child: const Text('Cancel'),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, _DeleteChoice.removeOnly),
-          child: const Text('Remove', style: TextStyle(color: Colors.white70)),
+          child: const Text('Remove'),
         ),
         FilledButton(
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFFFF5555),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            backgroundColor: AppColors.error,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
-          onPressed: () =>
-              Navigator.pop(context, _DeleteChoice.removeWithFiles),
+          onPressed: () => Navigator.pop(context, _DeleteChoice.removeWithFiles),
           child: const Text('Remove + Files'),
         ),
       ],
@@ -667,28 +661,25 @@ class _CompletedBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: const Color(0xFF2ECC71).withValues(alpha: 0.10),
+          color: AppColors.finished.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-              color: const Color(0xFF2ECC71).withValues(alpha: 0.28)),
+          border: Border.all(color: AppColors.finished.withValues(alpha: 0.28)),
         ),
         child: const Row(
           children: [
-            Icon(Icons.check_circle_outline_rounded,
-                color: Color(0xFF2ECC71), size: 13),
+            Icon(Icons.check_circle_outline_rounded, color: AppColors.finished, size: 13),
             SizedBox(width: 6),
             Expanded(
               child: Text(
                 'Download complete  ·  Tap to open',
                 style: TextStyle(
-                  color: Color(0xFF2ECC71),
+                  color: AppColors.finished,
                   fontSize: 10.5,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-            Icon(Icons.chevron_right_rounded,
-                color: Color(0xFF2ECC71), size: 15),
+            Icon(Icons.chevron_right_rounded, color: AppColors.finished, size: 15),
           ],
         ),
       ),
@@ -711,13 +702,13 @@ class _TorrentOptionsSheet extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF16162A),
+        color: AppColors.paperWhite,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: AppColors.inkFaded),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF00B894).withValues(alpha: 0.12),
-            blurRadius: 32,
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 24,
             offset: const Offset(0, -4),
           ),
         ],
@@ -730,7 +721,7 @@ class _TorrentOptionsSheet extends StatelessWidget {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white24,
+              color: AppColors.inkFaded,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -745,7 +736,7 @@ class _TorrentOptionsSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.download_rounded,
-                      color: Colors.white, size: 16),
+                      color: AppColors.paperWhite, size: 16),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -757,7 +748,7 @@ class _TorrentOptionsSheet extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.inkBlack,
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
                         ),
@@ -767,7 +758,7 @@ class _TorrentOptionsSheet extends StatelessWidget {
                         ' · ${SizeFormatter.format(status.downloadedBytes)}'
                         ' / ${SizeFormatter.format(status.totalSize)}',
                         style: const TextStyle(
-                            color: Colors.white38, fontSize: 11),
+                            color: AppColors.inkGrey, fontSize: 11),
                       ),
                     ],
                   ),
@@ -775,11 +766,11 @@ class _TorrentOptionsSheet extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(color: Colors.white12, height: 24),
+          const Divider(color: AppColors.inkFaded, height: 24),
           if (isPaused)
             _OptionTile(
               icon: Icons.play_arrow_rounded,
-              iconColor: const Color(0xFF00B894),
+              iconColor: AppColors.seeding,
               label: 'Resume Download',
               onTap: () async {
                 navigator.pop();
@@ -793,7 +784,7 @@ class _TorrentOptionsSheet extends StatelessWidget {
           else
             _OptionTile(
               icon: Icons.pause_rounded,
-              iconColor: Colors.white70,
+              iconColor: AppColors.inkGrey,
               label: 'Pause Download',
               onTap: () async {
                 navigator.pop();
@@ -806,7 +797,7 @@ class _TorrentOptionsSheet extends StatelessWidget {
             ),
           _OptionTile(
             icon: Icons.delete_outline_rounded,
-            iconColor: const Color(0xFFFF5555),
+            iconColor: AppColors.error,
             label: 'Remove Torrent',
             onTap: () async {
               navigator.pop();
@@ -831,7 +822,7 @@ class _TorrentOptionsSheet extends StatelessWidget {
     messenger.showSnackBar(
       SnackBar(
         content: Text(message, style: const TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFFFF5555),
+        backgroundColor: AppColors.error,
         duration: const Duration(seconds: 3),
       ),
     );
@@ -863,7 +854,7 @@ class _OptionTile extends StatelessWidget {
             Text(
               label,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.inkBlack,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
