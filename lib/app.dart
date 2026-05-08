@@ -102,13 +102,15 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
   @override
   Widget build(BuildContext context) {
     // Watch the theme service. If it's still loading, default to light.
-    final themeMode = ref.watch(themeServiceProvider).valueOrNull ?? ThemeMode.light;
+    final themeMode =
+        ref.watch(themeServiceProvider).valueOrNull ?? ThemeMode.light;
+    final isLight = themeMode != ThemeMode.dark;
 
     return MaterialApp(
       title: 'Meitorrent',
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      
+
       // Use our centralized theme definitions
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
@@ -116,11 +118,32 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
 
       builder: (context, child) {
         final mq = MediaQuery.of(context);
-        return MediaQuery(
-          data: mq.copyWith(
-            textScaler: TextScaler.noScaling,
-          ),
+        final scaled = MediaQuery(
+          data: mq.copyWith(textScaler: TextScaler.noScaling),
           child: child!,
+        );
+
+        // ── Sakura background (light theme only) ──────────────────────
+        if (!isLight) return scaled;
+
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            // All routes (now opaque parchment in light mode)
+            scaled,
+            // Sakura watermark — on top of UI with IgnorePointer to prevent interference
+            // This prevents "ghosting" during transitions because routes are now opaque
+            IgnorePointer(
+              child: Opacity(
+                opacity: 0.15,
+                child: Image.asset(
+                  'assets/images/sakura_bg_light.png',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topRight,
+                ),
+              ),
+            ),
+          ],
         );
       },
       home: const SplashScreen(),

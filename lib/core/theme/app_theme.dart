@@ -17,22 +17,23 @@ class AppTheme {
   AppTheme._();
 
   // ── Raw palette constants ──────────────────────────────────────
-  static const _crimson       = Color(0xFFD63031); // Rising-sun red
-  static const _parchment     = Color(0xFFFAF6EE); // Ivory canvas
-  static const _paperWhite    = Color(0xFFFDF9F2); // Card surface
-  static const _inkBlack      = Color(0xFF1A1A1A); // Sumi-e ink
-  static const _bamboo        = Color(0xFF27AE60); // Bamboo green
-  static const _autumnOrange  = Color(0xFFD35400); // Autumn orange
-  static const _deepCrimson   = Color(0xFFC0392B); // Error red
-  static const _inkGrey       = Color(0xFF5D5D5D); // Secondary text
-  static const _inkFaded      = Color(0xFFE8E0D4); // Dividers / borders
+  static const _crimson = Color(0xFFD63031); // Rising-sun red
+  static const _parchment = Color(0xFFFAF6EE); // Ivory canvas
+  static const _paperWhite = Color(0xFFFDF5E6); // Warm parchment for cards
+  static const _inkBlack = Color(0xFF1A1A1A); // Sumi-e ink
+  static const _bamboo = Color(0xFF27AE60); // Bamboo green
+  static const _autumnOrange = Color(0xFFD35400); // Autumn orange
+  static const _deepCrimson = Color(0xFFC0392B); // Error red
+  static const _inkGrey = Color(0xFF5D5D5D); // Secondary text
+  static const _inkFaded = Color(0xFFE8E0D4); // Dividers / borders
 
   // ── Dark palette ───────────────────────────────────────────────
-  static const _darkInk       = Color(0xFF121212); // Background
-  static const _darkSurface   = Color(0xFF1E1E1E); // Surface
-  static const _boneWhite     = Color(0xFFE0E0E0); // Primary text
-  static const _fadedWhite    = Color(0xFF9E9E9E); // Secondary text
-  static const _darkBorder    = Color(0xFF2C2C2C); // Borders
+  static const _darkInk = Color(0xFF0D0D0D); // Midnight Ink (Background)
+  static const _darkSurface = Color(0xFF161616); // Soot Black (Surface/Cards)
+  static const _boneWhite = Color(0xFFE5E2D9); // Bone White (Primary Text)
+  static const _fadedInk = Color(0xFF8A8A8A); // Faded Ink (Secondary Text)
+  static const _darkBorder = Color(0xFF222222); // Deep Border
+  static const _darkInput = Color(0xFF1F1F1F); // Input Fill (Dark)
 
   // ── Color Scheme ──────────────────────────────────────────────
   static const ColorScheme _scheme = ColorScheme(
@@ -75,21 +76,21 @@ class AppTheme {
       // Outfit font — modern yet warm
       textTheme: GoogleFonts.outfitTextTheme(
         ThemeData.light().textTheme.apply(
-          bodyColor: _inkBlack,
-          displayColor: _inkBlack,
-        ),
+              bodyColor: _inkBlack,
+              displayColor: _inkBlack,
+            ),
       ),
 
       // ── Card ──────────────────────────────────────────────────
       cardTheme: CardThemeData(
         color: _paperWhite,
-        elevation: 0,
+        elevation: 3,
+        shadowColor: _inkBlack.withValues(alpha: 0.12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: Color(0xFFE8E0D4), width: 1),
+          side: const BorderSide(color: Color(0xFFE8E0D4), width: 1.5),
         ),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        shadowColor: Colors.transparent,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
 
       // ── AppBar ────────────────────────────────────────────────
@@ -166,7 +167,8 @@ class AppTheme {
           borderSide: const BorderSide(color: _crimson, width: 1.5),
         ),
         hintStyle: TextStyle(color: _inkBlack.withValues(alpha: 0.35)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
 
       // ── SnackBar ──────────────────────────────────────────────
@@ -229,18 +231,22 @@ class AppTheme {
       brightness: Brightness.dark,
       colorScheme: const ColorScheme.dark(
         primary: _crimson,
+        secondary: _bamboo,
         surface: _darkInk,
         onSurface: _boneWhite,
         surfaceContainer: _darkSurface,
-        onSurfaceVariant: _fadedWhite,
+        onSurfaceVariant: _fadedInk,
         outline: _darkBorder,
+        error: _deepCrimson,
       ),
       scaffoldBackgroundColor: _darkInk,
       textTheme: GoogleFonts.outfitTextTheme(const TextTheme()).copyWith(
-        displayLarge: const TextStyle(color: _boneWhite, fontWeight: FontWeight.w800),
-        titleLarge: const TextStyle(color: _boneWhite, fontWeight: FontWeight.w700),
+        displayLarge:
+            const TextStyle(color: _boneWhite, fontWeight: FontWeight.w800),
+        titleLarge:
+            const TextStyle(color: _boneWhite, fontWeight: FontWeight.w700),
         bodyMedium: const TextStyle(color: _boneWhite),
-        bodySmall: const TextStyle(color: _fadedWhite),
+        bodySmall: const TextStyle(color: _fadedInk),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
@@ -255,12 +261,27 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: _darkSurface,
+        elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: _darkBorder),
+          side: const BorderSide(color: _darkBorder, width: 1),
         ),
       ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: _darkInput,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        hintStyle: const TextStyle(color: _fadedInk),
+      ),
       dividerTheme: const DividerThemeData(color: _darkBorder, thickness: 1),
+      dialogTheme: DialogThemeData(
+        backgroundColor: _darkSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 0,
+      ),
     );
   }
 }
@@ -273,41 +294,57 @@ class AppColors {
 
   // ── Theme-Aware Semantic Colors ──────────────────────────────────
   static Color surface(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.light ? paperWhite : darkSurface;
+      Theme.of(context).brightness == Brightness.light
+          ? paperWhite
+          : (Theme.of(context).cardTheme.color ?? darkSurface);
 
   static Color background(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.light ? parchment : darkBackground;
+      Theme.of(context).brightness == Brightness.light
+          ? parchment
+          : darkBackground;
 
   static Color text(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.light ? inkBlack : const Color(0xFFE0E0E0);
+      Theme.of(context).brightness == Brightness.light
+          ? inkBlack
+          : const Color(0xFFE0E0E0);
 
   static Color textSecondary(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.light ? inkGrey : const Color(0xFF9E9E9E);
+      Theme.of(context).brightness == Brightness.light
+          ? inkGrey
+          : const Color(0xFF9E9E9E);
 
   static Color border(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.light ? inkFaded : const Color(0xFF2C2C2C);
+      Theme.of(context).brightness == Brightness.light
+          ? inkFaded
+          : const Color(0xFF2C2C2C);
 
   // ── Static Palette ───────────────────────────────────────────────
-  static const parchment      = Color(0xFFFAF6EE); // light background
-  static const paperWhite     = Color(0xFFFDF9F2); // light surface
-  static const darkBackground = Color(0xFF121212); // dark background
-  static const darkSurface    = Color(0xFF1E1E1E); // dark surface
-  
-  static const inputFill      = Color(0xFFF4EDE0); // text field fill (light)
-  static const inkBlack       = Color(0xFF1A1A1A); // primary text (light)
-  static const inkGrey        = Color(0xFF5D5D5D); // secondary text (light)
-  static const inkFaded       = Color(0xFFE8E0D4); // borders / dividers (light)
+  static const parchment = Color(0xFFFAF6EE); // light background
+  static const paperWhite = Color(0xFFFDF9F2); // light surface
+  static const darkBackground = Color(0xFF0D0D0D); // dark background
+  static const darkSurface = Color(0xFF161616); // Soot Black (Surface/Cards)
+  static const boneWhite = Color(0xFFE5E2D9);
+  static const fadedInk = Color(0xFF8A8A8A);
+
+  static Color inputFill(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.light
+          ? const Color(0xFFF4EDE0)
+          : const Color(0xFF1F1F1F);
+
+  static const inkBlack = Color(0xFF1A1A1A); // primary text (light)
+  static const inkGrey = Color(0xFF5D5D5D); // secondary text (light)
+  static const inkFaded = Color(0xFFE8E0D4); // borders / dividers (light)
 
   // ── Torrent state colours (Static across themes) ──────────────────
-  static const downloading    = Color(0xFFD63031); // crimson red
-  static const downloadingDark= Color(0xFFC23616); // deep crimson
-  static const seeding        = Color(0xFF27AE60); // bamboo green
-  static const paused         = Color(0xFFD35400); // autumn orange
-  static const error          = Color(0xFFC0392B); // deep crimson
-  static const finished       = Color(0xFF1E8449); // forest green
-  static const unknown        = Color(0xFF8E8E8E); // slate grey
-  static const metadata       = Color(0xFF9E9E9E); 
-  static const checking       = Color(0xFF9E9E9E);
+  static const downloading = Color(0xFFD63031); // crimson red
+  static const downloadingDark = Color(0xFFC23616); // deep crimson
+  static const seeding = Color(0xFF27AE60); // bamboo green
+  static const paused = Color(0xFFD35400); // autumn orange
+  static const error = Color(0xFFC0392B); // deep crimson
+  static const finished = Color(0xFF1E8449); // forest green
+  static const unknown = Color(0xFF8E8E8E); // slate grey
+  static const metadata = Color(0xFF9E9E9E);
+  static const checking = Color(0xFF9E9E9E);
 }
 
 // ─────────────────────────────────────────────────────────────────

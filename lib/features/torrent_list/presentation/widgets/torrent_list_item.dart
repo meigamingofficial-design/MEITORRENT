@@ -135,8 +135,8 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                 status.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: AppColors.inkBlack,
+                                style: TextStyle(
+                                  color: AppColors.text(context),
                                   fontWeight: FontWeight.w700,
                                   fontSize: 15,
                                   letterSpacing: -0.2,
@@ -150,18 +150,45 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                         const SizedBox(height: 16),
                         Row(
                           children: [
-                            Icon(Icons.arrow_downward_rounded, color: Theme.of(context).colorScheme.primary, size: 14),
+                            // ── Download Speed ──
+                            const Icon(Icons.arrow_downward_rounded, 
+                                 color: AppColors.downloading, size: 14),
                             const SizedBox(width: 4),
                             Text(
                               SpeedFormatter.format(status.downloadSpeed.toInt()),
-                              style: const TextStyle(color: AppColors.inkGrey, fontSize: 12, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                color: AppColors.downloading, 
+                                fontSize: 11, 
+                                fontWeight: FontWeight.w700
+                              ),
                             ),
                             const SizedBox(width: 12),
-                            const Icon(Icons.people_outline_rounded, color: AppColors.inkGrey, size: 14),
-                            const SizedBox(width: 4),
+
+                            // ── Seeds ──
+                            const Icon(Icons.keyboard_double_arrow_up_rounded, 
+                                 color: AppColors.seeding, size: 14),
+                            const SizedBox(width: 2),
+                            Text(
+                              status.seeds.toString(),
+                              style: const TextStyle(
+                                color: AppColors.seeding, 
+                                fontSize: 11, 
+                                fontWeight: FontWeight.w700
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+
+                            // ── Peers ──
+                            Icon(Icons.people_outline_rounded, 
+                                 color: AppColors.textSecondary(context), size: 14),
+                            const SizedBox(width: 2),
                             Text(
                               status.peers.toString(),
-                              style: const TextStyle(color: AppColors.inkGrey, fontSize: 12),
+                              style: TextStyle(
+                                color: AppColors.textSecondary(context), 
+                                fontSize: 11, 
+                                fontWeight: FontWeight.w700
+                              ),
                             ),
                             const Spacer(),
                             Text(
@@ -180,7 +207,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                             Container(
                               height: 6,
                               decoration: BoxDecoration(
-                                color: AppColors.inkFaded,
+                                color: AppColors.border(context),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
@@ -198,7 +225,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                           borderRadius: BorderRadius.circular(10),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: const Color(0xFF00B894).withValues(alpha: value),
+                                              color: AppColors.seeding.withValues(alpha: value),
                                               blurRadius: 12,
                                               spreadRadius: 2,
                                             ),
@@ -216,7 +243,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                       borderRadius: BorderRadius.circular(10),
                                       boxShadow: isActive ? [
                                         BoxShadow(
-                                          color: const Color(0xFF00B894).withValues(alpha: 0.4),
+                                          color: AppColors.downloading.withValues(alpha: 0.4),
                                           blurRadius: 10,
                                           spreadRadius: 1,
                                         ),
@@ -233,7 +260,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                               '${SizeFormatter.format(status.downloadedBytes)} / '
                               '${SizeFormatter.format(status.totalSize)}',
                               style: TextStyle(
-                                color: AppColors.inkGrey.withValues(
+                                color: AppColors.textSecondary(context).withValues(
                                   alpha: isFinished ? 0.50 : 0.75,
                                 ),
                                 fontSize: 11,
@@ -261,10 +288,10 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: isSelected ? AppColors.downloading : AppColors.inkFaded.withValues(alpha: 0.4),
+                          color: isSelected ? AppColors.downloading : AppColors.border(context).withValues(alpha: 0.4),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: isSelected ? AppColors.downloading : AppColors.inkFaded,
+                            color: isSelected ? AppColors.downloading : AppColors.border(context),
                             width: 1.5,
                           ),
                           boxShadow: isSelected ? [
@@ -276,7 +303,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                         ),
                         child: Icon(
                           Icons.check,
-                          color: isSelected ? AppColors.paperWhite : Colors.transparent,
+                          color: isSelected ? Colors.white : Colors.transparent,
                           size: 14,
                         ),
                       ),
@@ -702,9 +729,9 @@ class _TorrentOptionsSheet extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       decoration: BoxDecoration(
-        color: AppColors.paperWhite,
+        color: AppColors.surface(context),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.inkFaded),
+        border: Border.all(color: AppColors.border(context)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -721,7 +748,7 @@ class _TorrentOptionsSheet extends StatelessWidget {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.inkFaded,
+              color: AppColors.border(context),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -736,7 +763,7 @@ class _TorrentOptionsSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.download_rounded,
-                      color: AppColors.paperWhite, size: 16),
+                      color: Colors.white, size: 16),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -747,8 +774,8 @@ class _TorrentOptionsSheet extends StatelessWidget {
                         status.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.inkBlack,
+                        style: TextStyle(
+                          color: AppColors.text(context),
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
                         ),
@@ -757,8 +784,8 @@ class _TorrentOptionsSheet extends StatelessWidget {
                         '${(status.progress * 100).toStringAsFixed(1)}%'
                         ' · ${SizeFormatter.format(status.downloadedBytes)}'
                         ' / ${SizeFormatter.format(status.totalSize)}',
-                        style: const TextStyle(
-                            color: AppColors.inkGrey, fontSize: 11),
+                        style: TextStyle(
+                            color: AppColors.textSecondary(context), fontSize: 11),
                       ),
                     ],
                   ),
@@ -766,7 +793,7 @@ class _TorrentOptionsSheet extends StatelessWidget {
               ],
             ),
           ),
-          const Divider(color: AppColors.inkFaded, height: 24),
+          Divider(color: AppColors.border(context), height: 24),
           if (isPaused)
             _OptionTile(
               icon: Icons.play_arrow_rounded,
@@ -853,8 +880,8 @@ class _OptionTile extends StatelessWidget {
             const SizedBox(width: 16),
             Text(
               label,
-              style: const TextStyle(
-                color: AppColors.inkBlack,
+              style: TextStyle(
+                color: AppColors.text(context),
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),

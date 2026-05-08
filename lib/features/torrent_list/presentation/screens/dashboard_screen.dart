@@ -25,7 +25,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AsyncValue<List<TorrentStatus>>>(torrentNotifierProvider, (prev, next) {
+    ref.listen<AsyncValue<List<TorrentStatus>>>(torrentNotifierProvider,
+        (prev, next) {
       final prevTorrents = prev?.valueOrNull ?? [];
       final nextTorrents = next.valueOrNull ?? [];
 
@@ -35,9 +36,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       }
 
       // 2. Failure Detection Loop (Agonistic Speed Throttling)
-      final activeDownloading = nextTorrents.where((t) => t.state.isActive && !t.state.isFinished).toList();
+      final activeDownloading = nextTorrents
+          .where((t) => t.state.isActive && !t.state.isFinished)
+          .toList();
       if (activeDownloading.isNotEmpty) {
-        final totalSpeed = activeDownloading.fold<int>(0, (s, t) => s + t.downloadSpeed);
+        final totalSpeed =
+            activeDownloading.fold<int>(0, (s, t) => s + t.downloadSpeed);
         if (totalSpeed == 0) {
           _zeroSpeedTicks++;
           if (_zeroSpeedTicks >= 15) {
@@ -72,7 +76,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           error: (e, _) => _ErrorBody(error: e.toString()),
           data: (torrents) {
-            if (torrents.isEmpty) return const SafeArea(child: EmptyStateWidget());
+            if (torrents.isEmpty) {
+              return const SafeArea(child: EmptyStateWidget());
+            }
 
             return SafeArea(
               bottom: false,
@@ -146,7 +152,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             duration: const Duration(milliseconds: 300),
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.paperWhite,
+              color: AppColors.surface(context),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
@@ -164,13 +170,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               elevation: 0,
               backgroundColor: Colors.transparent,
               leading: IconButton(
-                icon: const Icon(Icons.close, color: AppColors.inkGrey),
-                onPressed: () => ref.read(selectedTorrentsProvider.notifier).clear(),
+                icon:
+                    Icon(Icons.close, color: AppColors.textSecondary(context)),
+                onPressed: () =>
+                    ref.read(selectedTorrentsProvider.notifier).clear(),
               ),
               title: Text(
                 '${selectedIds.length} Selected',
-                style: const TextStyle(
-                  color: AppColors.inkBlack,
+                style: TextStyle(
+                  color: AppColors.text(context),
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
@@ -184,7 +192,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     final notifier = ref.read(torrentNotifierProvider.notifier);
                     final ids = selectedIds.toList();
                     ref.read(selectedTorrentsProvider.notifier).clear();
-                    await Future.wait(ids.map((id) => notifier.resumeTorrent(id)));
+                    await Future.wait(
+                        ids.map((id) => notifier.resumeTorrent(id)));
                   },
                 ),
                 const SizedBox(width: 4),
@@ -195,7 +204,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     final notifier = ref.read(torrentNotifierProvider.notifier);
                     final ids = selectedIds.toList();
                     ref.read(selectedTorrentsProvider.notifier).clear();
-                    await Future.wait(ids.map((id) => notifier.pauseTorrent(id)));
+                    await Future.wait(
+                        ids.map((id) => notifier.pauseTorrent(id)));
                   },
                 ),
                 const SizedBox(width: 4),
@@ -206,7 +216,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     final notifier = ref.read(torrentNotifierProvider.notifier);
                     final ids = selectedIds.toList();
                     ref.read(selectedTorrentsProvider.notifier).clear();
-                    await Future.wait(ids.map((id) => notifier.stopTorrent(id)));
+                    await Future.wait(
+                        ids.map((id) => notifier.stopTorrent(id)));
                   },
                 ),
                 const SizedBox(width: 4),
@@ -214,7 +225,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   icon: Icons.delete_outline_rounded,
                   color: AppColors.error,
                   tooltip: 'Delete',
-                  onPressed: () => _confirmDeleteMultiple(context, ref, selectedIds.toList()),
+                  onPressed: () => _confirmDeleteMultiple(
+                      context, ref, selectedIds.toList()),
                 ),
                 const SizedBox(width: 8),
               ],
@@ -240,16 +252,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           onSelected: (v) {
             final notifier = ref.read(torrentNotifierProvider.notifier);
             final torrents = async.valueOrNull ?? [];
             switch (v) {
               case 'select':
-                ref.read(selectedTorrentsProvider.notifier).enterSelectionMode();
+                ref
+                    .read(selectedTorrentsProvider.notifier)
+                    .enterSelectionMode();
                 break;
               case 'select_all':
-                ref.read(selectedTorrentsProvider.notifier).selectAll(torrents.map((t) => t.id).toList());
+                ref
+                    .read(selectedTorrentsProvider.notifier)
+                    .selectAll(torrents.map((t) => t.id).toList());
                 break;
               case 'resume_all':
                 notifier.resumeAll();
@@ -261,7 +278,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 notifier.stopAll();
                 break;
               case 'delete_all':
-                _confirmDeleteMultiple(context, ref, torrents.map((t) => t.id).toList(), isAll: true);
+                _confirmDeleteMultiple(
+                    context, ref, torrents.map((t) => t.id).toList(),
+                    isAll: true);
                 break;
               case 'exit_app':
                 _showExitConfirmation(context);
@@ -271,17 +290,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           itemBuilder: (_) => [
             const PopupMenuItem(
               value: 'select',
-              child: _MenuItem(icon: Icons.check_circle_outline_rounded, label: 'Select'),
+              child: _MenuItem(
+                  icon: Icons.check_circle_outline_rounded, label: 'Select'),
             ),
             const PopupMenuDivider(height: 1),
             const PopupMenuItem(
               value: 'select_all',
-              child: _MenuItem(icon: Icons.select_all_rounded, label: 'Select All'),
+              child: _MenuItem(
+                  icon: Icons.select_all_rounded, label: 'Select All'),
             ),
             const PopupMenuDivider(height: 1),
             const PopupMenuItem(
               value: 'resume_all',
-              child: _MenuItem(icon: Icons.play_arrow_rounded, label: 'Resume All'),
+              child: _MenuItem(
+                  icon: Icons.play_arrow_rounded, label: 'Resume All'),
             ),
             const PopupMenuItem(
               value: 'pause_all',
@@ -326,12 +348,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             icon: Icons.arrow_downward_rounded,
             value: SpeedFormatter.format(downTotal.toInt()),
             label: 'Total Down',
+            color: AppColors.downloading,
           ),
           const SizedBox(width: 12),
           _CompactSpeedTile(
             icon: Icons.arrow_upward_rounded,
             value: SpeedFormatter.format(upTotal.toInt()),
             label: 'Total Up',
+            color: AppColors.seeding,
           ),
         ],
       ),
@@ -345,9 +369,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Text('Exit Meitorrent?',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-        content: const Text(
+        content: Text(
           'Torrents will continue to download in the background.',
-          style: TextStyle(color: AppColors.inkGrey, fontSize: 14),
+          style:
+              TextStyle(color: AppColors.textSecondary(context), fontSize: 14),
         ),
         actions: [
           TextButton(
@@ -371,8 +396,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  void _confirmDeleteMultiple(BuildContext context, WidgetRef ref,
-      List<String> ids,
+  void _confirmDeleteMultiple(
+      BuildContext context, WidgetRef ref, List<String> ids,
       {bool isAll = false}) {
     if (ids.isEmpty) return;
 
@@ -382,17 +407,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Row(
           children: [
-            const Icon(Icons.delete_sweep_outlined, color: AppColors.error, size: 22),
+            const Icon(Icons.delete_sweep_outlined,
+                color: AppColors.error, size: 22),
             const SizedBox(width: 10),
             Text(isAll ? 'Delete All Torrents?' : 'Delete Selected?',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
           ],
         ),
         content: Text(
           isAll
               ? 'This will remove all torrents from your list.'
               : 'Remove ${ids.length} selected torrents?',
-          style: const TextStyle(color: AppColors.inkGrey, fontSize: 14),
+          style:
+              TextStyle(color: AppColors.textSecondary(context), fontSize: 14),
         ),
         actions: [
           TextButton(
@@ -442,7 +470,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         margin: const EdgeInsets.all(16),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.paperWhite,
+          color: AppColors.surface(context),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: AppColors.paused.withValues(alpha: 0.25)),
           boxShadow: [
@@ -465,13 +493,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     color: AppColors.paused.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.bolt_rounded, color: AppColors.paused, size: 20),
+                  child: const Icon(Icons.bolt_rounded,
+                      color: AppColors.paused, size: 20),
                 ),
                 const SizedBox(width: 12),
-                const Text(
+                Text(
                   'Sluggish Download Speeds?',
                   style: TextStyle(
-                    color: AppColors.inkBlack,
+                    color: AppColors.text(context),
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                   ),
@@ -479,9 +508,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'Your downloads may be throttled or paused by system battery limits. Whitelisting Meitorrent helps keep transfers active when the screen is locked.',
-              style: TextStyle(color: AppColors.inkGrey, fontSize: 13, height: 1.4),
+              style: TextStyle(
+                  color: AppColors.textSecondary(context),
+                  fontSize: 13,
+                  height: 1.4),
             ),
             const SizedBox(height: 20),
             Row(
@@ -489,11 +521,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 Expanded(
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Not Now', style: TextStyle(fontWeight: FontWeight.w600)),
+                    child: const Text('Not Now',
+                        style: TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -501,17 +535,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   child: FilledButton(
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.downloading,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: () {
                       Navigator.pop(ctx);
                       Navigator.push(
                         context,
-                        MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+                        MaterialPageRoute<void>(
+                            builder: (_) => const SettingsScreen()),
                       );
                     },
-                    child: const Text('Optimize Speed', style: TextStyle(fontWeight: FontWeight.w700)),
+                    child: const Text('Optimize Speed',
+                        style: TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ),
               ],
@@ -549,7 +586,8 @@ class _SelectionAction extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             child: Container(
               padding: const EdgeInsets.all(8),
-              child: Icon(icon, color: color ?? AppColors.inkBlack, size: 22),
+              child:
+                  Icon(icon, color: color ?? AppColors.text(context), size: 22),
             ),
           ),
         ),
@@ -563,11 +601,13 @@ class _CompactSpeedTile extends StatelessWidget {
     required this.icon,
     required this.value,
     required this.label,
+    required this.color,
   });
 
   final IconData icon;
   final String value;
   final String label;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -575,13 +615,16 @@ class _CompactSpeedTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.downloading.withValues(alpha: 0.07),
+          color: color.withValues(alpha: 0.35),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.downloading.withValues(alpha: 0.15)),
+          border: Border.all(
+            color: color.withValues(alpha: 0.80),
+            width: 2.0,
+          ),
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.downloading, size: 16),
+            Icon(icon, color: color, size: 16),
             const SizedBox(width: 8),
             Expanded(
               child: Column(
@@ -589,15 +632,16 @@ class _CompactSpeedTile extends StatelessWidget {
                 children: [
                   Text(
                     value,
-                    style: const TextStyle(
-                      color: AppColors.inkBlack,
+                    style: TextStyle(
+                      color: AppColors.text(context),
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   Text(
                     label,
-                    style: const TextStyle(color: AppColors.inkGrey, fontSize: 10),
+                    style: TextStyle(
+                        color: AppColors.textSecondary(context), fontSize: 10),
                   ),
                 ],
               ),
@@ -617,7 +661,7 @@ class _MenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? AppColors.inkBlack;
+    final c = color ?? AppColors.text(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -728,12 +772,13 @@ class _ErrorBody extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 52),
+            const Icon(Icons.error_outline_rounded,
+                color: AppColors.error, size: 52),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Something went wrong',
               style: TextStyle(
-                  color: AppColors.inkBlack,
+                  color: AppColors.text(context),
                   fontSize: 18,
                   fontWeight: FontWeight.w600),
             ),
@@ -741,7 +786,8 @@ class _ErrorBody extends StatelessWidget {
             Text(
               error,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.inkGrey, fontSize: 13),
+              style: TextStyle(
+                  color: AppColors.textSecondary(context), fontSize: 13),
             ),
           ],
         ),

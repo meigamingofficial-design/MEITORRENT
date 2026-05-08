@@ -177,36 +177,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           // Logo
                           Transform.scale(
                             scale: _logoScale.value,
-                            child: Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    AppColors.downloading
-                                        .withValues(alpha: _logoOpacity.value),
-                                    AppColors.downloadingDark
-                                        .withValues(alpha: _logoOpacity.value),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(28),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.downloading.withValues(
-                                      alpha: 0.35 * _logoOpacity.value,
-                                    ),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                Icons.download_rounded,
-                                color: Colors.white
-                                    .withValues(alpha: _logoOpacity.value),
-                                size: 52,
+                            child: Opacity(
+                              opacity: _logoOpacity.value,
+                              child: Image.asset(
+                                'assets/images/app_logo.png',
+                                width: 100,
+                                height: 100,
                               ),
                             ),
                           ),

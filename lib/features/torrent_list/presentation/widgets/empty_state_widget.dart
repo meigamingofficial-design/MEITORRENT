@@ -27,21 +27,21 @@ class EmptyStateWidget extends StatelessWidget {
               child: const Icon(Icons.download_rounded, color: AppColors.downloading, size: 48),
             ),
             const SizedBox(height: 32),
-            const Text(
+            Text(
               'No torrents yet',
               style: TextStyle(
-                color: AppColors.inkBlack,
+                color: AppColors.text(context),
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'Tap "Add Torrent" to paste a magnet link\nor open a .torrent file to get started.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.inkGrey,
+                color: AppColors.textSecondary(context),
                 fontSize: 15,
                 height: 1.6,
                 letterSpacing: 0.2,

@@ -741,7 +741,16 @@ class TorrentRepositoryImpl implements TorrentRepository {
         final enrichedStatuses = <TorrentStatus>[];
         for (final s in statuses) {
           var status = s;
-          final persisted = dbById[s.id];
+          var persisted = dbById[s.id];
+
+          // 🔍 FALLBACK: If ID changed on restart, find by Magnet/File
+          if (persisted == null) {
+            if (s.magnetUri != null) {
+              persisted = dbTorrents.firstWhereOrNull((t) => t.magnetUri == s.magnetUri);
+            } else if (s.torrentFilePath != null) {
+              persisted = dbTorrents.firstWhereOrNull((t) => t.torrentFilePath == s.torrentFilePath);
+            }
+          }
 
           if (persisted != null) {
             // 🧱 ANTI-REGRESSION: Never overwrite a completed state with an uncompleted one.
@@ -749,10 +758,23 @@ class TorrentRepositoryImpl implements TorrentRepository {
             final isCompleted = persisted.isCompleted || status.isCompleted;
             final progress = (persisted.isCompleted) ? 1.0 : (status.progress > persisted.progress ? status.progress : persisted.progress);
 
+            // Restore metadata if engine is warming up (totalSize == 0)
+            final totalSize = (status.totalSize == 0 && persisted.totalSize > 0) ? persisted.totalSize : status.totalSize;
+            final downloadedBytes = (isCompleted) ? totalSize : (status.downloadedBytes > persisted.downloadedBytes ? status.downloadedBytes : persisted.downloadedBytes);
+
             status = status.copyWith(
               isCompleted: isCompleted,
               progress: progress,
+              totalSize: totalSize,
+              downloadedBytes: downloadedBytes,
+              name: (status.name == 'Torrent #${status.id}' || status.name.isEmpty) ? persisted.name : status.name,
+              addedAt: persisted.addedAt,
             );
+
+            // If the ID changed, we need to remove the old record from DB to prevent ghosts
+            if (persisted.id != s.id) {
+              _db.deleteTorrentById(persisted.id).catchError((_) => 0);
+            }
           }
 
           final intId = int.tryParse(s.id);

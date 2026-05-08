@@ -56,9 +56,9 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
       child: Container(
         margin: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.paperWhite,
+          color: AppColors.surface(context),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.inkFaded),
+          border: Border.all(color: AppColors.border(context)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
@@ -81,7 +81,7 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.inkFaded,
+                      color: AppColors.border(context),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -109,10 +109,10 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                               ),
                             ),
                             const SizedBox(width: 14),
-                            const Text(
+                            Text(
                               'Add Torrent',
                               style: TextStyle(
-                                color: AppColors.inkBlack,
+                                color: AppColors.text(context),
                                 fontSize: 20,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: -0.5,
@@ -127,7 +127,7 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                         Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: AppColors.inkFaded,
+                            color: AppColors.border(context),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: TabBar(
@@ -146,7 +146,7 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                             indicatorSize: TabBarIndicatorSize.tab,
                             dividerColor: Colors.transparent,
                             labelColor: Colors.white,
-                            unselectedLabelColor: AppColors.inkGrey,
+                            unselectedLabelColor: AppColors.textSecondary(context),
                             labelStyle: const TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 14,
@@ -280,7 +280,7 @@ class _GradientButton extends StatelessWidget {
       height: 48,
       decoration: BoxDecoration(
         gradient: onPressed == null ? null : AppGradients.primary,
-        color: onPressed == null ? AppColors.inkFaded : null,
+        color: onPressed == null ? AppColors.border(context) : null,
         borderRadius: BorderRadius.circular(16),
         boxShadow: onPressed == null
             ? null
@@ -323,8 +323,8 @@ class _SecondaryButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.inkGrey,
-          side: const BorderSide(color: AppColors.inkFaded),
+          foregroundColor: AppColors.textSecondary(context),
+          side: BorderSide(color: AppColors.border(context)),
           padding: EdgeInsets.zero,
           minimumSize: const Size.fromHeight(48),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -368,13 +368,13 @@ class _MagnetTab extends StatelessWidget {
               expands: true,
               textAlign: TextAlign.center,
               textAlignVertical: TextAlignVertical.center,
-              style: const TextStyle(color: AppColors.inkBlack, fontSize: 14, height: 1.4),
+              style: TextStyle(color: AppColors.text(context), fontSize: 14, height: 1.4),
               decoration: InputDecoration(
                 hintText: 'Paste magnet link here',
-                hintStyle: TextStyle(color: AppColors.inkGrey.withValues(alpha: 0.5)),
-                prefixIcon: const Column(
+                hintStyle: TextStyle(color: AppColors.textSecondary(context).withValues(alpha: 0.5)),
+                prefixIcon: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [Icon(Icons.link_rounded, color: AppColors.inkGrey, size: 20)],
+                  children: [Icon(Icons.link_rounded, color: AppColors.textSecondary(context), size: 20)],
                 ),
                 suffixIcon: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -389,14 +389,14 @@ class _MagnetTab extends StatelessWidget {
                   ],
                 ),
                 filled: true,
-                fillColor: AppColors.inputFill,
+                fillColor: AppColors.inputFill(context),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: AppColors.inkFaded),
+                  borderSide: BorderSide(color: AppColors.border(context)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -455,7 +455,7 @@ class _FileTabState extends State<_FileTab> {
               border: Border.all(
                 color: _picking
                     ? AppColors.downloading
-                    : AppColors.inkFaded,
+                    : AppColors.border(context),
                 width: 1.5,
               ),
             ),
@@ -482,19 +482,19 @@ class _FileTabState extends State<_FileTab> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Choose .torrent file',
                         style: TextStyle(
-                          color: AppColors.inkBlack,
+                          color: AppColors.text(context),
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
+                      Text(
                         'Browse your internal storage',
                         style: TextStyle(
-                          color: AppColors.inkGrey,
+                          color: AppColors.textSecondary(context),
                           fontSize: 11,
                         ),
                       ),
@@ -536,18 +536,18 @@ class _SequentialRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.inkFaded.withValues(alpha: 0.5),
+        color: AppColors.border(context).withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          const Icon(Icons.auto_awesome_motion_rounded, size: 20, color: AppColors.inkGrey),
+          Icon(Icons.auto_awesome_motion_rounded, size: 20, color: AppColors.textSecondary(context)),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Text(
               'Sequential download',
               style: TextStyle(
-                color: AppColors.inkBlack,
+                color: AppColors.text(context),
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
