@@ -782,12 +782,13 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
           final intId = int.tryParse(s.id);
           if (intId != null &&
-              !status.isCompleted &&
-              status.progress > 0.02 &&
-              status.downloadSpeed == 0) {
+              (status.isCompleted || (status.progress > 0.02 && status.downloadSpeed == 0))) {
             final resume = _engine.getResumeDataSafe(intId);
             if (resume != null) {
               status = status.copyWith(resumeData: resume);
+              if (status.isCompleted) {
+                AppLogger.d('[Repo] Saved final 100% completed resume data for: ${status.name}');
+              }
             }
           }
           enrichedStatuses.add(status);
