@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // ─────────────────────────────────────────────────────────────────
@@ -137,6 +138,13 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark, // Dark status bar icons (time, battery, etc.)
+          statusBarBrightness: Brightness.light,    // For iOS status bar
+          systemNavigationBarColor: _torinoko,       // Match soft light parchment background
+          systemNavigationBarIconBrightness: Brightness.dark,
+        ),
         titleTextStyle: GoogleFonts.shipporiMincho(
           fontSize: 26,
           fontWeight: FontWeight.w800,
@@ -294,6 +302,13 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light, // Light status bar icons (time, battery, etc.)
+          statusBarBrightness: Brightness.dark,     // For iOS status bar
+          systemNavigationBarColor: _darkInk,        // Match midnight ink background
+          systemNavigationBarIconBrightness: Brightness.light,
+        ),
         titleTextStyle: GoogleFonts.shipporiMincho(
           fontSize: 26,
           fontWeight: FontWeight.w800,
