@@ -45,6 +45,7 @@ TorrentRepository torrentRepository(Ref ref) {
 @riverpod
 class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   StreamSubscription<List<TorrentStatus>>? _sub;
+  final _pendingStopTimers = <String, Timer>{};
 
   @override
   Future<List<TorrentStatus>> build() async {
@@ -52,6 +53,10 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     ref.onDispose(() {
       WidgetsBinding.instance.removeObserver(this);
       _sub?.cancel();
+      for (final timer in _pendingStopTimers.values) {
+        timer.cancel();
+      }
+      _pendingStopTimers.clear();
     });
 
     final repo = ref.watch(torrentRepositoryProvider);
@@ -68,9 +73,31 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
         if (config.stopSeedingWhenFinished) {
           for (final torrent in statuses) {
             if (torrent.state == TorrentState.finished && !torrent.isPaused) {
-              pauseTorrent(torrent.id);
-              AppLogger.i('[Notifier] Auto-paused finished torrent: ${torrent.id}');
+              if (!_pendingStopTimers.containsKey(torrent.id)) {
+                _pendingStopTimers[torrent.id] = Timer(const Duration(seconds: 15), () {
+                  _pendingStopTimers.remove(torrent.id);
+                  pauseTorrent(torrent.id);
+                  AppLogger.i('[Notifier] Auto-paused finished torrent after 15s delay: ${torrent.id}');
+                });
+                AppLogger.i('[Notifier] Scheduled 15s stop-seeding delay for torrent: ${torrent.id}');
+              }
+            } else {
+              // Cancel pending timer if torrent is already paused, deleted or resumed back to downloading
+              if (_pendingStopTimers.containsKey(torrent.id)) {
+                _pendingStopTimers[torrent.id]?.cancel();
+                _pendingStopTimers.remove(torrent.id);
+                AppLogger.i('[Notifier] Cancelled pending stop-seeding timer for torrent: ${torrent.id}');
+              }
             }
+          }
+        } else {
+          // If the setting was toggled off dynamically, clear all pending timers
+          if (_pendingStopTimers.isNotEmpty) {
+            for (final timer in _pendingStopTimers.values) {
+              timer.cancel();
+            }
+            _pendingStopTimers.clear();
+            AppLogger.i('[Notifier] Settings disabled: cleared all pending stop-seeding timers');
           }
         }
       },
