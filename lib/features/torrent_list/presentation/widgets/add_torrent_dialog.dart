@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/services/clipboard_service.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -97,25 +98,20 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppColors.downloading.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(12),
+                                color: AppColors.downloading.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              child: ShaderMask(
-                                shaderCallback: (bounds) =>
-                                    AppGradients.primary.createShader(bounds),
-                                blendMode: BlendMode.srcIn,
-                                child: const Icon(Icons.add_rounded,
-                                    color: Colors.white, size: 24),
-                              ),
+                              child: const Icon(Icons.add_rounded,
+                                    color: AppColors.downloading, size: 24),
                             ),
                             const SizedBox(width: 14),
                             Text(
                               'Add Torrent',
-                              style: TextStyle(
+                              style: GoogleFonts.shipporiMincho(
                                 color: AppColors.text(context),
-                                fontSize: 20,
+                                fontSize: 22,
                                 fontWeight: FontWeight.w800,
-                                letterSpacing: -0.5,
+                                letterSpacing: -0.2,
                               ),
                             ),
                           ],
@@ -147,12 +143,12 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                             dividerColor: Colors.transparent,
                             labelColor: Colors.white,
                             unselectedLabelColor: AppColors.textSecondary(context),
-                            labelStyle: const TextStyle(
+                            labelStyle: GoogleFonts.shipporiMincho(
                               fontWeight: FontWeight.w700,
                               fontSize: 14,
-                              letterSpacing: 0.2,
+                              letterSpacing: 0.1,
                             ),
-                            unselectedLabelStyle: const TextStyle(
+                            unselectedLabelStyle: GoogleFonts.shipporiMincho(
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
                             ),
@@ -300,8 +296,8 @@ class _GradientButton extends StatelessWidget {
           foregroundColor: Colors.white,
           padding: EdgeInsets.zero,
           minimumSize: const Size.fromHeight(48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: GoogleFonts.shipporiMincho(fontWeight: FontWeight.w700, fontSize: 14),
         ),
         child: child,
       ),
@@ -327,8 +323,8 @@ class _SecondaryButton extends StatelessWidget {
           side: BorderSide(color: AppColors.border(context)),
           padding: EdgeInsets.zero,
           minimumSize: const Size.fromHeight(48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: GoogleFonts.shipporiMincho(fontWeight: FontWeight.w600, fontSize: 14),
         ),
         child: child,
       ),

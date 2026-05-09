@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/oem_battery_guard.dart';
@@ -727,27 +728,27 @@ class _GradientFABState extends State<_GradientFAB>
         child: Container(
           decoration: BoxDecoration(
             gradient: AppGradients.primary,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(12), // Hanko stamp shape
             boxShadow: [
               BoxShadow(
-                color: AppColors.downloading.withValues(alpha: 0.35),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+                color: AppColors.downloading.withValues(alpha: 0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.add_rounded, color: Colors.white, size: 22),
-                SizedBox(width: 8),
+                const Icon(Icons.add_rounded, color: Colors.white, size: 22),
+                const SizedBox(width: 8),
                 Text(
                   'Add Torrent',
-                  style: TextStyle(
+                  style: GoogleFonts.shipporiMincho(
                     color: Colors.white,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                     fontSize: 15,
                   ),
                 ),

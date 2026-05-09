@@ -1,6 +1,6 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -205,46 +205,49 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                         Stack(
                           children: [
                             Container(
-                              height: 6,
+                              height: 4,
                               decoration: BoxDecoration(
-                                color: AppColors.border(context),
-                                borderRadius: BorderRadius.circular(10),
+                                color: AppColors.border(context).withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(4),
                               ),
                             ),
                             FractionallySizedBox(
                               widthFactor: status.progress.clamp(0.0, 1.0),
                               child: isFinished 
                                 ? TweenAnimationBuilder<double>(
-                                    tween: Tween(begin: 0.4, end: 0.8),
+                                    tween: Tween(begin: 0.3, end: 0.6),
                                     duration: const Duration(milliseconds: 1500),
                                     builder: (context, value, child) {
                                       return Container(
-                                        height: 6,
+                                        height: 4,
                                         decoration: BoxDecoration(
-                                          gradient: AppGradients.primary,
-                                          borderRadius: BorderRadius.circular(10),
+                                          gradient: AppGradients.seeding,
+                                          borderRadius: BorderRadius.circular(4),
                                           boxShadow: [
                                             BoxShadow(
                                               color: AppColors.seeding.withValues(alpha: value),
-                                              blurRadius: 12,
-                                              spreadRadius: 2,
+                                              blurRadius: 8,
+                                              spreadRadius: 1,
                                             ),
                                           ],
                                         ),
                                       );
                                     },
-                                    onEnd: () {},
                                   )
                                 : AnimatedContainer(
                                     duration: const Duration(milliseconds: 600),
-                                    height: 6,
+                                    height: 4,
                                     decoration: BoxDecoration(
-                                      gradient: AppGradients.primary,
-                                      borderRadius: BorderRadius.circular(10),
+                                      gradient: status.state == TorrentState.paused 
+                                          ? AppGradients.paused 
+                                          : AppGradients.primary,
+                                      borderRadius: BorderRadius.circular(4),
                                       boxShadow: isActive ? [
                                         BoxShadow(
-                                          color: AppColors.downloading.withValues(alpha: 0.4),
-                                          blurRadius: 10,
+                                          color: (status.state == TorrentState.paused 
+                                              ? AppColors.paused 
+                                              : AppColors.downloading).withValues(alpha: 0.3),
+                                          blurRadius: 8,
                                           spreadRadius: 1,
                                         ),
                                       ] : null,
@@ -480,11 +483,11 @@ class _AnimatedStateBadge extends StatelessWidget {
       ),
       child: Text(
         state.displayName.toUpperCase(),
-        style: TextStyle(
+        style: GoogleFonts.shipporiMincho(
           color: _color,
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.5,
+          fontSize: 10, // Slightly smaller for calligraphic look
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.1,
         ),
       ),
     );
@@ -692,21 +695,21 @@ class _CompletedBanner extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppColors.finished.withValues(alpha: 0.28)),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.check_circle_outline_rounded, color: AppColors.finished, size: 13),
-            SizedBox(width: 6),
+            const Icon(Icons.check_circle_outline_rounded, color: AppColors.finished, size: 13),
+            const SizedBox(width: 6),
             Expanded(
               child: Text(
-                'Download complete  ·  Tap to open',
-                style: TextStyle(
+                'Download complete · Tap to open',
+                style: GoogleFonts.shipporiMincho(
                   color: AppColors.finished,
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: AppColors.finished, size: 15),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.finished, size: 15),
           ],
         ),
       ),

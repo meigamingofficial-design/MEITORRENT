@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 
 /// Shown when there are no torrents yet.
@@ -17,23 +18,27 @@ class EmptyStateWidget extends StatelessWidget {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: AppColors.downloading.withValues(alpha: 0.08),
+                color: AppColors.downloading.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.downloading.withValues(alpha: 0.2),
-                  width: 2,
-                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.downloading.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    spreadRadius: 5,
+                  ),
+                ],
               ),
-              child: const Icon(Icons.download_rounded, color: AppColors.downloading, size: 48),
+              child: const Icon(Icons.download_rounded, 
+                               color: AppColors.downloading, size: 48),
             ),
             const SizedBox(height: 32),
             Text(
               'No torrents yet',
-              style: TextStyle(
+              style: GoogleFonts.shipporiMincho(
                 color: AppColors.text(context),
-                fontSize: 22,
+                fontSize: 24,
                 fontWeight: FontWeight.w800,
-                letterSpacing: -0.5,
+                letterSpacing: -0.2,
               ),
             ),
             const SizedBox(height: 12),
@@ -44,7 +49,7 @@ class EmptyStateWidget extends StatelessWidget {
                 color: AppColors.textSecondary(context),
                 fontSize: 15,
                 height: 1.6,
-                letterSpacing: 0.2,
+                letterSpacing: 0.1,
               ),
             ),
             const SizedBox(height: 60),

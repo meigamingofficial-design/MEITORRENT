@@ -16,16 +16,24 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   AppTheme._();
 
-  // ── Raw palette constants ──────────────────────────────────────
-  static const _crimson = Color(0xFFD63031); // Rising-sun red
-  static const _parchment = Color(0xFFFAF6EE); // Ivory canvas
-  static const _paperWhite = Color(0xFFFDF5E6); // Warm parchment for cards
-  static const _inkBlack = Color(0xFF1A1A1A); // Sumi-e ink
-  static const _bamboo = Color(0xFF27AE60); // Bamboo green
-  static const _autumnOrange = Color(0xFFD35400); // Autumn orange
-  static const _deepCrimson = Color(0xFFC0392B); // Error red
-  static const _inkGrey = Color(0xFF5D5D5D); // Secondary text
-  static const _inkFaded = Color(0xFFE8E0D4); // Dividers / borders
+  // ── Traditional Japanese Palette (Nippon Colors) ────────────────
+  static const _shuRed = Color(0xFFE83929); // Vermilion (Shu-iro)
+  static const _sumizome = Color(0xFF1C1C1C); // Ink Black (Sumizome)
+  static const _torinoko = Color(0xFFF9F1E1); // Paper/Eggshell (Torinoko)
+  static const _kumen = Color(0xFFFDF9F2); // Ivory Parchment
+  static const _takeGreen = Color(0xFF316745); // Bamboo Green (Take-gaki)
+  static const _yamabuki = Color(0xFFFFB11B); // Golden Yellow (Yamabuki)
+  static const _beni = Color(0xFFB7282E); // Deep Madder Red (Beni-iro)
+  static const _charcoal = Color(0xFF5D5D5D); // Charcoal Gray
+  static const _paperBorder = Color(0xFFE8E0D4); // Soft Paper Edge
+
+  // Private legacy aliases
+  static const _crimson = _shuRed;
+  static const _paperWhite = _kumen;
+  static const _inkBlack = _sumizome;
+  static const _bamboo = _takeGreen;
+  static const _deepCrimson = _beni;
+  static const _inkGrey = _charcoal;
 
   // ── Dark palette ───────────────────────────────────────────────
   static const _darkInk = Color(0xFF0D0D0D); // Midnight Ink (Background)
@@ -38,31 +46,31 @@ class AppTheme {
   // ── Color Scheme ──────────────────────────────────────────────
   static const ColorScheme _scheme = ColorScheme(
     brightness: Brightness.light,
-    primary: _crimson,
+    primary: _shuRed,
     onPrimary: Colors.white,
     primaryContainer: Color(0xFFFFDADA),
-    onPrimaryContainer: Color(0xFF8B0000),
-    secondary: _bamboo,
+    onPrimaryContainer: _beni,
+    secondary: _takeGreen,
     onSecondary: Colors.white,
     secondaryContainer: Color(0xFFD4EDDA),
     onSecondaryContainer: Color(0xFF145A32),
-    tertiary: _autumnOrange,
-    onTertiary: Colors.white,
+    tertiary: _yamabuki,
+    onTertiary: _sumizome,
     tertiaryContainer: Color(0xFFFFE4CC),
     onTertiaryContainer: Color(0xFF7B3100),
-    error: _deepCrimson,
+    error: _beni,
     onError: Colors.white,
     errorContainer: Color(0xFFFFDAD6),
-    onErrorContainer: Color(0xFF8B0000),
-    surface: _paperWhite,
-    onSurface: _inkBlack,
-    surfaceContainerHighest: _inkFaded,
+    onErrorContainer: _beni,
+    surface: _kumen,
+    onSurface: _sumizome,
+    surfaceContainerHighest: _paperBorder,
     outline: Color(0xFFCCC4BA),
-    outlineVariant: Color(0xFFE8E0D4),
+    outlineVariant: _paperBorder,
     shadow: Color(0xFF000000),
     scrim: Color(0xFF000000),
-    inverseSurface: _inkBlack,
-    onInverseSurface: _parchment,
+    inverseSurface: _sumizome,
+    onInverseSurface: _torinoko,
     inversePrimary: Color(0xFFFFB3B3),
   );
 
@@ -71,63 +79,63 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: _scheme,
-      scaffoldBackgroundColor: _parchment,
+      scaffoldBackgroundColor: _torinoko,
 
-      // Outfit font — modern yet warm
+      // Outfit for UI, Shippori Mincho for headers
       textTheme: GoogleFonts.outfitTextTheme(
         ThemeData.light().textTheme.apply(
-              bodyColor: _inkBlack,
-              displayColor: _inkBlack,
+              bodyColor: _sumizome,
+              displayColor: _sumizome,
             ),
       ),
 
-      // ── Card ──────────────────────────────────────────────────
+      // ── Card (Handmade Paper Style) ───────────────────────────
       cardTheme: CardThemeData(
-        color: _paperWhite,
-        elevation: 3,
-        shadowColor: _inkBlack.withValues(alpha: 0.12),
+        color: _kumen,
+        elevation: 2,
+        shadowColor: _sumizome.withValues(alpha: 0.1),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: Color(0xFFE8E0D4), width: 1.5),
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: _paperBorder, width: 1.2),
         ),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
 
-      // ── AppBar ────────────────────────────────────────────────
+      // ── AppBar (Calligraphic Style) ───────────────────────────
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.outfit(
-          fontSize: 24,
+        titleTextStyle: GoogleFonts.shipporiMincho(
+          fontSize: 26,
           fontWeight: FontWeight.w800,
-          color: _inkBlack,
-          letterSpacing: -0.5,
+          color: _sumizome,
+          letterSpacing: -0.2,
         ),
-        iconTheme: const IconThemeData(color: _inkBlack),
+        iconTheme: const IconThemeData(color: _sumizome),
       ),
 
-      // ── FAB ───────────────────────────────────────────────────
+      // ── FAB (Hanko Stamp Style) ───────────────────────────────
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: _crimson,
+        backgroundColor: _shuRed,
         foregroundColor: Colors.white,
-        elevation: 4,
+        elevation: 6,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(12), // Squares off slightly like a stamp
         ),
       ),
 
       // ── Elevated Button ───────────────────────────────────────
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: _crimson,
+          backgroundColor: _shuRed,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: GoogleFonts.outfit(fontWeight: FontWeight.w700),
+          textStyle: GoogleFonts.shipporiMincho(fontWeight: FontWeight.w700),
           elevation: 0,
         ),
       ),
@@ -295,56 +303,62 @@ class AppColors {
   // ── Theme-Aware Semantic Colors ──────────────────────────────────
   static Color surface(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
-          ? paperWhite
+          ? kumen
           : (Theme.of(context).cardTheme.color ?? darkSurface);
 
   static Color background(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
-          ? parchment
+          ? torinoko
           : darkBackground;
 
   static Color text(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
-          ? inkBlack
+          ? sumizome
           : const Color(0xFFE0E0E0);
 
   static Color textSecondary(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
-          ? inkGrey
+          ? charcoal
           : const Color(0xFF9E9E9E);
 
   static Color border(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
-          ? inkFaded
+          ? paperBorder
           : const Color(0xFF2C2C2C);
 
   // ── Static Palette ───────────────────────────────────────────────
-  static const parchment = Color(0xFFFAF6EE); // light background
-  static const paperWhite = Color(0xFFFDF9F2); // light surface
+  static const torinoko = Color(0xFFF9F1E1); // light background
+  static const kumen = Color(0xFFFDF9F2); // light surface
   static const darkBackground = Color(0xFF0D0D0D); // dark background
   static const darkSurface = Color(0xFF161616); // Soot Black (Surface/Cards)
   static const boneWhite = Color(0xFFE5E2D9);
-  static const fadedInk = Color(0xFF8A8A8A);
+
+  // Legacy aliases to fix compilation
+  static const parchment = torinoko;
+  static const paperWhite = kumen;
+  static const inkBlack = sumizome;
+  static const inkGrey = charcoal;
+  static const inkFaded = paperBorder;
 
   static Color inputFill(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
           ? const Color(0xFFF4EDE0)
           : const Color(0xFF1F1F1F);
 
-  static const inkBlack = Color(0xFF1A1A1A); // primary text (light)
-  static const inkGrey = Color(0xFF5D5D5D); // secondary text (light)
-  static const inkFaded = Color(0xFFE8E0D4); // borders / dividers (light)
+  static const sumizome = Color(0xFF1C1C1C); // primary text (light)
+  static const charcoal = Color(0xFF5D5D5D); // secondary text (light)
+  static const paperBorder = Color(0xFFE8E0D4); // borders / dividers (light)
 
   // ── Torrent state colours (Static across themes) ──────────────────
-  static const downloading = Color(0xFFD63031); // crimson red
-  static const downloadingDark = Color(0xFFC23616); // deep crimson
-  static const seeding = Color(0xFF27AE60); // bamboo green
-  static const paused = Color(0xFFD35400); // autumn orange
-  static const error = Color(0xFFC0392B); // deep crimson
-  static const finished = Color(0xFF1E8449); // forest green
-  static const unknown = Color(0xFF8E8E8E); // slate grey
-  static const metadata = Color(0xFF9E9E9E);
-  static const checking = Color(0xFF9E9E9E);
+  static const downloading = Color(0xFFE83929); // Shu Red
+  static const downloadingDark = Color(0xFFB7282E); // Beni Red
+  static const seeding = Color(0xFF316745); // Take Green
+  static const paused = Color(0xFFD35400); // Autumn Orange
+  static const error = Color(0xFFB7282E); // Beni Red
+  static const finished = Color(0xFF145A32); // Deep Take Green
+  static const unknown = Color(0xFF8A8A8A); // Faded Ink
+  static const metadata = Color(0xFF5D5D5D); // Charcoal
+  static const checking = Color(0xFF5D5D5D);
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -353,44 +367,44 @@ class AppColors {
 class AppGradients {
   AppGradients._();
 
-  /// Primary crimson gradient (FAB, CTAs).
+  /// Primary Shu red gradient (FAB, CTAs).
   static const primary = LinearGradient(
-    colors: [Color(0xFFE84118), Color(0xFFC23616)],
+    colors: [Color(0xFFE83929), Color(0xFFB7282E)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Seeding gradient — bamboo green.
+  /// Seeding gradient — Take Green.
   static const seeding = LinearGradient(
-    colors: [Color(0xFF2ECC71), Color(0xFF27AE60)],
+    colors: [Color(0xFF316745), Color(0xFF145A32)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   /// Error gradient.
   static const error = LinearGradient(
-    colors: [Color(0xFFE74C3C), Color(0xFFC0392B)],
+    colors: [Color(0xFFB7282E), Color(0xFF8B0000)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Paused gradient — autumn orange.
+  /// Paused gradient.
   static const paused = LinearGradient(
-    colors: [Color(0xFFF39C12), Color(0xFFD35400)],
+    colors: [Color(0xFFD35400), Color(0xFF7B3100)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Subtle crimson card tint.
+  /// Subtle paper card tint.
   static const cardSurface = LinearGradient(
-    colors: [Color(0x08D63031), Color(0x04C23616)],
+    colors: [Color(0x08E83929), Color(0x041C1C1C)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   /// Active selection / border gradient.
   static const activeBorder = LinearGradient(
-    colors: [Color(0x40D63031), Color(0x20C23616)],
+    colors: [Color(0x40E83929), Color(0x20B7282E)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
