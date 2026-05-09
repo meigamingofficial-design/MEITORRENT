@@ -23,6 +23,7 @@ class TorrentTaskHandler extends TaskHandler {
   int? _sessionAddress;
   String? _savePath;
   Timer? _pollingTimer;
+  DateTime? _lastMainIsolateUpdate;
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
@@ -32,6 +33,7 @@ class TorrentTaskHandler extends TaskHandler {
   /// Called when the main isolate pushes data via [FlutterForegroundTask.sendDataToTask].
   @override
   void onReceiveData(Object data) {
+    _lastMainIsolateUpdate = DateTime.now();
     if (data is Map<String, dynamic>) {
       // 1. Update notification text
       final title = data['title'] as String? ?? 'Meitorrent';
@@ -69,14 +71,20 @@ class TorrentTaskHandler extends TaskHandler {
 
     // Update notification from our own polling too
     _pollingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      // Skip updating from background polling if the main isolate is actively pushing to prevent blinking / fighting
+      if (_lastMainIsolateUpdate != null &&
+          DateTime.now().difference(_lastMainIsolateUpdate!) < const Duration(seconds: 4)) {
+        return;
+      }
+
       final engine = lt.LibtorrentFlutter.instanceInternal;
       if (engine == null) return;
 
       final torrents = engine.torrents.values.toList();
       if (torrents.isEmpty) return;
 
-      // Simple summary for notification
-      final active = torrents.where((t) => t.state.isActive).toList();
+      // Simple summary for notification (properly check isPaused to prevent 'Ready to download' conflicts)
+      final active = torrents.where((t) => t.state.isActive && !t.isPaused).toList();
       final String text;
       if (active.isNotEmpty) {
         final totalDown = active.fold<int>(0, (s, t) => s + t.downloadRate);
