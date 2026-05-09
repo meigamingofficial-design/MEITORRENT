@@ -167,70 +167,73 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 width: 1.5,
               ),
             ),
-            child: AppBar(
-              elevation: 0,
-              backgroundColor: Colors.transparent,
-              leading: IconButton(
-                icon:
-                    Icon(Icons.close, color: AppColors.textSecondary(context)),
-                onPressed: () =>
-                    ref.read(selectedTorrentsProvider.notifier).clear(),
+            child: SizedBox(
+              height: 56,
+              child: Row(
+                children: [
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: Icon(Icons.close, color: AppColors.textSecondary(context)),
+                    onPressed: () =>
+                        ref.read(selectedTorrentsProvider.notifier).clear(),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      '${selectedIds.length} Selected',
+                      style: GoogleFonts.shipporiMincho(
+                        color: AppColors.text(context),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  _SelectionAction(
+                    icon: Icons.play_arrow_rounded,
+                    tooltip: 'Resume',
+                    onPressed: () async {
+                      final notifier = ref.read(torrentNotifierProvider.notifier);
+                      final ids = selectedIds.toList();
+                      ref.read(selectedTorrentsProvider.notifier).clear();
+                      await Future.wait(
+                          ids.map((id) => notifier.resumeTorrent(id)));
+                    },
+                  ),
+                  _SelectionAction(
+                    icon: Icons.pause_rounded,
+                    tooltip: 'Pause',
+                    onPressed: () async {
+                      final notifier = ref.read(torrentNotifierProvider.notifier);
+                      final ids = selectedIds.toList();
+                      ref.read(selectedTorrentsProvider.notifier).clear();
+                      await Future.wait(
+                          ids.map((id) => notifier.pauseTorrent(id)));
+                    },
+                  ),
+                  _SelectionAction(
+                    icon: Icons.stop_rounded,
+                    tooltip: 'Stop',
+                    onPressed: () async {
+                      final notifier = ref.read(torrentNotifierProvider.notifier);
+                      final ids = selectedIds.toList();
+                      ref.read(selectedTorrentsProvider.notifier).clear();
+                      await Future.wait(
+                          ids.map((id) => notifier.stopTorrent(id)));
+                    },
+                  ),
+                  _SelectionAction(
+                    icon: Icons.delete_outline_rounded,
+                    color: AppColors.error,
+                    tooltip: 'Delete',
+                    onPressed: () => _confirmDeleteMultiple(
+                        context, ref, selectedIds.toList()),
+                  ),
+                  const SizedBox(width: 8),
+                ],
               ),
-              title: Text(
-                '${selectedIds.length} Selected',
-                style: GoogleFonts.shipporiMincho(
-                  color: AppColors.text(context),
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.2,
-                ),
-              ),
-              actions: [
-                _SelectionAction(
-                  icon: Icons.play_arrow_rounded,
-                  tooltip: 'Resume',
-                  onPressed: () async {
-                    final notifier = ref.read(torrentNotifierProvider.notifier);
-                    final ids = selectedIds.toList();
-                    ref.read(selectedTorrentsProvider.notifier).clear();
-                    await Future.wait(
-                        ids.map((id) => notifier.resumeTorrent(id)));
-                  },
-                ),
-                const SizedBox(width: 4),
-                _SelectionAction(
-                  icon: Icons.pause_rounded,
-                  tooltip: 'Pause',
-                  onPressed: () async {
-                    final notifier = ref.read(torrentNotifierProvider.notifier);
-                    final ids = selectedIds.toList();
-                    ref.read(selectedTorrentsProvider.notifier).clear();
-                    await Future.wait(
-                        ids.map((id) => notifier.pauseTorrent(id)));
-                  },
-                ),
-                const SizedBox(width: 4),
-                _SelectionAction(
-                  icon: Icons.stop_rounded,
-                  tooltip: 'Stop',
-                  onPressed: () async {
-                    final notifier = ref.read(torrentNotifierProvider.notifier);
-                    final ids = selectedIds.toList();
-                    ref.read(selectedTorrentsProvider.notifier).clear();
-                    await Future.wait(
-                        ids.map((id) => notifier.stopTorrent(id)));
-                  },
-                ),
-                const SizedBox(width: 4),
-                _SelectionAction(
-                  icon: Icons.delete_outline_rounded,
-                  color: AppColors.error,
-                  tooltip: 'Delete',
-                  onPressed: () => _confirmDeleteMultiple(
-                      context, ref, selectedIds.toList()),
-                ),
-                const SizedBox(width: 8),
-              ],
             ),
           ),
         ),
@@ -581,7 +584,7 @@ class _SelectionAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Tooltip(
         message: tooltip,
         child: Material(
@@ -590,7 +593,7 @@ class _SelectionAction extends StatelessWidget {
             onTap: onPressed,
             borderRadius: BorderRadius.circular(12),
             child: Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(6),
               child:
                   Icon(icon, color: color ?? AppColors.text(context), size: 22),
             ),
