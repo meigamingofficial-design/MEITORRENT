@@ -17,13 +17,13 @@ class AppTheme {
   AppTheme._();
 
   // ── Traditional Japanese Palette (Nippon Colors) ────────────────
-  static const _shuRed = Color(0xFFE83929); // Vermilion (Shu-iro)
+  static const _shuRed = Color(0xFFFF3B7B); // Painted Sakura Pink (from user painting)
   static const _sumizome = Color(0xFF1C1C1C); // Ink Black (Sumizome)
-  static const _torinoko = Color(0xFFF9F1E1); // Paper/Eggshell (Torinoko)
-  static const _kumen = Color(0xFFFDF9F2); // Ivory Parchment
+  static const _torinoko = Color(0xFFFCF3F3); // Soft Sakura Parchment (pink tint)
+  static const _kumen = Color(0xFFFFF7F7); // Pure Sakura Paper (pinkish white)
   static const _takeGreen = Color(0xFF316745); // Bamboo Green (Take-gaki)
   static const _yamabuki = Color(0xFFFFB11B); // Golden Yellow (Yamabuki)
-  static const _beni = Color(0xFFB7282E); // Deep Madder Red (Beni-iro)
+  static const _beni = Color(0xFFD81B60); // Painted Blossom Crimson (deep magenta pink)
   static const _charcoal = Color(0xFF5D5D5D); // Charcoal Gray
   static const _paperBorder = Color(0xFFE8E0D4); // Soft Paper Edge
 
@@ -40,7 +40,7 @@ class AppTheme {
   static const _charcoalFaded = Color(0xFF8A8A8A); // Faded Ink (Secondary Text)
   static const _darkBorder = Color(0xFF2C2D33); // Deep Paper Edge
   static const _darkInput = Color(0xFF1A1B1E); // Input Fill (Dark)
-  static const _hankoRedDark = Color(0xFFB7282E); // Beni Red (Hanko in Dark)
+  static const _hankoRedDark = Color(0xFFD81B60); // Painted Blossom Crimson in Dark
 
   // ── Light Color Scheme ──────────────────────────────────────
   static const ColorScheme _scheme = ColorScheme(
@@ -452,8 +452,8 @@ class AppColors {
           : const Color(0xFF2C2D33); // Dark Border
 
   // ── Static Palette ───────────────────────────────────────────────
-  static const torinoko = Color(0xFFF9F1E1); // light background
-  static const kumen = Color(0xFFFDF9F2); // light surface
+  static const torinoko = Color(0xFFFCF3F3); // Soft Sakura Parchment (pink tint)
+  static const kumen = Color(0xFFFFF7F7); // Pure Sakura Paper (pinkish white)
   static const darkBackground = Color(0xFF141517); // dark background
   static const darkSurface = Color(0xFF1F2023); // Soot Black (Surface/Cards)
   static const boneWhite = Color(0xFFE5E2D9);
@@ -475,11 +475,11 @@ class AppColors {
   static const paperBorder = Color(0xFFE8E0D4); // borders / dividers (light)
 
   // ── Torrent state colours (Static across themes) ──────────────────
-  static const downloading = Color(0xFFE83929); // Shu Red
-  static const downloadingDark = Color(0xFFB7282E); // Beni Red
+  static const downloading = Color(0xFFFF3B7B); // Painted Sakura Pink
+  static const downloadingDark = Color(0xFFD81B60); // Painted Blossom Crimson
   static const seeding = Color(0xFF316745); // Take Green
   static const paused = Color(0xFFD35400); // Autumn Orange
-  static const error = Color(0xFFB7282E); // Beni Red
+  static const error = Color(0xFFD81B60); // Painted Blossom Crimson
   static const finished = Color(0xFF145A32); // Deep Take Green
   static const unknown = Color(0xFF8A8A8A); // Faded Ink
   static const metadata = Color(0xFF5D5D5D); // Charcoal
@@ -492,9 +492,9 @@ class AppColors {
 class AppGradients {
   AppGradients._();
 
-  /// Primary Shu red gradient (FAB, CTAs).
+  /// Primary Sakura pink gradient (FAB, CTAs).
   static const primary = LinearGradient(
-    colors: [Color(0xFFE83929), Color(0xFFB7282E)],
+    colors: [Color(0xFFFF3B7B), Color(0xFFD81B60)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -508,7 +508,7 @@ class AppGradients {
 
   /// Error gradient.
   static const error = LinearGradient(
-    colors: [Color(0xFFB7282E), Color(0xFF8B0000)],
+    colors: [Color(0xFFD81B60), Color(0xFF800020)], // Blossom Crimson to Deep Burgundy/Wine
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -522,14 +522,14 @@ class AppGradients {
 
   /// Subtle paper card tint.
   static const cardSurface = LinearGradient(
-    colors: [Color(0x08E83929), Color(0x041C1C1C)],
+    colors: [Color(0x08FF3B7B), Color(0x041C1C1C)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   /// Active selection / border gradient.
   static const activeBorder = LinearGradient(
-    colors: [Color(0x40E83929), Color(0x20B7282E)],
+    colors: [Color(0x40FF3B7B), Color(0x20D81B60)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

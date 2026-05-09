@@ -131,6 +131,12 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
           children: [
             // All routes (now opaque parchment in light mode)
             scaled,
+            // Subtle pink blush overlay for a gorgeous unified Sakura theme
+            IgnorePointer(
+              child: Container(
+                color: const Color(0xFFFFC0CB).withValues(alpha: 0.04), // 4% opacity soft pink tint
+              ),
+            ),
             // Sakura watermark — on top of UI with IgnorePointer to prevent interference
             // This prevents "ghosting" during transitions because routes are now opaque
             IgnorePointer(

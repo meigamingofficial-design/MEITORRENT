@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/services/engine_process_manager.dart';
 import '../../../core/services/foreground_service_manager.dart';
@@ -180,10 +179,30 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                             scale: _logoScale.value,
                             child: Opacity(
                               opacity: _logoOpacity.value,
-                              child: Image.asset(
-                                'assets/images/app_logo.png',
-                                width: 100,
-                                height: 100,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color: AppColors.border(context).withValues(alpha: 0.8),
+                                    width: 1.5,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.08),
+                                      blurRadius: 16,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(22.5),
+                                  child: Image.asset(
+                                    'assets/images/app_logo.png',
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -197,13 +216,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       animation: _logoOpacity,
                       builder: (_, __) => Text(
                         'Meitorrent',
-                        style: GoogleFonts.shipporiMincho(
-                          fontSize: 34,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.text(context)
-                              .withValues(alpha: _logoOpacity.value),
-                          letterSpacing: -0.5,
-                        ),
+                        style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                              color: AppColors.text(context)
+                                  .withValues(alpha: _logoOpacity.value),
+                              fontSize: 34,
+                            ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -239,8 +256,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         child: Text(
                           _statusText,
                           key: ValueKey(_statusText),
-                          style: TextStyle(
-                              color: AppColors.textSecondary(context), fontSize: 13),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppColors.textSecondary(context),
+                                fontSize: 13,
+                              ),
                         ),
                       ),
                     ] else ...[

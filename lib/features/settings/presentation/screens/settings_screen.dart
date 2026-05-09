@@ -2,7 +2,6 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/services/oem_battery_guard.dart';
 
@@ -370,13 +369,29 @@ class _AboutTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: Image.asset(
-          'assets/images/app_logo.png',
-          width: 40,
-          height: 40,
-          fit: BoxFit.cover,
+      leading: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.border(context).withValues(alpha: 0.8),
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(11),
+          child: Image.asset(
+            'assets/images/app_logo.png',
+            width: 40,
+            height: 40,
+            fit: BoxFit.cover,
+          ),
         ),
       ),
       title: Text(
@@ -469,10 +484,10 @@ class _LegalDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(title,
-            style: GoogleFonts.shipporiMincho(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-            )),
+            style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                )),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
