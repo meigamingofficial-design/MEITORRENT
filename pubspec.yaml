@@ -85,6 +85,7 @@ flutter:
     - PRIVACY_POLICY.md
     - TERMS.md
     - LICENSES.md
+    - google_fonts/
     - assets/images/
     - assets/images/app_logo.png
     - assets/images/icon_android.png

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
@@ -19,6 +20,9 @@ import 'core/services/shared_preferences_provider.dart';
 @pragma('vm:entry-point')
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Force Google Fonts to load locally from bundled assets with zero network latency
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   // Required by flutter_foreground_task before runApp
   ForegroundServiceManager.initCommunicationPort();
