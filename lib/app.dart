@@ -15,10 +15,10 @@ import 'features/torrent_list/presentation/widgets/add_torrent_dialog.dart';
 final navigatorKey = GlobalKey<NavigatorState>();
 
 class MeitorrentApp extends ConsumerStatefulWidget {
-  const MeitorrentApp({super.key, this.initialMagnetUri});
+  const MeitorrentApp({super.key, this.initialLinkOrPath});
 
-  /// Magnet URI captured during cold-start deep linking (before runApp).
-  final String? initialMagnetUri;
+  /// Magnet URI or cached local .torrent file path captured during cold-start.
+  final String? initialLinkOrPath;
 
   @override
   ConsumerState<MeitorrentApp> createState() => _MeitorrentAppState();
@@ -32,13 +32,13 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
     super.initState();
 
     // ── Warm-start deep links ─────────────────────────────────────────
-    _deepLinkSub = DeepLinkService.instance.magnetStream.listen(_handleMagnet);
+    _deepLinkSub = DeepLinkService.instance.torrentStream.listen(_handleIncomingLink);
 
-    // ── Cold-start deep link (app launched from magnet in browser) ────
-    if (widget.initialMagnetUri != null) {
+    // ── Cold-start deep link (app launched from file or link) ─────────
+    if (widget.initialLinkOrPath != null) {
       // Defer until the navigator is ready
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _openDialogWithMagnet(widget.initialMagnetUri!);
+        _openDialogWithLink(widget.initialLinkOrPath!);
       });
     }
   }
@@ -49,52 +49,60 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
     super.dispose();
   }
 
-  /// Handles an incoming magnet URI from any source (warm-start deep link).
-  void _handleMagnet(String uri) {
+  /// Handles an incoming magnet URI or local file path from any source.
+  void _handleIncomingLink(String linkOrPath) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _openDialogWithMagnet(uri);
+      _openDialogWithLink(linkOrPath);
     });
   }
 
-  /// Opens [AddTorrentDialog] pre-filled with [magnetUri] using the global
+  /// Opens [AddTorrentDialog] pre-filled with [linkOrPath] using the global
   /// navigator so it works regardless of what screen is currently showing.
-  void _openDialogWithMagnet(String magnetUri) {
+  void _openDialogWithLink(String linkOrPath) {
     final ctx = navigatorKey.currentContext;
     if (ctx == null) return;
+
+    final isMagnet = linkOrPath.startsWith('magnet:');
 
     showModalBottomSheet<void>(
       context: ctx,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => AddTorrentDialog(
-        initialMagnetUri: magnetUri,
+        initialMagnetUri: isMagnet ? linkOrPath : null,
+        initialTorrentFilePath: isMagnet ? null : linkOrPath,
         onMagnetAdded: (uri, path) {
           ref
               .read(torrentNotifierProvider.notifier)
               .addMagnet(uri, savePath: path);
-          ScaffoldMessenger.of(ctx).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle_rounded,
-                      color: Color(0xFF2ECC71), size: 18),
-                  const SizedBox(width: 10),
-                  Text('Torrent added from browser', style: TextStyle(color: AppColors.text(ctx))),
-                ],
-              ),
-              backgroundColor: AppColors.surface(ctx),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              duration: const Duration(seconds: 3),
-            ),
-          );
+          _showToast(ctx, 'Torrent added from browser');
         },
         onFileAdded: (file, path) {
           ref
               .read(torrentNotifierProvider.notifier)
               .addTorrentFile(file, savePath: path);
+          _showToast(ctx, 'Torrent added from storage');
         },
+      ),
+    );
+  }
+
+  void _showToast(BuildContext ctx, String message) {
+    ScaffoldMessenger.of(ctx).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded,
+                color: Color(0xFF2ECC71), size: 18),
+            const SizedBox(width: 10),
+            Text(message, style: TextStyle(color: AppColors.text(ctx))),
+          ],
+        ),
+        backgroundColor: AppColors.surface(ctx),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 3),
       ),
     );
   }

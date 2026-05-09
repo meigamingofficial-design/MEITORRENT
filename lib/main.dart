@@ -27,8 +27,8 @@ void main() async {
   // Load SharedPreferences synchronously for instant settings access
   final sharedPrefs = await SharedPreferences.getInstance();
 
-  // Capture cold-start magnet link (if the app was opened via magnet:// URI)
-  final initialMagnet = await DeepLinkService.instance.initialize();
+  // Capture cold-start link/path (if the app was opened via magnet:// or a local .torrent file)
+  final initialLinkOrPath = await DeepLinkService.instance.initialize();
 
   // Light system UI — parchment background
   SystemChrome.setSystemUIOverlayStyle(
@@ -50,7 +50,7 @@ void main() async {
       overrides: [
         sharedPreferencesProvider.overrideWithValue(sharedPrefs),
       ],
-      child: MeitorrentApp(initialMagnetUri: initialMagnet),
+      child: MeitorrentApp(initialLinkOrPath: initialLinkOrPath),
     ),
   );
 }

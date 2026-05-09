@@ -13,11 +13,13 @@ class AddTorrentDialog extends StatefulWidget {
     required this.onMagnetAdded,
     required this.onFileAdded,
     this.initialMagnetUri,
+    this.initialTorrentFilePath,
   });
 
   final void Function(String uri, String? savePath) onMagnetAdded;
   final void Function(String filePath, String? savePath) onFileAdded;
   final String? initialMagnetUri;
+  final String? initialTorrentFilePath;
 
   @override
   State<AddTorrentDialog> createState() => _AddTorrentDialogState();
@@ -30,6 +32,7 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
   final _magnetFormKey = GlobalKey<FormState>();
   bool _sequential = false;
   bool _isLoading = false;
+  String? _selectedFilePath;
 
   @override
   void initState() {
@@ -37,6 +40,10 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
     _tabController = TabController(length: 2, vsync: this);
     if (widget.initialMagnetUri != null) {
       _magnetController.text = widget.initialMagnetUri!;
+    }
+    if (widget.initialTorrentFilePath != null) {
+      _selectedFilePath = widget.initialTorrentFilePath;
+      _tabController.index = 1; // Open .torrent file tab directly!
     }
   }
 
@@ -178,11 +185,11 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                               ),
                               _FileTab(
                                 sequential: _sequential,
+                                initialFilePath: _selectedFilePath,
                                 onSequentialChanged: (v) =>
                                     setState(() => _sequential = v),
                                 onFilePicked: (path) {
-                                  widget.onFileAdded(path, null);
-                                  Navigator.pop(context);
+                                  setState(() => _selectedFilePath = path);
                                 },
                               ),
                             ],
@@ -192,13 +199,13 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                     ),
                   ),
 
-                  // ── Action buttons (magnet tab only) ───────────────────────
+                  // ── Action buttons ─────────────────────────────────────────
                   AnimatedBuilder(
                     animation: _tabController,
                     builder: (_, __) {
-                      if (_tabController.index != 0) {
-                        return SizedBox(height: safePad + 16);
-                      }
+                      final isMagnet = _tabController.index == 0;
+                      final canSubmit = isMagnet ? true : (_selectedFilePath != null);
+
                       return Padding(
                         padding: EdgeInsets.fromLTRB(24, 0, 24, safePad + 24),
                         child: Row(
@@ -212,7 +219,11 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                             const SizedBox(width: 16),
                             Expanded(
                               child: _GradientButton(
-                                onPressed: _isLoading ? null : _submitMagnet,
+                                onPressed: _isLoading
+                                    ? null
+                                    : (canSubmit
+                                        ? (isMagnet ? _submitMagnet : _submitFile)
+                                        : null),
                                 child: _isLoading
                                     ? const SizedBox(
                                         width: 20,
@@ -237,6 +248,13 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
         ),
       ),
     );
+  }
+
+  void _submitFile() {
+    if (_selectedFilePath == null) return;
+    setState(() => _isLoading = true);
+    widget.onFileAdded(_selectedFilePath!, null);
+    Navigator.pop(context);
   }
 
   Future<void> _pasteFromClipboard() async {
@@ -415,18 +433,18 @@ class _MagnetTab extends StatelessWidget {
   }
 }
 
-// ─── File Tab ────────────────────────────────────────────────────────────────
-
 class _FileTab extends StatefulWidget {
   const _FileTab({
     required this.sequential,
     required this.onSequentialChanged,
     required this.onFilePicked,
+    this.initialFilePath,
   });
 
   final bool sequential;
   final ValueChanged<bool> onSequentialChanged;
-  final ValueChanged<String> onFilePicked;
+  final ValueChanged<String?> onFilePicked;
+  final String? initialFilePath;
 
   @override
   State<_FileTab> createState() => _FileTabState();
@@ -434,6 +452,25 @@ class _FileTab extends StatefulWidget {
 
 class _FileTabState extends State<_FileTab> {
   bool _picking = false;
+  String? _selectedPath;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedPath = widget.initialFilePath;
+  }
+
+  @override
+  void didUpdateWidget(covariant _FileTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialFilePath != oldWidget.initialFilePath) {
+      _selectedPath = widget.initialFilePath;
+    }
+  }
+
+  String _getFileName(String path) {
+    return path.split('/').last;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -462,40 +499,94 @@ class _FileTabState extends State<_FileTab> {
                       strokeWidth: 2,
                     ),
                   )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.downloading.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(16),
+                : _selectedPath != null
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.downloading.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Icon(
+                                Icons.insert_drive_file_rounded,
+                                color: AppColors.downloading,
+                                size: 28,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    _getFileName(_selectedPath!),
+                                    style: TextStyle(
+                                      color: AppColors.text(context),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Pre-loaded torrent file',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary(context),
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close_rounded, color: AppColors.downloading),
+                              onPressed: () {
+                                setState(() => _selectedPath = null);
+                                widget.onFilePicked(null);
+                              },
+                            ),
+                          ],
                         ),
-                        child: const Icon(
-                          Icons.cloud_upload_outlined,
-                          color: AppColors.downloading,
-                          size: 28,
-                        ),
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.downloading.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Icon(
+                              Icons.cloud_upload_outlined,
+                              color: AppColors.downloading,
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Choose .torrent file',
+                            style: TextStyle(
+                              color: AppColors.text(context),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Browse your internal storage',
+                            style: TextStyle(
+                              color: AppColors.textSecondary(context),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Choose .torrent file',
-                        style: TextStyle(
-                          color: AppColors.text(context),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Browse your internal storage',
-                        style: TextStyle(
-                          color: AppColors.textSecondary(context),
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
           ),
         ),
         const SizedBox(height: 12),
@@ -512,7 +603,9 @@ class _FileTabState extends State<_FileTab> {
         allowedExtensions: ['torrent'],
       );
       if (result?.files.single.path != null) {
-        widget.onFilePicked(result!.files.single.path!);
+        final path = result!.files.single.path!;
+        setState(() => _selectedPath = path);
+        widget.onFilePicked(path);
       }
     } finally {
       if (mounted) setState(() => _picking = false);

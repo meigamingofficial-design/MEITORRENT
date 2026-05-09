@@ -70,6 +70,25 @@ class MainActivity : FlutterActivity() {
                         if (path != null) openFolder(path, result)
                         else result.error("INVALID_ARG", "path is null", null)
                     }
+                    "copyContentUriToCache" -> {
+                        val uriStr = call.argument<String>("uri")
+                        if (uriStr != null) {
+                            try {
+                                val uri = Uri.parse(uriStr)
+                                val tempFile = File(context.cacheDir, "temp_" + System.currentTimeMillis() + ".torrent")
+                                context.contentResolver.openInputStream(uri)?.use { input ->
+                                    tempFile.outputStream().use { output ->
+                                        input.copyTo(output)
+                                    }
+                                }
+                                result.success(tempFile.absolutePath)
+                            } catch (e: Exception) {
+                                result.error("COPY_FAILED", e.message, null)
+                            }
+                        } else {
+                            result.error("INVALID_ARG", "uri is null", null)
+                        }
+                    }
                     else -> result.notImplemented()
                 }
             }
