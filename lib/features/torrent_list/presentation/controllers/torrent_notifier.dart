@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -45,14 +46,38 @@ TorrentRepository torrentRepository(Ref ref) {
 @riverpod
 class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   StreamSubscription<List<TorrentStatus>>? _sub;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
+  List<ConnectivityResult> _currentConnectivity = [ConnectivityResult.none];
+  final _wifiAutoPausedTorrents = <String, bool>{}; // Map of torrentId -> wasSeeding
   final _pendingStopTimers = <String, Timer>{};
 
   @override
   Future<List<TorrentStatus>> build() async {
     WidgetsBinding.instance.addObserver(this);
+
+    // Initialize current connectivity
+    Connectivity().checkConnectivity().then((results) {
+      _currentConnectivity = results;
+      _enforceWifiOnly(results);
+    });
+
+    _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
+      _currentConnectivity = results;
+      _enforceWifiOnly(results);
+    });
+
+    ref.listen(settingsNotifierProvider, (previous, next) async {
+      if (previous?.wifiOnlyMode != next.wifiOnlyMode) {
+        final results = await Connectivity().checkConnectivity();
+        _currentConnectivity = results;
+        _enforceWifiOnly(results);
+      }
+    });
+
     ref.onDispose(() {
       WidgetsBinding.instance.removeObserver(this);
       _sub?.cancel();
+      _connectivitySub?.cancel();
       for (final timer in _pendingStopTimers.values) {
         timer.cancel();
       }
@@ -68,8 +93,22 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
         // Push notification update (Hardening #5)
         ForegroundServiceManager.instance.pushUpdate(statuses);
 
-        // ── Auto-pause seeding if setting enabled ─────────────────────
         final config = ref.read(settingsNotifierProvider);
+
+        // ── WiFi-only Mode Enforcement ────────────────────────────────
+        final hasWifiResult = _currentConnectivity.contains(ConnectivityResult.wifi);
+        if (config.wifiOnlyMode && !hasWifiResult) {
+          for (final torrent in statuses) {
+            final isDownloadingOrSeeding = torrent.state == TorrentState.downloading || torrent.state == TorrentState.seeding;
+            if (isDownloadingOrSeeding && !torrent.isPaused) {
+              _wifiAutoPausedTorrents[torrent.id] = torrent.state == TorrentState.seeding;
+              pauseTorrent(torrent.id);
+              AppLogger.i('[WiFi Guard] Live block: auto-paused active torrent: ${torrent.id}');
+            }
+          }
+        }
+
+        // ── Auto-pause seeding if setting enabled ─────────────────────
         if (config.stopSeedingWhenFinished) {
           for (final torrent in statuses) {
             if (torrent.state == TorrentState.finished && !torrent.isPaused) {
@@ -111,6 +150,56 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     final stored = await repo.getStoredTorrents();
     ForegroundServiceManager.instance.pushUpdate(stored);
     return stored;
+  }
+
+  Future<void> _enforceWifiOnly(List<ConnectivityResult> results) async {
+    final settings = ref.read(settingsNotifierProvider);
+    if (!settings.wifiOnlyMode) {
+      // If Wifi-only mode is turned OFF, resume any torrents we previously auto-paused
+      if (_wifiAutoPausedTorrents.isNotEmpty) {
+        AppLogger.i('[WiFi Guard] WiFi-only mode disabled. Auto-resuming torrents: ${_wifiAutoPausedTorrents.keys}');
+        for (final id in List.from(_wifiAutoPausedTorrents.keys)) {
+          _wifiAutoPausedTorrents.remove(id);
+          try {
+            await resumeTorrent(id);
+          } catch (e) {
+            AppLogger.w('[WiFi Guard] Failed to auto-resume torrent: $id', error: e);
+          }
+        }
+      }
+      return;
+    }
+
+    final hasWifi = results.contains(ConnectivityResult.wifi);
+    if (!hasWifi) {
+      // Not on WiFi! Pause any active downloading or seeding torrents
+      final statuses = state.valueOrNull ?? [];
+      for (final torrent in statuses) {
+        final isDownloadingOrSeeding = torrent.state == TorrentState.downloading || torrent.state == TorrentState.seeding;
+        if (isDownloadingOrSeeding && !torrent.isPaused) {
+          _wifiAutoPausedTorrents[torrent.id] = torrent.state == TorrentState.seeding;
+          AppLogger.i('[WiFi Guard] Device not on WiFi. Auto-pausing torrent: ${torrent.id}');
+          try {
+            await pauseTorrent(torrent.id);
+          } catch (e) {
+            AppLogger.w('[WiFi Guard] Failed to auto-pause torrent: ${torrent.id}', error: e);
+          }
+        }
+      }
+    } else {
+      // Back on WiFi! Resume any torrents we auto-paused
+      if (_wifiAutoPausedTorrents.isNotEmpty) {
+        AppLogger.i('[WiFi Guard] Connected to WiFi! Auto-resuming torrents: ${_wifiAutoPausedTorrents.keys}');
+        for (final id in List.from(_wifiAutoPausedTorrents.keys)) {
+          _wifiAutoPausedTorrents.remove(id);
+          try {
+            await resumeTorrent(id);
+          } catch (e) {
+            AppLogger.w('[WiFi Guard] Failed to auto-resume torrent: $id', error: e);
+          }
+        }
+      }
+    }
   }
 
   // ─── Actions ────────────────────────────────────────────────────
