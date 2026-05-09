@@ -136,6 +136,9 @@ class NotificationService {
       // Keep ongoing only while actively downloading/checking — not for
       // completed or paused torrents so the user can dismiss them.
       ongoing: status.state.isActive,
+      // 🔒 Prevent "Flip-Up & Flip-Down" Shuffle: Force stable sorting based on addedAt
+      when: status.addedAt.millisecondsSinceEpoch,
+      showWhen: false,
     );
 
     await _plugin.show(
