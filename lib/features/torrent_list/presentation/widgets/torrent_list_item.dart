@@ -144,7 +144,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                               ),
                             ),
                             const SizedBox(width: 8),
-                            _AnimatedStateBadge(state: status.state),
+                            _AnimatedStateBadge(status: status),
                           ],
                         ),
                         const SizedBox(height: 16),
@@ -445,11 +445,14 @@ class _GlassCard extends StatelessWidget {
 }
 
 class _AnimatedStateBadge extends StatelessWidget {
-  const _AnimatedStateBadge({required this.state});
-  final TorrentState state;
+  const _AnimatedStateBadge({required this.status});
+  final TorrentStatus status;
 
   Color get _color {
-    switch (state) {
+    if (status.isCompleted) {
+      return AppColors.finished;
+    }
+    switch (status.state) {
       case TorrentState.downloading:
         return AppColors.downloading;
       case TorrentState.seeding:
@@ -473,6 +476,7 @@ class _AnimatedStateBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final text = status.isCompleted ? 'Finished' : status.state.displayName;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -482,7 +486,7 @@ class _AnimatedStateBadge extends StatelessWidget {
         border: Border.all(color: _color.withValues(alpha: 0.3), width: 1),
       ),
       child: Text(
-        state.displayName.toUpperCase(),
+        text.toUpperCase(),
         style: GoogleFonts.shipporiMincho(
           color: _color,
           fontSize: 10, // Slightly smaller for calligraphic look

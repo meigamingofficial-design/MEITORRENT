@@ -209,6 +209,9 @@ class TorrentRepositoryImpl implements TorrentRepository {
         state: live.state == TorrentState.seeding
             ? TorrentState.seeding
             : TorrentState.finished,
+        isCompleted: true,
+        isPaused: persisted.isPaused || persisted.isStopped,
+        isStopped: persisted.isStopped,
       );
     }
     final isWarmingUp = live.state == TorrentState.downloadingMetadata ||
