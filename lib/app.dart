@@ -74,15 +74,15 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
               .addMagnet(uri, savePath: path);
           ScaffoldMessenger.of(ctx).showSnackBar(
             SnackBar(
-              content: const Row(
+              content: Row(
                 children: [
-                  Icon(Icons.check_circle_rounded,
+                  const Icon(Icons.check_circle_rounded,
                       color: Color(0xFF2ECC71), size: 18),
-                  SizedBox(width: 10),
-                  Text('Torrent added from browser'),
+                  const SizedBox(width: 10),
+                  Text('Torrent added from browser', style: TextStyle(color: AppColors.text(ctx))),
                 ],
               ),
-              backgroundColor: AppColors.paperWhite,
+              backgroundColor: AppColors.surface(ctx),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),

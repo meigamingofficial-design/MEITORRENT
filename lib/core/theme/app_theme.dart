@@ -31,19 +31,18 @@ class AppTheme {
   static const _crimson = _shuRed;
   static const _paperWhite = _kumen;
   static const _inkBlack = _sumizome;
-  static const _bamboo = _takeGreen;
-  static const _deepCrimson = _beni;
   static const _inkGrey = _charcoal;
 
-  // ── Dark palette ───────────────────────────────────────────────
-  static const _darkInk = Color(0xFF0D0D0D); // Midnight Ink (Background)
-  static const _darkSurface = Color(0xFF161616); // Soot Black (Surface/Cards)
-  static const _boneWhite = Color(0xFFE5E2D9); // Bone White (Primary Text)
-  static const _fadedInk = Color(0xFF8A8A8A); // Faded Ink (Secondary Text)
-  static const _darkBorder = Color(0xFF222222); // Deep Border
-  static const _darkInput = Color(0xFF1F1F1F); // Input Fill (Dark)
+  // ── Dark palette (Night Ink Aesthetic) ──────────────────────────
+  static const _darkInk = Color(0xFF141517); // Midnight Ink (Background)
+  static const _darkSurface = Color(0xFF1F2023); // Soot Gray (Surface/Cards)
+  static const _riceWhite = Color(0xFFE5E2D9); // Rice Paper White (Primary Text)
+  static const _charcoalFaded = Color(0xFF8A8A8A); // Faded Ink (Secondary Text)
+  static const _darkBorder = Color(0xFF2C2D33); // Deep Paper Edge
+  static const _darkInput = Color(0xFF1A1B1E); // Input Fill (Dark)
+  static const _hankoRedDark = Color(0xFFB7282E); // Beni Red (Hanko in Dark)
 
-  // ── Color Scheme ──────────────────────────────────────────────
+  // ── Light Color Scheme ──────────────────────────────────────
   static const ColorScheme _scheme = ColorScheme(
     brightness: Brightness.light,
     primary: _shuRed,
@@ -72,6 +71,37 @@ class AppTheme {
     inverseSurface: _sumizome,
     onInverseSurface: _torinoko,
     inversePrimary: Color(0xFFFFB3B3),
+  );
+
+  // ── Dark Color Scheme ───────────────────────────────────────
+  static const ColorScheme _darkScheme = ColorScheme(
+    brightness: Brightness.dark,
+    primary: _shuRed,
+    onPrimary: Colors.white,
+    primaryContainer: _hankoRedDark,
+    onPrimaryContainer: Colors.white,
+    secondary: _takeGreen,
+    onSecondary: Colors.white,
+    secondaryContainer: Color(0xFF145A32),
+    onSecondaryContainer: Color(0xFFD4EDDA),
+    tertiary: _yamabuki,
+    onTertiary: _darkInk,
+    tertiaryContainer: Color(0xFF7B3100),
+    onTertiaryContainer: Color(0xFFFFE4CC),
+    error: _beni,
+    onError: Colors.white,
+    errorContainer: _beni,
+    onErrorContainer: Colors.white,
+    surface: _darkSurface,
+    onSurface: _riceWhite,
+    surfaceContainerHighest: _darkBorder,
+    outline: _charcoalFaded,
+    outlineVariant: _darkBorder,
+    shadow: Color(0xFF000000),
+    scrim: Color(0xFF000000),
+    inverseSurface: _torinoko,
+    onInverseSurface: _sumizome,
+    inversePrimary: _shuRed,
   );
 
   // ── Public ThemeData ──────────────────────────────────────────
@@ -232,70 +262,165 @@ class AppTheme {
     );
   }
 
-  /// Dark Sumi-e Theme — Deep Ink & Bone White
+  // ── Dark ThemeData ───────────────────────────────────────────
   static ThemeData get dark {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      colorScheme: const ColorScheme.dark(
-        primary: _crimson,
-        secondary: _bamboo,
-        surface: _darkInk,
-        onSurface: _boneWhite,
-        surfaceContainer: _darkSurface,
-        onSurfaceVariant: _fadedInk,
-        outline: _darkBorder,
-        error: _deepCrimson,
-      ),
+      colorScheme: _darkScheme,
       scaffoldBackgroundColor: _darkInk,
-      textTheme: GoogleFonts.outfitTextTheme(const TextTheme()).copyWith(
-        displayLarge:
-            const TextStyle(color: _boneWhite, fontWeight: FontWeight.w800),
-        titleLarge:
-            const TextStyle(color: _boneWhite, fontWeight: FontWeight.w700),
-        bodyMedium: const TextStyle(color: _boneWhite),
-        bodySmall: const TextStyle(color: _fadedInk),
+
+      // Outfit for UI, Shippori Mincho for headers
+      textTheme: GoogleFonts.outfitTextTheme(
+        ThemeData.dark().textTheme.apply(
+              bodyColor: _riceWhite,
+              displayColor: _riceWhite,
+            ),
       ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: false,
-        iconTheme: IconThemeData(color: _boneWhite),
-        titleTextStyle: TextStyle(
-          color: _boneWhite,
-          fontSize: 20,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
+
+      // ── Card (Dark Paper Style) ───────────────────────────────
       cardTheme: CardThemeData(
         color: _darkSurface,
-        elevation: 0,
+        elevation: 0, // Flat with borders for dark mode
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: _darkBorder, width: 1),
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: _darkBorder, width: 1.2),
+        ),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      ),
+
+      // ── AppBar (Dark Calligraphic) ────────────────────────────
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        titleTextStyle: GoogleFonts.shipporiMincho(
+          fontSize: 26,
+          fontWeight: FontWeight.w800,
+          color: _riceWhite,
+          letterSpacing: -0.2,
+        ),
+        iconTheme: const IconThemeData(color: _riceWhite),
+      ),
+
+      // ── FAB (Dark Hanko Stamp) ────────────────────────────────
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: _shuRed,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
+
+      // ── Elevated Button ───────────────────────────────────────
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _shuRed,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          textStyle: GoogleFonts.shipporiMincho(fontWeight: FontWeight.w700),
+          elevation: 0,
+        ),
+      ),
+
+      // ── Outlined Button ───────────────────────────────────────
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: _darkBorder),
+          foregroundColor: _charcoalFaded,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+
+      // ── Text Button ───────────────────────────────────────────
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: _charcoalFaded,
+        ),
+      ),
+
+      // ── Input (Dark Ink) ──────────────────────────────────────
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: _darkInput,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
-        hintStyle: const TextStyle(color: _fadedInk),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: _darkBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: _shuRed, width: 1.5),
+        ),
+        hintStyle: TextStyle(color: _riceWhite.withValues(alpha: 0.35)),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
-      dividerTheme: const DividerThemeData(color: _darkBorder, thickness: 1),
+
+      // ── SnackBar ──────────────────────────────────────────────
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: _darkSurface,
+        contentTextStyle: GoogleFonts.outfit(color: _riceWhite),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        behavior: SnackBarBehavior.floating,
+      ),
+
+      // ── Divider ───────────────────────────────────────────────
+      dividerTheme: const DividerThemeData(
+        color: _darkBorder,
+        thickness: 1,
+      ),
+
+      // ── Switch ────────────────────────────────────────────────
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? _shuRed
+              : _charcoalFaded,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? _shuRed.withValues(alpha: 0.25)
+              : _darkBorder,
+        ),
+      ),
+
+      // ── Popup Menu ────────────────────────────────────────────
+      popupMenuTheme: PopupMenuThemeData(
+        color: _darkSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: _darkBorder),
+        ),
+        elevation: 8,
+      ),
+
+      // ── Dialog ────────────────────────────────────────────────
       dialogTheme: DialogThemeData(
         backgroundColor: _darkSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        elevation: 0,
+        elevation: 12,
+      ),
+
+      // ── Progress Indicator ────────────────────────────────────
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: _shuRed,
       ),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Semantic colors — torrent state accent colours
+// Simplified AppColors
 // ─────────────────────────────────────────────────────────────────
 class AppColors {
   AppColors._();
@@ -314,23 +439,23 @@ class AppColors {
   static Color text(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
           ? sumizome
-          : const Color(0xFFE0E0E0);
+          : const Color(0xFFE5E2D9); // Rice White
 
   static Color textSecondary(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
           ? charcoal
-          : const Color(0xFF9E9E9E);
+          : const Color(0xFF8A8A8A); // Faded Ink
 
   static Color border(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
           ? paperBorder
-          : const Color(0xFF2C2C2C);
+          : const Color(0xFF2C2D33); // Dark Border
 
   // ── Static Palette ───────────────────────────────────────────────
   static const torinoko = Color(0xFFF9F1E1); // light background
   static const kumen = Color(0xFFFDF9F2); // light surface
-  static const darkBackground = Color(0xFF0D0D0D); // dark background
-  static const darkSurface = Color(0xFF161616); // Soot Black (Surface/Cards)
+  static const darkBackground = Color(0xFF141517); // dark background
+  static const darkSurface = Color(0xFF1F2023); // Soot Black (Surface/Cards)
   static const boneWhite = Color(0xFFE5E2D9);
 
   // Legacy aliases to fix compilation
@@ -343,7 +468,7 @@ class AppColors {
   static Color inputFill(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
           ? const Color(0xFFF4EDE0)
-          : const Color(0xFF1F1F1F);
+          : const Color(0xFF1A1B1E);
 
   static const sumizome = Color(0xFF1C1C1C); // primary text (light)
   static const charcoal = Color(0xFF5D5D5D); // secondary text (light)

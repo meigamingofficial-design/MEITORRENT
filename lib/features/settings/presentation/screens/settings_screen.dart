@@ -2,6 +2,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/services/oem_battery_guard.dart';
 
@@ -188,10 +189,10 @@ class _SpeedLimitTile extends StatelessWidget {
         ),
         child: Icon(icon, color: iconColor, size: 20),
       ),
-      title: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+      title: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text(context))),
       subtitle: Text(displayLabel,
-          style: const TextStyle(color: AppColors.inkGrey, fontSize: 12)),
-      trailing: const Icon(Icons.chevron_right, color: AppColors.inkFaded),
+          style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12)),
+      trailing: Icon(Icons.chevron_right, color: AppColors.textSecondary(context), size: 18),
       onTap: () => _showPicker(context),
     );
   }
@@ -203,9 +204,9 @@ class _SpeedLimitTile extends StatelessWidget {
       builder: (_) => Container(
         margin: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.paperWhite,
+          color: AppColors.surface(context),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.inkFaded),
+          border: Border.all(color: AppColors.border(context)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -213,8 +214,8 @@ class _SpeedLimitTile extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(20),
               child: Text(label,
-                  style: const TextStyle(
-                      color: AppColors.inkBlack,
+                  style: TextStyle(
+                      color: AppColors.text(context),
                       fontSize: 16,
                       fontWeight: FontWeight.w700)),
             ),
@@ -226,7 +227,7 @@ class _SpeedLimitTile extends StatelessWidget {
                     style: TextStyle(
                         color: selected
                             ? AppColors.downloading
-                            : AppColors.inkGrey,
+                            : AppColors.textSecondary(context),
                         fontWeight:
                             selected ? FontWeight.w600 : FontWeight.normal)),
                 trailing: selected
@@ -271,14 +272,14 @@ class _SwitchTile extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.inkFaded,
+          color: AppColors.border(context).withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, color: AppColors.inkGrey, size: 20),
+        child: Icon(icon, color: AppColors.textSecondary(context), size: 20),
       ),
-      title: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+      title: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text(context))),
       subtitle: Text(subtitle,
-          style: const TextStyle(color: AppColors.inkGrey, fontSize: 12)),
+          style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12)),
       trailing: Switch(
         value: value,
         onChanged: onChanged,
@@ -303,34 +304,34 @@ class _ConnectionsTile extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.inkFaded,
+          color: AppColors.border(context).withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: const Icon(Icons.people_outline,
-            color: AppColors.inkGrey, size: 20),
+        child: Icon(Icons.people_outline,
+            color: AppColors.textSecondary(context), size: 20),
       ),
-      title: const Text('Max Connections', style: TextStyle(fontSize: 14)),
+      title: Text('Max Connections', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text(context))),
       subtitle: Text('$current peers',
-          style: const TextStyle(color: AppColors.inkGrey, fontSize: 12)),
-      trailing: const Icon(Icons.chevron_right, color: AppColors.inkFaded),
+          style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12)),
+      trailing: Icon(Icons.chevron_right, color: AppColors.textSecondary(context), size: 18),
       onTap: () => showModalBottomSheet<void>(
         context: context,
         backgroundColor: Colors.transparent,
         builder: (_) => Container(
           margin: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: AppColors.surface(context),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.inkFaded),
+            border: Border.all(color: AppColors.border(context)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Padding(
-                padding: EdgeInsets.all(20),
+              Padding(
+                padding: const EdgeInsets.all(20),
                 child: Text('Max Global Connections',
                     style: TextStyle(
-                        color: AppColors.inkBlack,
+                        color: AppColors.text(context),
                         fontSize: 16,
                         fontWeight: FontWeight.w700)),
               ),
@@ -341,7 +342,7 @@ class _ConnectionsTile extends StatelessWidget {
                       style: TextStyle(
                           color: selected
                               ? AppColors.downloading
-                              : AppColors.inkGrey,
+                              : AppColors.textSecondary(context),
                           fontWeight:
                               selected ? FontWeight.w600 : FontWeight.normal)),
                   trailing: selected
@@ -378,24 +379,25 @@ class _AboutTile extends StatelessWidget {
           fit: BoxFit.cover,
         ),
       ),
-      title: const Text(
+      title: Text(
         'Meitorrent',
         style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w700,
+          color: AppColors.text(context),
         ),
       ),
-      subtitle: const Column(
+      subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(height: 2),
+          const SizedBox(height: 2),
           Text(
             'v1.0.0 · Fast. Private. Reliable.',
-            style: TextStyle(color: AppColors.inkGrey, fontSize: 11),
+            style: TextStyle(color: AppColors.textSecondary(context), fontSize: 11),
           ),
-          SizedBox(height: 1),
-          Text(
+          const SizedBox(height: 1),
+          const Text(
             'Designed & Developed by MeiGamingOfficial',
             style: TextStyle(
               color: AppColors.downloading,
@@ -426,13 +428,13 @@ class _LegalTile extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.inkFaded,
+          color: AppColors.border(context).withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, color: AppColors.inkGrey, size: 20),
+        child: Icon(icon, color: AppColors.textSecondary(context), size: 20),
       ),
-      title: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-      trailing: const Icon(Icons.chevron_right, color: AppColors.inkFaded),
+      title: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text(context))),
+      trailing: Icon(Icons.chevron_right, color: AppColors.textSecondary(context), size: 18),
       onTap: () async {
         try {
           final content =
@@ -467,15 +469,18 @@ class _LegalDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            style: GoogleFonts.shipporiMincho(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+            )),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: SelectableText(
           content,
-          style: const TextStyle(
-            color: AppColors.inkBlack,
+          style: TextStyle(
+            color: AppColors.text(context),
             fontSize: 14,
             height: 1.8,
             letterSpacing: 0.2,
@@ -570,7 +575,7 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.inkFaded,
+              color: AppColors.border(context).withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -581,13 +586,13 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
               size: 20,
             ),
           ),
-          title: const Text('Ignore Battery Optimizations',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          title: Text('Ignore Battery Optimizations',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text(context))),
           subtitle: Text(
             _isIgnored
                 ? 'Battery optimizations are disabled'
                 : 'Helps keep torrent downloads active when the app is in the background or screen is off',
-            style: const TextStyle(color: AppColors.inkGrey, fontSize: 12),
+            style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12),
           ),
           trailing: _isLoading
               ? const SizedBox(
@@ -635,8 +640,8 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
                       const SizedBox(width: 8),
                       Text(
                         'Detected $_oemName Device',
-                        style: const TextStyle(
-                          color: AppColors.inkBlack,
+                        style: TextStyle(
+                          color: AppColors.text(context),
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
@@ -644,10 +649,10 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
                     ],
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'Your device enforces custom battery restrictions. For stable downloads, please set Meitorrent to "Unrestricted" and enable "Auto-start".',
                     style: TextStyle(
-                        color: AppColors.inkGrey, fontSize: 11, height: 1.3),
+                        color: AppColors.textSecondary(context), fontSize: 11, height: 1.3),
                   ),
                   const SizedBox(height: 10),
                   InkWell(

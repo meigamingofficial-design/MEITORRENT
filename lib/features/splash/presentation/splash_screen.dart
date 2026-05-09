@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/services/engine_process_manager.dart';
 import '../../../core/services/foreground_service_manager.dart';
@@ -143,7 +144,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: AppColors.parchment,
+        backgroundColor: AppColors.background(context),
         body: SafeArea(
           child: Stack(
             children: [
@@ -196,10 +197,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       animation: _logoOpacity,
                       builder: (_, __) => Text(
                         'Meitorrent',
-                        style: TextStyle(
-                          fontSize: 32,
+                        style: GoogleFonts.shipporiMincho(
+                          fontSize: 34,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.inkBlack
+                          color: AppColors.text(context)
                               .withValues(alpha: _logoOpacity.value),
                           letterSpacing: -0.5,
                         ),
@@ -212,7 +213,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         'Fast. Private. Reliable.',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppColors.inkGrey.withValues(
+                          color: AppColors.textSecondary(context).withValues(
                             alpha: _logoOpacity.value * 0.7,
                           ),
                           letterSpacing: 1.2,
@@ -238,8 +239,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         child: Text(
                           _statusText,
                           key: ValueKey(_statusText),
-                          style: const TextStyle(
-                              color: AppColors.inkGrey, fontSize: 13),
+                          style: TextStyle(
+                              color: AppColors.textSecondary(context), fontSize: 13),
                         ),
                       ),
                     ] else ...[
@@ -273,23 +274,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   animation: _logoOpacity,
                   builder: (_, __) => Opacity(
                     opacity: _logoOpacity.value * 0.4,
-                    child: const Column(
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           'from',
                           style: TextStyle(
-                            color: AppColors.inkGrey,
+                            color: AppColors.textSecondary(context),
                             fontSize: 10,
                             letterSpacing: 2,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Text(
                           'MeiGamingOfficial',
                           style: TextStyle(
-                            color: AppColors.inkBlack,
+                            color: AppColors.text(context),
                             fontSize: 13,
                             letterSpacing: 1.5,
                             fontWeight: FontWeight.w700,

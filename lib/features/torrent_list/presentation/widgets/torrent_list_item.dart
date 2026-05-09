@@ -344,7 +344,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
   void _showError(ScaffoldMessengerState messenger, String message) {
     messenger.showSnackBar(
       SnackBar(
-        content: Text(message, style: const TextStyle(color: AppColors.paperWhite)),
+        content: Text(message, style: const TextStyle(color: Colors.white)),
         backgroundColor: AppColors.error,
         duration: const Duration(seconds: 3),
       ),
@@ -408,8 +408,8 @@ class _GlassCard extends StatelessWidget {
                 colors: hasError
                     ? [AppColors.error.withValues(alpha: 0.08), AppColors.error.withValues(alpha: 0.04)]
                     : [
-                        AppColors.paperWhite,
-                        AppColors.parchment,
+                        AppColors.surface(context),
+                        AppColors.background(context),
                       ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -526,7 +526,7 @@ class _ActionButtons extends ConsumerWidget {
         else
           _CircleIconButton(
             icon: isDone ? Icons.check_circle_outline_rounded : Icons.pause_rounded,
-            color: isDone ? AppColors.finished : AppColors.inkGrey,
+            color: isDone ? AppColors.finished : AppColors.textSecondary(context),
             onTap: () async {
               try {
                 await notifier.pauseTorrent(status.id);
@@ -539,7 +539,7 @@ class _ActionButtons extends ConsumerWidget {
         if (!isStopped)
           _CircleIconButton(
             icon: Icons.stop_rounded,
-            color: AppColors.inkGrey,
+            color: AppColors.textSecondary(context),
             onTap: () async {
               try {
                 await notifier.stopTorrent(status.id);
@@ -552,7 +552,7 @@ class _ActionButtons extends ConsumerWidget {
         if (!isDone)
           _CircleIconButton(
             icon: Icons.folder_open_rounded,
-            color: AppColors.inkGrey,
+            color: AppColors.textSecondary(context),
             onTap: () async {
               try {
                 await FolderService.instance.openDownloadTarget(
@@ -579,7 +579,7 @@ class _ActionButtons extends ConsumerWidget {
   void _showErrorSnackBar(ScaffoldMessengerState messenger, String message) {
     messenger.showSnackBar(
       SnackBar(
-        content: Text(message, style: const TextStyle(color: AppColors.paperWhite)),
+        content: Text(message, style: const TextStyle(color: Colors.white)),
         backgroundColor: AppColors.error,
         duration: const Duration(seconds: 3),
       ),
@@ -653,7 +653,7 @@ class _DeleteDialog extends StatelessWidget {
       ),
       content: Text(
         '"$torrentName"',
-        style: const TextStyle(color: AppColors.inkGrey, fontSize: 13),
+        style: TextStyle(color: AppColors.textSecondary(context), fontSize: 13),
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
@@ -814,7 +814,7 @@ class _TorrentOptionsSheet extends StatelessWidget {
           else
             _OptionTile(
               icon: Icons.pause_rounded,
-              iconColor: AppColors.inkGrey,
+            iconColor: AppColors.textSecondary(context),
               label: 'Pause Download',
               onTap: () async {
                 navigator.pop();

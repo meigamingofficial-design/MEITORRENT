@@ -178,11 +178,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
               title: Text(
                 '${selectedIds.length} Selected',
-                style: TextStyle(
+                style: GoogleFonts.shipporiMincho(
                   color: AppColors.text(context),
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
+                  letterSpacing: -0.2,
                 ),
               ),
               actions: [
@@ -240,9 +240,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return AppBar(
       elevation: 0,
       backgroundColor: Colors.transparent,
-      title: const Text(
+      title: Text(
         'Meitorrent',
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+        style: GoogleFonts.shipporiMincho(
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.2,
+        ),
       ),
       actions: [
         IconButton(
@@ -616,11 +620,11 @@ class _CompactSpeedTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.35),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: color.withValues(alpha: 0.80),
-            width: 2.0,
+            color: color.withValues(alpha: 0.3),
+            width: 1.5,
           ),
         ),
         child: Row(

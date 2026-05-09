@@ -123,7 +123,7 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                         Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: AppColors.border(context),
+                            color: AppColors.inputFill(context),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: TabBar(
