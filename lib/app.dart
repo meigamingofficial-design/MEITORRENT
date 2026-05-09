@@ -33,14 +33,6 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
 
     // ── Warm-start deep links ─────────────────────────────────────────
     _deepLinkSub = DeepLinkService.instance.torrentStream.listen(_handleIncomingLink);
-
-    // ── Cold-start deep link (app launched from file or link) ─────────
-    if (widget.initialLinkOrPath != null) {
-      // Defer until the navigator is ready
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _openDialogWithLink(widget.initialLinkOrPath!);
-      });
-    }
   }
 
   @override

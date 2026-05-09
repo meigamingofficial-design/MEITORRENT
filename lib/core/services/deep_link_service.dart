@@ -30,6 +30,9 @@ class DeepLinkService {
   /// Fires whenever a valid magnet URI or a copied local .torrent file path arrives.
   Stream<String> get torrentStream => _controller.stream;
 
+  /// Stores a pending initial link from cold start to be processed by DashboardScreen.
+  String? pendingInitialLink;
+
   /// Call once, before [runApp]. Returns the initial magnet URI or copied local .torrent path
   /// if the app was launched via a file/link (cold start), or null.
   Future<String?> initialize() async {
@@ -73,6 +76,7 @@ class DeepLinkService {
       },
     );
 
+    pendingInitialLink = coldLink;
     return coldLink;
   }
 

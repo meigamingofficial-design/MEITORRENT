@@ -12,6 +12,7 @@ import '../widgets/add_torrent_dialog.dart';
 import '../widgets/empty_state_widget.dart';
 import '../widgets/torrent_list_item.dart';
 import '../../../../core/utils/speed_formatter.dart';
+import '../../../../core/services/deep_link_service.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -23,6 +24,42 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   String? _newlyAddedId;
   int _zeroSpeedTicks = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Cold-start deep links: handle preloaded torrents once DashboardScreen is fully mounted
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final initialLink = DeepLinkService.instance.pendingInitialLink;
+      if (initialLink != null) {
+        DeepLinkService.instance.pendingInitialLink = null; // Consume
+        _showAddTorrentDialog(context, initialLink);
+      }
+    });
+  }
+
+  void _showAddTorrentDialog(BuildContext context, [String? prefilledLinkOrPath]) {
+    final isMagnet = prefilledLinkOrPath != null && prefilledLinkOrPath.startsWith('magnet:');
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AddTorrentDialog(
+        initialMagnetUri: isMagnet ? prefilledLinkOrPath : null,
+        initialTorrentFilePath: isMagnet ? null : prefilledLinkOrPath,
+        onMagnetAdded: (uri, path) {
+          ref
+              .read(torrentNotifierProvider.notifier)
+              .addMagnet(uri, savePath: path);
+        },
+        onFileAdded: (file, path) {
+          ref
+              .read(torrentNotifierProvider.notifier)
+              .addTorrentFile(file, savePath: path);
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,23 +151,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           },
         ),
         floatingActionButton: _GradientFAB(
-          onPressed: () => showModalBottomSheet<void>(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (_) => AddTorrentDialog(
-              onMagnetAdded: (uri, path) {
-                ref
-                    .read(torrentNotifierProvider.notifier)
-                    .addMagnet(uri, savePath: path);
-              },
-              onFileAdded: (file, path) {
-                ref
-                    .read(torrentNotifierProvider.notifier)
-                    .addTorrentFile(file, savePath: path);
-              },
-            ),
-          ),
+          onPressed: () => _showAddTorrentDialog(context),
         ),
       ),
     );
