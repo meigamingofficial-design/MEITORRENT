@@ -203,6 +203,9 @@ class TorrentRepositoryImpl implements TorrentRepository {
     // 🧱 HARD LOCK: Completed torrents should NEVER go backwards to 0% or Checking.
     if (persisted.isCompleted) {
       return live.copyWith(
+        name: (live.name == 'Torrent #${live.id}' || live.name.isEmpty)
+            ? persisted.name
+            : live.name,
         progress: 1.0,
         downloadedBytes: persisted.totalSize,
         totalSize: persisted.totalSize,

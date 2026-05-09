@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/services/oem_battery_guard.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -24,6 +25,7 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   String? _newlyAddedId;
   int _zeroSpeedTicks = 0;
+  bool _hasPromptedSpeedWarning = false;
 
   @override
   void initState() {
@@ -84,7 +86,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           _zeroSpeedTicks++;
           if (_zeroSpeedTicks >= 15) {
             _zeroSpeedTicks = 0;
-            _showBackgroundWarningPrompt(context);
+            if (!_hasPromptedSpeedWarning) {
+              _hasPromptedSpeedWarning = true;
+              _showBackgroundWarningPrompt(context);
+            }
           }
         } else {
           _zeroSpeedTicks = 0;
@@ -452,8 +457,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  void _showBackgroundWarningPrompt(BuildContext context) {
+  void _showBackgroundWarningPrompt(BuildContext context) async {
     if (!mounted) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final alreadyDismissed = prefs.getBool('meitorrent_speed_warning_dismissed') ?? false;
+      if (alreadyDismissed) return;
+    } catch (_) {}
+
+    if (!context.mounted) return;
 
     showModalBottomSheet<void>(
       context: context,
@@ -517,7 +530,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    onPressed: () => Navigator.pop(ctx),
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      try {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setBool('meitorrent_speed_warning_dismissed', true);
+                      } catch (_) {}
+                    },
                     child: const Text('Not Now',
                         style: TextStyle(fontWeight: FontWeight.w600)),
                   ),
@@ -531,13 +550,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
                       Navigator.pop(ctx);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                            builder: (_) => const SettingsScreen()),
-                      );
+                      try {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setBool('meitorrent_speed_warning_dismissed', true);
+                      } catch (_) {}
+                      if (context.mounted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                              builder: (_) => const SettingsScreen()),
+                        );
+                      }
                     },
                     child: const Text('Optimize Speed',
                         style: TextStyle(fontWeight: FontWeight.w700)),

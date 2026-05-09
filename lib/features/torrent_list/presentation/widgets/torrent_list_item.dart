@@ -135,9 +135,9 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                 status.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
+                                style: GoogleFonts.shipporiMincho(
                                   color: AppColors.text(context),
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: FontWeight.w800,
                                   fontSize: 15,
                                   letterSpacing: -0.2,
                                 ),
