@@ -263,7 +263,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           onSelected: (v) {
-            final notifier = ref.read(torrentNotifierProvider.notifier);
             final torrents = async.valueOrNull ?? [];
             switch (v) {
               case 'select':
@@ -275,20 +274,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ref
                     .read(selectedTorrentsProvider.notifier)
                     .selectAll(torrents.map((t) => t.id).toList());
-                break;
-              case 'resume_all':
-                notifier.resumeAll();
-                break;
-              case 'pause_all':
-                notifier.pauseAll();
-                break;
-              case 'stop_all':
-                notifier.stopAll();
-                break;
-              case 'delete_all':
-                _confirmDeleteMultiple(
-                    context, ref, torrents.map((t) => t.id).toList(),
-                    isAll: true);
                 break;
               case 'exit_app':
                 _showExitConfirmation(context);
@@ -309,33 +294,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
             const PopupMenuDivider(height: 1),
             const PopupMenuItem(
-              value: 'resume_all',
-              child: _MenuItem(
-                  icon: Icons.play_arrow_rounded, label: 'Resume All'),
-            ),
-            const PopupMenuItem(
-              value: 'pause_all',
-              child: _MenuItem(icon: Icons.pause_rounded, label: 'Pause All'),
-            ),
-            const PopupMenuItem(
-              value: 'stop_all',
-              child: _MenuItem(icon: Icons.stop_rounded, label: 'Stop All'),
-            ),
-            const PopupMenuDivider(height: 1),
-            const PopupMenuItem(
-              value: 'delete_all',
-              child: _MenuItem(
-                icon: Icons.delete_outline_rounded,
-                label: 'Delete All',
-                color: AppColors.error,
-              ),
-            ),
-            const PopupMenuDivider(height: 1),
-            const PopupMenuItem(
               value: 'exit_app',
               child: _MenuItem(
                 icon: Icons.logout_rounded,
                 label: 'Exit App',
+                color: AppColors.error,
               ),
             ),
           ],
