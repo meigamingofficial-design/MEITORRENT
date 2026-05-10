@@ -112,34 +112,8 @@ class MainActivity : FlutterActivity() {
                 path
             }
 
-            // Strategy 1: Universal Local File Path with StrictMode bypass.
-            // This is the absolute best way to force Android to display the "Open with" chooser
-            // containing ALL third-party file managers (Solid Explorer, ES, Mi, etc.), as well as system file managers.
-            try {
-                // ── Bypass FileUriExposedException using reflection ──
-                try {
-                    val strictModeMethod = android.os.StrictMode::class.java.getMethod("disableDeathOnFileUriExposure")
-                    strictModeMethod.invoke(null)
-                } catch (e: Exception) {
-                    android.util.Log.w("MeiTorrent", "Failed to disable file URI death: ${e.message}")
-                }
-
-                val uri = Uri.fromFile(dir)
-                val intent = Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(uri, "resource/folder")
-                }
-                
-                val chooser = Intent.createChooser(intent, "Open with").apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                startActivity(chooser)
-                result.success("exact_file_uri")
-                return
-            } catch (e: Exception) {
-                android.util.Log.w("MeiTorrent", "Strategy 1 (File URI Chooser) failed: ${e.message}")
-            }
-
-            // Strategy 2: DocumentsContract (Standard for Android 11+ / API 30+ as a robust fallback)
+            // Strategy 1: DocumentsContract for Android 11+ / API 30+ (Direct & Fast)
+            // This is the official Google API to open the exact folder directly in the system Files app.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 try {
                     val authority = "com.android.externalstorage.documents"
@@ -150,36 +124,68 @@ class MainActivity : FlutterActivity() {
                         addCategory(Intent.CATEGORY_DEFAULT)
                         setDataAndType(uri, "vnd.android.document/directory")
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }
-                    
-                    val chooser = Intent.createChooser(intent, "Open with").apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
-                    startActivity(chooser)
-                    result.success("exact_modern_documents")
+                    startActivity(intent)
+                    result.success("exact_modern_documents_direct")
                     return
                 } catch (e: Exception) {
-                    android.util.Log.w("MeiTorrent", "Strategy 2 (Documents UI) failed: ${e.message}")
+                    android.util.Log.w("MeiTorrent", "Strategy 1 (Direct Documents UI) failed: ${e.message}")
                 }
             }
 
-            // Strategy 3: Root Download Folder (High Compatibility Fallback)
+            // Strategy 2: Content URI direct view of root/fallback folder
             try {
                 val uri = Uri.parse("content://com.android.externalstorage.documents/document/primary:Download")
                 val intent = Intent(Intent.ACTION_VIEW).apply {
                     setDataAndType(uri, "vnd.android.document/directory")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(intent)
+                result.success("download_documents_direct")
+                return
+            } catch (e: Exception) {
+                android.util.Log.w("MeiTorrent", "Strategy 2 (Root Download Direct) failed: ${e.message}")
+            }
+
+            // Strategy 3: Universal Local File Path (File URI)
+            try {
+                // Bypass FileUriExposedException using reflection
+                try {
+                    val strictModeMethod = android.os.StrictMode::class.java.getMethod("disableDeathOnFileUriExposure")
+                    strictModeMethod.invoke(null)
+                } catch (e: Exception) {}
+
+                val uri = Uri.fromFile(dir)
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "resource/folder")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(intent)
+                result.success("file_uri_direct")
+                return
+            } catch (e: Exception) {
+                android.util.Log.w("MeiTorrent", "Strategy 3 (File URI Direct) failed: ${e.message}")
+            }
+
+            // Strategy 4: File URI with Chooser (Last resort before picker)
+            try {
+                val uri = Uri.fromFile(dir)
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "resource/folder")
                 }
                 val chooser = Intent.createChooser(intent, "Open with").apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
                 startActivity(chooser)
-                result.success("fallback_root")
+                result.success("file_uri_chooser")
                 return
             } catch (e: Exception) {
-                android.util.Log.w("MeiTorrent", "Strategy 3 (Root Download) failed: ${e.message}")
+                android.util.Log.w("MeiTorrent", "Strategy 4 (File URI Chooser) failed: ${e.message}")
             }
 
-            // Strategy 4: System Picker (Last resort, works on all versions 21+)
+            // Strategy 5: System Folder Tree Picker (Universal fallback)
             try {
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
