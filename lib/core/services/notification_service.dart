@@ -81,9 +81,10 @@ class NotificationService {
 
     // Check effective completion FIRST — a paused torrent at 100% is "Finished",
     // not "Paused". The engine emits paused state after auto-stop-seeding fires.
+    // We use a small tolerance (100 bytes / 0.1%) to handle metadata padding edge cases.
     final isEffectivelyDone = status.isCompleted ||
-        status.progress >= 1.0 ||
-        (status.totalSize > 0 && status.downloadedBytes >= status.totalSize);
+        status.progress >= 0.999 ||
+        (status.totalSize > 0 && status.downloadedBytes >= (status.totalSize - 100));
 
     if (isEffectivelyDone) {
       body = '✓ Download complete · ${SizeFormatter.format(status.totalSize)} · Tap to open';

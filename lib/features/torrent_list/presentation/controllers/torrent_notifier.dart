@@ -225,6 +225,7 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   }
 
   Future<void> pauseTorrent(String id) async {
+    _updateOptimisticStatus(id, isPaused: true);
     try {
       final repo = ref.read(torrentRepositoryProvider);
       await repo.pauseTorrent(id);
@@ -232,12 +233,13 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     } catch (e, st) {
       AppLogger.e('[Notifier] Failed to pause torrent: $id',
           error: e, stack: st);
-      state = AsyncValue.error(e, st);
+      // Let the live stream handle the rollback/actual state
       rethrow;
     }
   }
 
   Future<void> stopTorrent(String id) async {
+    _updateOptimisticStatus(id, isPaused: true, isStopped: true);
     try {
       final repo = ref.read(torrentRepositoryProvider);
       await repo.stopTorrent(id);
@@ -245,12 +247,12 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     } catch (e, st) {
       AppLogger.e('[Notifier] Failed to stop torrent: $id',
           error: e, stack: st);
-      state = AsyncValue.error(e, st);
       rethrow;
     }
   }
 
   Future<void> resumeTorrent(String id) async {
+    _updateOptimisticStatus(id, isPaused: false, isStopped: false);
     try {
       final repo = ref.read(torrentRepositoryProvider);
       await repo.resumeTorrent(id);
@@ -258,9 +260,26 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     } catch (e, st) {
       AppLogger.e('[Notifier] Failed to resume torrent: $id',
           error: e, stack: st);
-      state = AsyncValue.error(e, st);
       rethrow;
     }
+  }
+
+  void _updateOptimisticStatus(String id, {bool? isPaused, bool? isStopped}) {
+    final previousList = state.asData?.value;
+    if (previousList == null) return;
+
+    final updated = previousList.map((t) {
+      if (t.id == id) {
+        return t.copyWith(
+          isPaused: isPaused ?? t.isPaused,
+          isStopped: isStopped ?? t.isStopped,
+        );
+      }
+      return t;
+    }).toList();
+
+    state = AsyncValue.data(updated);
+    ForegroundServiceManager.instance.pushUpdate(updated);
   }
 
   Future<void> deleteTorrent(String id, {bool deleteFiles = false}) async {
