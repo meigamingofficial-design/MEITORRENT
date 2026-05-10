@@ -21,8 +21,8 @@ import 'core/services/shared_preferences_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Force Google Fonts to load locally from bundled assets with zero network latency
-  GoogleFonts.config.allowRuntimeFetching = false;
+  // Allow Google Fonts to load dynamically and fall back gracefully if offline
+  GoogleFonts.config.allowRuntimeFetching = true;
 
   // Required by flutter_foreground_task before runApp
   ForegroundServiceManager.initCommunicationPort();

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -125,6 +126,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final notifPerm = await FlutterForegroundTask.checkNotificationPermission();
     if (notifPerm != NotificationPermission.granted) {
       await FlutterForegroundTask.requestNotificationPermission();
+    }
+
+    // Request standard Storage permissions for compatibility (Android 10 and below)
+    if (await Permission.storage.isDenied) {
+      await Permission.storage.request();
+    }
+
+    // Request MANAGE_EXTERNAL_STORAGE permission for Android 11+
+    if (await Permission.manageExternalStorage.isDenied) {
+      await Permission.manageExternalStorage.request();
     }
   }
 
