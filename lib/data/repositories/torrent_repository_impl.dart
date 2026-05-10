@@ -532,33 +532,46 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
     final intId = int.tryParse(id);
 
-    // 1. Remove from engine if it's registered there
-    if (intId != null && _isLiveInEngine(intId)) {
-      _engine.remove(intId, deleteFiles: deleteFiles);
-    } else if (deleteFiles) {
-      // Not in engine → manually delete the files
+    // 1. Manually delete the files on Dart's side if deleteFiles is true.
+    // We do this BEFORE DB deletion to ensure we can fetch the savePath/name snapshot from DB.
+    if (deleteFiles) {
       final stored = await _db.getTorrentById(id);
       if (stored != null) {
-        final dir = Directory('${stored.savePath}/${stored.name}');
-        if (dir.existsSync()) {
-          dir.deleteSync(recursive: true);
-        } else {
-          final base = Directory(stored.savePath);
-          if (base.existsSync()) base.deleteSync(recursive: true);
+        try {
+          final targetPath = '${stored.savePath}/${stored.name}';
+          final dir = Directory(targetPath);
+          final file = File(targetPath);
+
+          if (dir.existsSync()) {
+            dir.deleteSync(recursive: true);
+            AppLogger.i('[Repo] Manually deleted folder: $targetPath');
+          } else if (file.existsSync()) {
+            file.deleteSync();
+            AppLogger.i('[Repo] Manually deleted file: $targetPath');
+          } else {
+            AppLogger.w('[Repo] Deletion target not found on disk: $targetPath');
+          }
+        } catch (e, st) {
+          AppLogger.e('[Repo] Failed to manually delete files for $id', error: e, stack: st);
         }
       }
     }
 
-    // 2. Remove from engine live-set — prevent ghost state
+    // 2. Remove from engine if it's registered there
+    if (intId != null && _isLiveInEngine(intId)) {
+      _engine.remove(intId, deleteFiles: deleteFiles);
+    }
+
+    // 3. Remove from engine live-set — prevent ghost state
     if (intId != null) _engineActiveIds.remove(intId);
 
-    // 3. Cancel the per-torrent notification
+    // 4. Cancel the per-torrent notification
     await NotificationService.instance.cancelNotification(id);
 
-    // 4. Remove from DB
+    // 5. Remove from DB
     await _db.deleteTorrentById(id);
 
-    // 5. Ensure immediate persistence
+    // 6. Ensure immediate persistence
     await _flushDbWrite();
 
     AppLogger.i('[Repo] Deleted torrent $id (deleteFiles=$deleteFiles)');
