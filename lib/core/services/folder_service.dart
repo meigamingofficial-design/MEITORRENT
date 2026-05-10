@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:open_filex/open_filex.dart';
 
 import 'logger_service.dart';
 import 'storage_service.dart';
@@ -14,27 +15,53 @@ class FolderService {
 
   /// Opens the torrent's final download target.
   ///
-  /// For single-file torrents, this uses `open_filex` to open the file
-  /// directly. For multi-file torrents, it falls back to the native folder
-  /// handling path.
+  /// For single-file torrents (or folders containing exactly one file), this
+  /// uses `open_filex` to trigger Android's native "Open with" chooser.
+  /// For multi-file torrents, it opens the directory directly.
   Future<void> openDownloadTarget({
     required String savePath,
     required String name,
   }) async {
     try {
       final targetPath = (savePath.isEmpty) ? await StorageService.instance.getDownloadPath() : savePath;
+      final file = File('$targetPath/$name');
       final directFolder = Directory('$targetPath/$name');
-      
+
+      // 1. If it's a file, open it directly using open_filex (triggers Android "Open with" chooser)
+      if (file.existsSync()) {
+        AppLogger.i('[Folder] Opening single file with open_filex: ${file.path}');
+        await OpenFilex.open(file.path);
+        return;
+      }
+
+      // 2. If it's a folder, check if it contains exactly one file (recursive)
       if (directFolder.existsSync()) {
-        await openDownloadFolder(directFolder.path);
-      } else {
-        final parentDir = Directory(targetPath);
-        if (parentDir.existsSync()) {
-          await openDownloadFolder(targetPath);
-        } else {
-          // Final fallback: try to open the root download folder at least
-          await openDownloadFolder();
+        try {
+          final entities = directFolder.listSync(recursive: true).whereType<File>().toList();
+          if (entities.length == 1) {
+            final singleFile = entities.first;
+            AppLogger.i('[Folder] Folder contains a single file, opening with open_filex: ${singleFile.path}');
+            await OpenFilex.open(singleFile.path);
+            return;
+          }
+        } catch (_) {
+          // Fallback to opening the directory directly if listSync fails
         }
+
+        // Open the directory directly
+        AppLogger.i('[Folder] Opening directory: ${directFolder.path}');
+        await openDownloadFolder(directFolder.path);
+        return;
+      }
+
+      // 3. Fallback to parent directory if direct target doesn't exist
+      final parentDir = Directory(targetPath);
+      if (parentDir.existsSync()) {
+        AppLogger.i('[Folder] Target not found, opening parent directory: $targetPath');
+        await openDownloadFolder(targetPath);
+      } else {
+        AppLogger.w('[Folder] Parent not found, opening root download folder');
+        await openDownloadFolder();
       }
     } catch (e, st) {
       AppLogger.e(
