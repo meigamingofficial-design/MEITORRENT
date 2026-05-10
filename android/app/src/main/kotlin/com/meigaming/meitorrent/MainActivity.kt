@@ -96,10 +96,6 @@ class MainActivity : FlutterActivity() {
 
     /**
      * Opens a folder in the system file manager using Play Store–compliant
-     * DocumentsProvider URIs with multiple fallback strategies.
-     */
-    /**
-     * Opens a folder in the system file manager using Play Store–compliant
      * DocumentsProvider URIs with multiple fallback strategies for ALL Android versions.
      */
     private fun openFolder(path: String, result: MethodChannel.Result) {
@@ -116,7 +112,34 @@ class MainActivity : FlutterActivity() {
                 path
             }
 
-            // Strategy 1: DocumentsContract (Standard for Android 11+ / API 30+)
+            // Strategy 1: Universal Local File Path with StrictMode bypass.
+            // This is the absolute best way to force Android to display the "Open with" chooser
+            // containing ALL third-party file managers (Solid Explorer, ES, Mi, etc.), as well as system file managers.
+            try {
+                // ── Bypass FileUriExposedException using reflection ──
+                try {
+                    val strictModeMethod = android.os.StrictMode::class.java.getMethod("disableDeathOnFileUriExposure")
+                    strictModeMethod.invoke(null)
+                } catch (e: Exception) {
+                    android.util.Log.w("MeiTorrent", "Failed to disable file URI death: ${e.message}")
+                }
+
+                val uri = Uri.fromFile(dir)
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "resource/folder")
+                }
+                
+                val chooser = Intent.createChooser(intent, "Open with").apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(chooser)
+                result.success("exact_file_uri")
+                return
+            } catch (e: Exception) {
+                android.util.Log.w("MeiTorrent", "Strategy 1 (File URI Chooser) failed: ${e.message}")
+            }
+
+            // Strategy 2: DocumentsContract (Standard for Android 11+ / API 30+ as a robust fallback)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 try {
                     val authority = "com.android.externalstorage.documents"
@@ -133,32 +156,14 @@ class MainActivity : FlutterActivity() {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
                     startActivity(chooser)
-                    result.success("exact_modern")
+                    result.success("exact_modern_documents")
                     return
                 } catch (e: Exception) {
-                    android.util.Log.w("MeiTorrent", "Strategy 1 failed: ${e.message}")
+                    android.util.Log.w("MeiTorrent", "Strategy 2 (Documents UI) failed: ${e.message}")
                 }
             }
 
-            // Strategy 2: Legacy File Path (For Android 9 and below)
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                try {
-                    val uri = Uri.fromFile(dir)
-                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(uri, "resource/folder")
-                    }
-                    val chooser = Intent.createChooser(intent, "Open with").apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    startActivity(chooser)
-                    result.success("legacy_path")
-                    return
-                } catch (e: Exception) {
-                    android.util.Log.w("MeiTorrent", "Strategy 2 failed: ${e.message}")
-                }
-            }
-
-            // Strategy 3: Root Download Folder (High Compatibility)
+            // Strategy 3: Root Download Folder (High Compatibility Fallback)
             try {
                 val uri = Uri.parse("content://com.android.externalstorage.documents/document/primary:Download")
                 val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -171,7 +176,7 @@ class MainActivity : FlutterActivity() {
                 result.success("fallback_root")
                 return
             } catch (e: Exception) {
-                android.util.Log.w("MeiTorrent", "Strategy 3 failed: ${e.message}")
+                android.util.Log.w("MeiTorrent", "Strategy 3 (Root Download) failed: ${e.message}")
             }
 
             // Strategy 4: System Picker (Last resort, works on all versions 21+)
