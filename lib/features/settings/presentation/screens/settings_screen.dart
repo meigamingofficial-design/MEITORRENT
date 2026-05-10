@@ -21,6 +21,7 @@ class SettingsScreen extends ConsumerWidget {
     final isDark = ref.isDarkMode;
 
     return Scaffold(
+      backgroundColor: AppColors.background(context),
       appBar: AppBar(title: const Text('Settings')),
       body: SafeArea(
         child: ListView(

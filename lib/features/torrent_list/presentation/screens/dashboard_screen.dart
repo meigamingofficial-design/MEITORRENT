@@ -339,20 +339,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           onPressed: () => Navigator.of(context).push(
             PageRouteBuilder<void>(
               pageBuilder: (_, __, ___) => const SettingsScreen(),
-              transitionsBuilder: (_, animation, __, child) {
-                final slide = Tween<Offset>(
-                  begin: const Offset(1.0, 0.0),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
+              transitionsBuilder: (_, animation, __, child) => FadeTransition(
+                opacity: CurvedAnimation(
                   parent: animation,
-                  curve: Curves.easeOutCubic,
-                ));
-                return SlideTransition(
-                  position: slide,
-                  child: FadeTransition(opacity: animation, child: child),
-                );
-              },
-              transitionDuration: const Duration(milliseconds: 280),
+                  curve: Curves.easeOut,
+                ),
+                child: child,
+              ),
+              transitionDuration: const Duration(milliseconds: 220),
             ),
           ),
         ),
@@ -641,20 +635,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           context,
                           PageRouteBuilder<void>(
                             pageBuilder: (_, __, ___) => const SettingsScreen(),
-                            transitionsBuilder: (_, animation, __, child) {
-                              final slide = Tween<Offset>(
-                                begin: const Offset(1.0, 0.0),
-                                end: Offset.zero,
-                              ).animate(CurvedAnimation(
+                            transitionsBuilder: (_, animation, __, child) => FadeTransition(
+                              opacity: CurvedAnimation(
                                 parent: animation,
-                                curve: Curves.easeOutCubic,
-                              ));
-                              return SlideTransition(
-                                position: slide,
-                                child: FadeTransition(opacity: animation, child: child),
-                              );
-                            },
-                            transitionDuration: const Duration(milliseconds: 280),
+                                curve: Curves.easeOut,
+                              ),
+                              child: child,
+                            ),
+                            transitionDuration: const Duration(milliseconds: 220),
                           ),
                         );
                       }
