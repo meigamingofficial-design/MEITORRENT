@@ -232,6 +232,12 @@ class ForegroundServiceManager {
       ..clear()
       ..addAll(currentIds);
 
+    // If NO torrents exist at all, stop the service to remove the notification entirely.
+    if (statuses.isEmpty) {
+      if (_serviceStarted) stopService();
+      return;
+    }
+
     // ── 500 ms global throttle for summary notification and content updates ───────────────────────────────────────
     final now = DateTime.now();
     if (_lastPush != null &&
@@ -276,8 +282,9 @@ class ForegroundServiceManager {
     };
 
     if (!_serviceStarted) {
-      // ── Queue for when service comes up ──────────────────────────────
+      // ── Start service if we have torrents but it's not running ──────
       _pendingData = payload;
+      startService();
       return;
     }
 
