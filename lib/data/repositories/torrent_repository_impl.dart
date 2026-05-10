@@ -554,15 +554,23 @@ class TorrentRepositoryImpl implements TorrentRepository {
           final targetPath = '${stored.savePath}/${stored.name}';
           final dir = Directory(targetPath);
           final file = File(targetPath);
+          
+          String? parentPath;
 
           if (dir.existsSync()) {
+            parentPath = dir.parent.path;
             dir.deleteSync(recursive: true);
             AppLogger.i('[Repo] Manually deleted folder: $targetPath');
           } else if (file.existsSync()) {
+            parentPath = file.parent.path;
             file.deleteSync();
             AppLogger.i('[Repo] Manually deleted file: $targetPath');
           } else {
             AppLogger.w('[Repo] Deletion target not found on disk: $targetPath');
+          }
+
+          if (parentPath != null) {
+            _cleanupEmptyParents(parentPath, stored.savePath);
           }
         } catch (e, st) {
           AppLogger.e('[Repo] Failed to manually delete files for $id', error: e, stack: st);
@@ -910,6 +918,40 @@ class TorrentRepositoryImpl implements TorrentRepository {
       }
     }
     return uri.substring(0, uri.length.clamp(0, 20));
+  }
+
+  /// Cleans up empty parent directories starting from the deleted item's parent,
+  /// moving upwards but stopping before/at the root Meitorrent download directory.
+  void _cleanupEmptyParents(String startParentPath, String rootLimitPath) {
+    try {
+      var currentDir = Directory(startParentPath);
+      final rootDir = Directory(rootLimitPath);
+      
+      // Normalize paths to make comparisons safe and robust
+      final rootNorm = rootDir.absolute.path.replaceFirst(RegExp(r'/$'), '');
+      
+      while (currentDir.path != rootNorm && currentDir.existsSync()) {
+        final currentNorm = currentDir.absolute.path.replaceFirst(RegExp(r'/$'), '');
+        // STRICT GUARD: Never delete the root Meitorrent folder or anything above it
+        if (currentNorm == rootNorm || !currentNorm.startsWith(rootNorm)) {
+          break;
+        }
+
+        // Check if the directory is empty
+        final list = currentDir.listSync();
+        if (list.isEmpty) {
+          final nextParent = currentDir.parent;
+          AppLogger.i('[Repo] Deleting empty parent directory: ${currentDir.path}');
+          currentDir.deleteSync();
+          currentDir = nextParent;
+        } else {
+          // If not empty, we cannot delete it, so we stop the upward traversal
+          break;
+        }
+      }
+    } catch (e, st) {
+      AppLogger.w('[Repo] Non-fatal: failed to clean up empty parent folders: $e', stack: st);
+    }
   }
 
   // Removed unsupported _initAlertHandler, _persistResumeData, _initResumeTimer, and _getResumeDir.
