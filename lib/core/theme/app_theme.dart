@@ -18,22 +18,22 @@ class AppTheme {
   AppTheme._();
 
   // ── Traditional Japanese Palette (Nippon Colors) ────────────────
-  static const _shuRed = Color(0xFFFF3B7B); // Painted Sakura Pink (from user painting)
+  static const _shuRed = Color(0xFFD63031); // Traditional Japanese Crimson Red
   static const _sumizome = Color(0xFF1C1C1C); // Ink Black (Sumizome)
-  static const _torinoko = Color(0xFFFCF3F3); // Soft Sakura Parchment (pink tint)
-  static const _kumen = Color(0xFFFFF7F7); // Pure Sakura Paper (pinkish white)
+  static const _torinoko = Color(0xFFF9F6F0); // Warm Washi Parchment Ivory (from user painting background)
+  static const _kumen = Color(0xFFFFFDF9); // Soft Clean Paper White
   static const _takeGreen = Color(0xFF316745); // Bamboo Green (Take-gaki)
   static const _yamabuki = Color(0xFFFFB11B); // Golden Yellow (Yamabuki)
-  static const _beni = Color(0xFFD81B60); // Painted Blossom Crimson (deep magenta pink)
+  static const _beni = Color(0xFFB71C1C); // Deep Traditional Blossom Crimson / Dark Scarlet
   static const _charcoal = Color(0xFF5D5D5D); // Charcoal Gray
-  static const _paperBorder = Color(0xFFE8E0D4); // Soft Paper Edge
-
+  static const _paperBorder = Color(0xFFE2D7C7); // Soft Warm Washi Paper Edge
+ 
   // Private legacy aliases
   static const _crimson = _shuRed;
   static const _paperWhite = _kumen;
   static const _inkBlack = _sumizome;
   static const _inkGrey = _charcoal;
-
+ 
   // ── Dark palette (Night Ink Aesthetic) ──────────────────────────
   static const _darkInk = Color(0xFF141517); // Midnight Ink (Background)
   static const _darkSurface = Color(0xFF1F2023); // Soot Gray (Surface/Cards)
@@ -41,7 +41,7 @@ class AppTheme {
   static const _charcoalFaded = Color(0xFF8A8A8A); // Faded Ink (Secondary Text)
   static const _darkBorder = Color(0xFF2C2D33); // Deep Paper Edge
   static const _darkInput = Color(0xFF1A1B1E); // Input Fill (Dark)
-  static const _hankoRedDark = Color(0xFFD81B60); // Painted Blossom Crimson in Dark
+  static const _hankoRedDark = Color(0xFFB71C1C); // Deep Blossom Crimson in Dark
 
   // ── Light Color Scheme ──────────────────────────────────────
   static const ColorScheme _scheme = ColorScheme(
@@ -467,8 +467,8 @@ class AppColors {
           : const Color(0xFF2C2D33); // Dark Border
 
   // ── Static Palette ───────────────────────────────────────────────
-  static const torinoko = Color(0xFFFCF3F3); // Soft Sakura Parchment (pink tint)
-  static const kumen = Color(0xFFFFF7F7); // Pure Sakura Paper (pinkish white)
+  static const torinoko = Color(0xFFF9F6F0); // Warm Washi Parchment Ivory (from user painting background)
+  static const kumen = Color(0xFFFFFDF9); // Soft Clean Paper White
   static const darkBackground = Color(0xFF141517); // dark background
   static const darkSurface = Color(0xFF1F2023); // Soot Black (Surface/Cards)
   static const boneWhite = Color(0xFFE5E2D9);
@@ -487,14 +487,14 @@ class AppColors {
 
   static const sumizome = Color(0xFF1C1C1C); // primary text (light)
   static const charcoal = Color(0xFF5D5D5D); // secondary text (light)
-  static const paperBorder = Color(0xFFE8E0D4); // borders / dividers (light)
+  static const paperBorder = Color(0xFFE2D7C7); // borders / dividers (light)
 
   // ── Torrent state colours (Static across themes) ──────────────────
-  static const downloading = Color(0xFFFF3B7B); // Painted Sakura Pink
-  static const downloadingDark = Color(0xFFD81B60); // Painted Blossom Crimson
+  static const downloading = Color(0xFFD63031); // Traditional Japanese Crimson Red
+  static const downloadingDark = Color(0xFFB71C1C); // Deep Traditional Blossom Crimson / Dark Scarlet
   static const seeding = Color(0xFF316745); // Take Green
   static const paused = Color(0xFFD35400); // Autumn Orange
-  static const error = Color(0xFFD81B60); // Painted Blossom Crimson
+  static const error = Color(0xFFB71C1C); // Deep Traditional Blossom Crimson
   static const finished = Color(0xFF145A32); // Deep Take Green
   static const unknown = Color(0xFF8A8A8A); // Faded Ink
   static const metadata = Color(0xFF5D5D5D); // Charcoal
@@ -507,9 +507,9 @@ class AppColors {
 class AppGradients {
   AppGradients._();
 
-  /// Primary Sakura pink gradient (FAB, CTAs).
+  /// Primary Crimson Red gradient (FAB, CTAs).
   static const primary = LinearGradient(
-    colors: [Color(0xFFFF3B7B), Color(0xFFD81B60)],
+    colors: [Color(0xFFD63031), Color(0xFFB71C1C)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -523,7 +523,7 @@ class AppGradients {
 
   /// Error gradient.
   static const error = LinearGradient(
-    colors: [Color(0xFFD81B60), Color(0xFF800020)], // Blossom Crimson to Deep Burgundy/Wine
+    colors: [Color(0xFFB71C1C), Color(0xFF800020)], // Deep Crimson to Burgundy
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -537,14 +537,14 @@ class AppGradients {
 
   /// Subtle paper card tint.
   static const cardSurface = LinearGradient(
-    colors: [Color(0x08FF3B7B), Color(0x041C1C1C)],
+    colors: [Color(0x08D63031), Color(0x041C1C1C)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   /// Active selection / border gradient.
   static const activeBorder = LinearGradient(
-    colors: [Color(0x40FF3B7B), Color(0x20D81B60)],
+    colors: [Color(0x40D63031), Color(0x20B71C1C)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
