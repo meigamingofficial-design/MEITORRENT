@@ -35,9 +35,65 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       final initialLink = DeepLinkService.instance.pendingInitialLink;
       if (initialLink != null) {
         DeepLinkService.instance.pendingInitialLink = null; // Consume
-        _showAddTorrentDialog(context, initialLink);
+        _addDirectly(initialLink);
       }
     });
+  }
+
+  void _addDirectly(String linkOrPath) async {
+    if (!mounted) return;
+
+    final isMagnet = linkOrPath.startsWith('magnet:');
+    try {
+      if (isMagnet) {
+        await ref
+            .read(torrentNotifierProvider.notifier)
+            .addMagnet(linkOrPath);
+        if (mounted) {
+          _showToast('Magnet link added successfully');
+        }
+      } else {
+        await ref
+            .read(torrentNotifierProvider.notifier)
+            .addTorrentFile(linkOrPath);
+        if (mounted) {
+          _showToast('Torrent file added successfully');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        _showToast('Failed to add torrent: $e', isError: true);
+      }
+    }
+  }
+
+  void _showToast(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              isError ? Icons.error_outline_rounded : Icons.check_circle_rounded,
+              color: isError ? AppColors.error : const Color(0xFF2ECC71),
+              size: 18,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(color: AppColors.text(context)),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: AppColors.surface(context),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   void _showAddTorrentDialog(BuildContext context, [String? prefilledLinkOrPath]) {

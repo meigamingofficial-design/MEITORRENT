@@ -8,7 +8,6 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_service.dart';
 import 'features/splash/presentation/splash_screen.dart';
 import 'features/torrent_list/presentation/controllers/torrent_notifier.dart';
-import 'features/torrent_list/presentation/widgets/add_torrent_dialog.dart';
 
 /// Global navigator key — used to show SnackBars and open dialogs from
 /// outside the widget tree (e.g. from the deep-link handler).
@@ -43,40 +42,33 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
 
   /// Handles an incoming magnet URI or local file path from any source.
   void _handleIncomingLink(String linkOrPath) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _openDialogWithLink(linkOrPath);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final isMagnet = linkOrPath.startsWith('magnet:');
+      try {
+        if (isMagnet) {
+          await ref
+              .read(torrentNotifierProvider.notifier)
+              .addMagnet(linkOrPath);
+          final ctx = navigatorKey.currentContext;
+          if (ctx != null && ctx.mounted) {
+            _showToast(ctx, 'Magnet link added successfully');
+          }
+        } else {
+          await ref
+              .read(torrentNotifierProvider.notifier)
+              .addTorrentFile(linkOrPath);
+          final ctx = navigatorKey.currentContext;
+          if (ctx != null && ctx.mounted) {
+            _showToast(ctx, 'Torrent file added successfully');
+          }
+        }
+      } catch (e) {
+        final ctx = navigatorKey.currentContext;
+        if (ctx != null && ctx.mounted) {
+          _showToast(ctx, 'Failed to add torrent: $e');
+        }
+      }
     });
-  }
-
-  /// Opens [AddTorrentDialog] pre-filled with [linkOrPath] using the global
-  /// navigator so it works regardless of what screen is currently showing.
-  void _openDialogWithLink(String linkOrPath) {
-    final ctx = navigatorKey.currentContext;
-    if (ctx == null) return;
-
-    final isMagnet = linkOrPath.startsWith('magnet:');
-
-    showModalBottomSheet<void>(
-      context: ctx,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => AddTorrentDialog(
-        initialMagnetUri: isMagnet ? linkOrPath : null,
-        initialTorrentFilePath: isMagnet ? null : linkOrPath,
-        onMagnetAdded: (uri, path) {
-          ref
-              .read(torrentNotifierProvider.notifier)
-              .addMagnet(uri, savePath: path);
-          _showToast(ctx, 'Torrent added from browser');
-        },
-        onFileAdded: (file, path) {
-          ref
-              .read(torrentNotifierProvider.notifier)
-              .addTorrentFile(file, savePath: path);
-          _showToast(ctx, 'Torrent added from storage');
-        },
-      ),
-    );
   }
 
   void _showToast(BuildContext ctx, String message) {
