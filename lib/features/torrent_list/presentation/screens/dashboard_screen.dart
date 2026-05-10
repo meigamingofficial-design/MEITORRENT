@@ -423,7 +423,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         title: const Text('Exit Meitorrent?',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
         content: Text(
-          'Torrents will continue to download in the background.',
+          'This will stop all active downloads and completely close the application.',
           style:
               TextStyle(color: AppColors.textSecondary(context), fontSize: 14),
         ),
@@ -434,7 +434,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.downloading,
+              backgroundColor: AppColors.error,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
             ),
