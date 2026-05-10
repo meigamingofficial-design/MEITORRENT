@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/services/engine_process_manager.dart';
 import '../../../core/services/foreground_service_manager.dart';
@@ -134,15 +135,26 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       await Permission.storage.request();
     }
 
-    // MANAGE_EXTERNAL_STORAGE (Android 11+) — show rationale dialog before opening system settings
+    // MANAGE_EXTERNAL_STORAGE (Android 11+)
+    // Only show the rationale dialog ONCE (first install). On subsequent launches where
+    // permission is still denied/skipped, we silently skip — no nagging.
     final manageStatus = await Permission.manageExternalStorage.status;
     if (!manageStatus.isGranted) {
-      await _requestManageStorageWithRationale();
+      final prefs = await SharedPreferences.getInstance();
+      final alreadyShown = prefs.getBool('meitorrent_storage_perm_shown') ?? false;
+
+      if (!alreadyShown) {
+        // Mark as shown so we never prompt again (unless user explicitly triggers it)
+        await prefs.setBool('meitorrent_storage_perm_shown', true);
+        await _requestManageStorageWithRationale();
+      }
+      // If already shown and still not granted — silently continue, app still works
     }
   }
 
   /// Shows a clear, friendly explanation dialog before directing the user to
   /// the "All files access" system settings page. Handles rejection gracefully.
+  /// Only called ONCE per install — never nags again.
   Future<void> _requestManageStorageWithRationale() async {
     if (!mounted) return;
 
@@ -194,7 +206,38 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   height: 1.6,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+              // Privacy reassurance chip
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.downloading.withValues(alpha: 0.07),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                      color: AppColors.downloading.withValues(alpha: 0.2)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.lock_outline_rounded,
+                        color: AppColors.downloading, size: 14),
+                    SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        'We only access files needed for downloads and file management. '
+                        'Your data is never shared.',
+                        style: TextStyle(
+                          color: AppColors.downloading,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
               // Buttons
               Row(
                 children: [
@@ -248,7 +291,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         _showStoragePermissionDeniedTip();
       }
     } else {
-      // User chose to skip — show a helpful tip without blocking
+      // User chose to skip — show a one-time helpful tip, then never bother again
       if (mounted) _showStoragePermissionDeniedTip();
     }
   }
@@ -257,7 +300,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void _showStoragePermissionDeniedTip() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        duration: const Duration(seconds: 6),
+        duration: const Duration(seconds: 7),
         backgroundColor: AppColors.surface(context),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -269,8 +312,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Without storage access, downloads may be limited. '
-                'Go to Settings → Apps → Meitorrent → Permissions to enable it.',
+                'Storage access not granted. Downloads may be limited. '
+                'Enable it anytime in Settings → Apps → Meitorrent → Permissions.',
                 style: TextStyle(
                     color: AppColors.text(context),
                     fontSize: 12,
