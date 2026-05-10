@@ -206,6 +206,9 @@ class ForegroundServiceManager {
   // Tracks last summary text to avoid sending identical data to the OS.
   String? _lastSummary;
 
+  // Tracks currently active individual torrent notification IDs to clean up orphaned notifications.
+  final Set<String> _showingNotificationIds = {};
+
   /// Push-based notification update.
   ///
   /// Behaviour:
@@ -215,7 +218,17 @@ class ForegroundServiceManager {
   /// - Stores pending data when service is not yet started (no silent drops)
   /// - Skips OS call if summary content is unchanged
   void pushUpdate(List<TorrentStatus> statuses) {
-    // ── 500 ms global throttle ───────────────────────────────────────
+    // ── Update individual notifications & Cancel obsolete ones ──────
+    final currentIds = statuses.map((s) => s.id).toSet();
+    final toCancel = _showingNotificationIds.difference(currentIds);
+    for (final id in toCancel) {
+      NotificationService.instance.cancelNotification(id);
+    }
+    _showingNotificationIds
+      ..clear()
+      ..addAll(currentIds);
+
+    // ── 500 ms global throttle for summary notification and content updates ───────────────────────────────────────
     final now = DateTime.now();
     if (_lastPush != null &&
         now.difference(_lastPush!) < const Duration(milliseconds: 500)) {
@@ -223,7 +236,6 @@ class ForegroundServiceManager {
     }
     _lastPush = now;
 
-    // ── Update individual notifications (self-throttled in NotificationService)
     for (final status in statuses) {
       NotificationService.instance.updateTorrentNotification(status);
     }

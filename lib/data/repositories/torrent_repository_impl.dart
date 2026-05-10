@@ -121,15 +121,25 @@ class TorrentRepositoryImpl implements TorrentRepository {
       final merged = <TorrentStatus>[];
       final seenMagnets = <String>{};
       final seenFiles = <String>{};
+      final seenNames = <String>{};
 
       for (final s in initialMerged) {
-        if (s.magnetUri != null) {
+        if (s.magnetUri != null && s.magnetUri!.isNotEmpty) {
           if (seenMagnets.contains(s.magnetUri)) continue;
           seenMagnets.add(s.magnetUri!);
-        } else if (s.torrentFilePath != null) {
+        } else if (s.torrentFilePath != null && s.torrentFilePath!.isNotEmpty) {
           if (seenFiles.contains(s.torrentFilePath)) continue;
           seenFiles.add(s.torrentFilePath!);
         }
+
+        // Fallback: Deduplicate by name if it's a real name (not a Torrent #... placeholder or empty)
+        final isRealName = s.name.isNotEmpty && !s.name.startsWith('Torrent #') && s.name != '…';
+        if (isRealName) {
+          final normalizedName = s.name.trim().toLowerCase();
+          if (seenNames.contains(normalizedName)) continue;
+          seenNames.add(normalizedName);
+        }
+
         merged.add(s);
       }
 
