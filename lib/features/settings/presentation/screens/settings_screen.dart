@@ -457,9 +457,17 @@ class _LegalTile extends StatelessWidget {
               await DefaultAssetBundle.of(context).loadString(assetPath);
           if (context.mounted) {
             Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) =>
+              PageRouteBuilder<void>(
+                pageBuilder: (_, __, ___) =>
                     _LegalDetailScreen(title: label, content: content),
+                transitionsBuilder: (_, animation, __, child) => FadeTransition(
+                  opacity: CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOut,
+                  ),
+                  child: child,
+                ),
+                transitionDuration: const Duration(milliseconds: 220),
               ),
             );
           }
@@ -483,6 +491,7 @@ class _LegalDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background(context),
       appBar: AppBar(
         title: Text(title,
             style: Theme.of(context).textTheme.displayMedium?.copyWith(
