@@ -81,27 +81,57 @@ class TorrentTaskHandler extends TaskHandler {
       if (engine == null) return;
 
       final torrents = engine.torrents.values.toList();
-      if (torrents.isEmpty) return;
-
-      // Simple summary for notification (background isolate — TorrentInfo fields only)
+      
+      // Update summary notification
       final active = torrents.where((t) => t.state.isActive && !t.isPaused).toList();
-      // progress >= 1.0 is the only reliable completion signal in the bg isolate
       final finished = torrents.where((t) => t.progress >= 1.0).toList();
-      final String text;
+      
+      final String summaryText;
       if (active.isNotEmpty) {
         final totalDown = active.fold<int>(0, (s, t) => s + t.downloadRate);
-        text = '${active.length} active · ↓ ${SpeedFormatter.format(totalDown)}';
+        summaryText = '${active.length} active · ↓ ${SpeedFormatter.format(totalDown)}';
       } else if (finished.isNotEmpty) {
-        text = '${finished.length} download${finished.length == 1 ? '' : 's'} complete';
+        summaryText = '${finished.length} download${finished.length == 1 ? '' : 's'} complete';
+      } else if (torrents.isNotEmpty) {
+        summaryText = '${torrents.length} torrent${torrents.length == 1 ? '' : 's'} paused';
       } else {
-        text = '${torrents.length} torrent${torrents.length == 1 ? '' : 's'} paused';
+        summaryText = 'No torrents added';
       }
 
       FlutterForegroundTask.updateService(
         notificationTitle: 'Meitorrent',
-        notificationText: text,
+        notificationText: summaryText,
       );
+
+      // ── Update individual notifications from background ───────────
+      for (final info in torrents) {
+        final status = _mapToStatus(info);
+        NotificationService.instance.updateTorrentNotification(status);
+      }
     });
+  }
+
+  /// Minimal mapping for NotificationService from raw engine TorrentInfo.
+  TorrentStatus _mapToStatus(lt_models.TorrentInfo info) {
+    return TorrentStatus(
+      id: info.id.toString(),
+      name: info.name,
+      progress: info.progress,
+      downloadSpeed: info.downloadRate,
+      uploadSpeed: info.uploadRate,
+      peers: info.numPeers,
+      seeds: info.numSeeds,
+      state: info.isPaused ? TorrentState.paused : 
+             (info.progress >= 1.0 ? TorrentState.finished : TorrentState.downloading),
+      totalSize: info.totalWanted,
+      downloadedBytes: info.totalDone,
+      uploadedBytes: info.totalUploaded,
+      savePath: info.savePath,
+      addedAt: DateTime.now(), // Fallback
+      ratio: info.totalWanted > 0 ? info.totalUploaded / info.totalWanted : 0.0,
+      isPaused: info.isPaused,
+      isCompleted: info.progress >= 1.0 || info.isFinished,
+    );
   }
 
   @override
@@ -268,8 +298,6 @@ class ForegroundServiceManager {
       text = '${finished.length} download${finished.length == 1 ? '' : 's'} complete';
     } else if (paused.isNotEmpty) {
       text = '${paused.length} torrent${paused.length == 1 ? '' : 's'} paused';
-    } else if (statuses.isNotEmpty) {
-      text = '${statuses.length} torrent${statuses.length == 1 ? '' : 's'}';
     } else {
       text = 'No torrents added';
     }
