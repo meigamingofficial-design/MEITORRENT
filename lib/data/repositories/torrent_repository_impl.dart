@@ -119,28 +119,44 @@ class TorrentRepositoryImpl implements TorrentRepository {
       // Priority: Live engine statuses come first.
       final initialMerged = [...liveStatuses, ...engineSkipped];
 
-      // 7. Global Deduplication: Ensure only one entry per source exists (Hardening #4).
-      // This prevents duplicates if the same magnet is added twice with different IDs.
+      // 7. Global Deduplication: Ensure only one entry per content exists (Hardening #4).
+      // This prevents duplicates if IDs change or the same content is added from different sources.
       final merged = <TorrentStatus>[];
       final seenMagnets = <String>{};
       final seenFiles = <String>{};
-      final seenNames = <String>{};
+      final seenHashes = <String>{};
+      final seenFingerprints = <String>{};
 
       for (final s in initialMerged) {
+        // A. Magnet/Hash Deduplication
         if (s.magnetUri != null && s.magnetUri!.isNotEmpty) {
+          final hash = _infoHashFromMagnet(s.magnetUri!);
+          if (hash != null) {
+            if (seenHashes.contains(hash)) continue;
+            seenHashes.add(hash);
+          }
           if (seenMagnets.contains(s.magnetUri)) continue;
           seenMagnets.add(s.magnetUri!);
-        } else if (s.torrentFilePath != null && s.torrentFilePath!.isNotEmpty) {
+        } 
+        
+        // B. File Path Deduplication
+        else if (s.torrentFilePath != null && s.torrentFilePath!.isNotEmpty) {
           if (seenFiles.contains(s.torrentFilePath)) continue;
           seenFiles.add(s.torrentFilePath!);
         }
 
-        // Fallback: Deduplicate by name if it's a real name (not a Torrent #... placeholder or empty)
+        // C. Fingerprint Deduplication (Name + Size)
+        // Extremely useful for catching re-added files with different temp paths or magnets with metadata renames.
         final isRealName = s.name.isNotEmpty && !s.name.startsWith('Torrent #') && s.name != '…';
-        if (isRealName) {
-          final normalizedName = s.name.trim().toLowerCase();
-          if (seenNames.contains(normalizedName)) continue;
-          seenNames.add(normalizedName);
+        if (isRealName && s.totalSize > 0) {
+          // Normalize name: lowercase, remove dots/underscores/dashes
+          final normName = s.name.toLowerCase().replaceAll(RegExp(r'[\.\-_\s]'), '');
+          final fingerprint = '${normName}_${s.totalSize}';
+          if (seenFingerprints.contains(fingerprint)) {
+            AppLogger.d('[Repo] Filtering duplicate by fingerprint: ${s.name}');
+            continue;
+          }
+          seenFingerprints.add(fingerprint);
         }
 
         merged.add(s);
@@ -523,6 +539,9 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
             if (targetId != id) {
               AppLogger.i('[Repo] Syncing ID on resume: $id → $targetId');
+              // Cancel the notification for the OLD ID to prevent duplicates in tray
+              unawaited(NotificationService.instance.cancelNotification(id));
+              
               await _db.deleteTorrentById(id);
               await _db.upsertTorrent(
                 TorrentModel.toCompanion(t.copyWith(id: targetId)),
