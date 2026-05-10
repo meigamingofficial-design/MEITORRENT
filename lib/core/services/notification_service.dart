@@ -1,6 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../domain/entities/torrent_status.dart';
 import '../utils/speed_formatter.dart';
+import '../utils/size_formatter.dart';
 import 'folder_service.dart';
 
 /// Handles individual per-torrent notifications using flutter_local_notifications.
@@ -76,23 +77,25 @@ class NotificationService {
     final String body;
     bool showProgress = false;
 
+    final sizeStr = '${SizeFormatter.format(status.downloadedBytes)} / ${SizeFormatter.format(status.totalSize)}';
+
     switch (status.state) {
       case TorrentState.downloading:
         final speedStr = SpeedFormatter.format(status.downloadSpeed);
         final etaStr = status.etaSeconds != null
             ? ' · ${_formatEta(status.etaSeconds!)} left'
             : '';
-        body = '$progress% · ↓ $speedStr$etaStr';
+        body = '$progress% · $sizeStr · ↓ $speedStr$etaStr';
         showProgress = true;
 
       case TorrentState.seeding:
-        body = 'Seeding · ↑ ${SpeedFormatter.format(status.uploadSpeed)}';
+        body = 'Seeding · $sizeStr · ↑ ${SpeedFormatter.format(status.uploadSpeed)}';
 
       case TorrentState.finished:
-        body = 'Completed ✔  —  Tap to open download';
+        body = 'Completed ✔  —  ${SizeFormatter.format(status.totalSize)} · Tap to open';
 
       case TorrentState.paused:
-        body = 'Paused · $progress%';
+        body = 'Paused · $progress% ($sizeStr)';
 
       case TorrentState.downloadingMetadata:
         body = 'Fetching metadata…';
@@ -100,14 +103,14 @@ class NotificationService {
       case TorrentState.checkingFiles:
       case TorrentState.checkingResume:
       case TorrentState.allocating:
-        body = '${status.state.displayName} · $progress%';
+        body = '${status.state.displayName} · $progress% ($sizeStr)';
         showProgress = true;
 
       case TorrentState.error:
         body = 'Error: ${status.errorMessage ?? "Unknown error"}';
 
       default:
-        body = status.state.displayName;
+        body = '${status.state.displayName} · $sizeStr';
     }
 
     // ── Identical-content guard ──────────────────────────────────────
