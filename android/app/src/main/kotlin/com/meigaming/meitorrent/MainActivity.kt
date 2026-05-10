@@ -126,11 +126,13 @@ class MainActivity : FlutterActivity() {
                     val intent = Intent(Intent.ACTION_VIEW).apply {
                         addCategory(Intent.CATEGORY_DEFAULT)
                         setDataAndType(uri, "vnd.android.document/directory")
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
                     
-                    startActivity(intent)
+                    val chooser = Intent.createChooser(intent, "Open with").apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(chooser)
                     result.success("exact_modern")
                     return
                 } catch (e: Exception) {
@@ -144,9 +146,11 @@ class MainActivity : FlutterActivity() {
                     val uri = Uri.fromFile(dir)
                     val intent = Intent(Intent.ACTION_VIEW).apply {
                         setDataAndType(uri, "resource/folder")
+                    }
+                    val chooser = Intent.createChooser(intent, "Open with").apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
-                    startActivity(intent)
+                    startActivity(chooser)
                     result.success("legacy_path")
                     return
                 } catch (e: Exception) {
@@ -159,9 +163,11 @@ class MainActivity : FlutterActivity() {
                 val uri = Uri.parse("content://com.android.externalstorage.documents/document/primary:Download")
                 val intent = Intent(Intent.ACTION_VIEW).apply {
                     setDataAndType(uri, "vnd.android.document/directory")
+                }
+                val chooser = Intent.createChooser(intent, "Open with").apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
-                startActivity(intent)
+                startActivity(chooser)
                 result.success("fallback_root")
                 return
             } catch (e: Exception) {
