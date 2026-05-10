@@ -56,6 +56,9 @@ class TorrentRepositoryImpl implements TorrentRepository {
   /// by the engine for a few frames. (Ghost prevention)
   final Set<String> _deletedIds = {};
 
+  /// Cache of the progress at which intermediate fast-resume data was last saved to DB.
+  final Map<String, double> _lastSavedResumeProgress = {};
+
   /// Cache of the last emitted statuses to allow emergency saves during lifecycle events.
   List<TorrentStatus> _lastStatuses = [];
 
@@ -807,13 +810,29 @@ class TorrentRepositoryImpl implements TorrentRepository {
           }
 
           final intId = int.tryParse(s.id);
-          if (intId != null &&
-              (status.isCompleted || (status.progress > 0.02 && status.downloadSpeed == 0))) {
-            final resume = _engine.getResumeDataSafe(intId);
-            if (resume != null) {
-              status = status.copyWith(resumeData: resume);
-              if (status.isCompleted) {
-                AppLogger.d('[Repo] Saved final 100% completed resume data for: ${status.name}');
+          if (intId != null) {
+            final lastSavedProgress = _lastSavedResumeProgress[s.id] ?? 0.0;
+            final isCompleted = status.isCompleted;
+            final progressDelta = status.progress - lastSavedProgress;
+
+            // Save resume data if:
+            //   1. Torrent is 100% completed (final write)
+            //   2. Progress has increased by >= 1% since the last saved checkpoint
+            //   3. Torrent is idle/paused (progress > 2% and download speed is 0)
+            if (isCompleted ||
+                progressDelta >= 0.01 ||
+                (status.progress > 0.02 && status.downloadSpeed == 0)) {
+              final resume = _engine.getResumeDataSafe(intId);
+              if (resume != null) {
+                status = status.copyWith(resumeData: resume);
+                _lastSavedResumeProgress[s.id] = status.progress;
+                if (isCompleted) {
+                  AppLogger.d('[Repo] Saved final 100% completed resume data for: ${status.name}');
+                } else {
+                  AppLogger.d(
+                    '[Repo] Saved intermediate fast-resume data at ${(status.progress * 100).toStringAsFixed(1)}% for: ${status.name}',
+                  );
+                }
               }
             }
           }
