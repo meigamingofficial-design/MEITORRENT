@@ -134,12 +134,158 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       await Permission.storage.request();
     }
 
-    // MANAGE_EXTERNAL_STORAGE (Android 11+) — only request if not already granted
-    // This is slow on some devices so we only invoke it when genuinely needed.
+    // MANAGE_EXTERNAL_STORAGE (Android 11+) — show rationale dialog before opening system settings
     final manageStatus = await Permission.manageExternalStorage.status;
-    if (manageStatus.isDenied) {
-      await Permission.manageExternalStorage.request();
+    if (!manageStatus.isGranted) {
+      await _requestManageStorageWithRationale();
     }
+  }
+
+  /// Shows a clear, friendly explanation dialog before directing the user to
+  /// the "All files access" system settings page. Handles rejection gracefully.
+  Future<void> _requestManageStorageWithRationale() async {
+    if (!mounted) return;
+
+    final granted = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: AppColors.surface(ctx),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.downloading.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.folder_open_rounded,
+                    color: AppColors.downloading, size: 32),
+              ),
+              const SizedBox(height: 20),
+              // Title
+              Text(
+                'Storage Access Required',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.text(ctx),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Body
+              Text(
+                'Meitorrent needs "All files access" to:\n\n'
+                '• Save downloaded torrents to your storage\n'
+                '• Resume downloads after restarting\n'
+                '• Delete files when you remove a torrent\n\n'
+                'On the next screen, enable "Allow access to manage all files".',
+                textAlign: TextAlign.left,
+                style: TextStyle(
+                  color: AppColors.textSecondary(ctx),
+                  fontSize: 13,
+                  height: 1.6,
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        side: BorderSide(color: AppColors.border(ctx)),
+                      ),
+                      child: Text('Skip for now',
+                          style: TextStyle(
+                              color: AppColors.textSecondary(ctx),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.downloading,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Grant Access',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (granted == true) {
+      // Open the system "All files access" settings page
+      await Permission.manageExternalStorage.request();
+
+      // Check if the user actually granted it after returning from system settings
+      final newStatus = await Permission.manageExternalStorage.status;
+      if (!newStatus.isGranted && mounted) {
+        _showStoragePermissionDeniedTip();
+      }
+    } else {
+      // User chose to skip — show a helpful tip without blocking
+      if (mounted) _showStoragePermissionDeniedTip();
+    }
+  }
+
+  /// Shows a non-blocking snackbar tip when storage access is denied or skipped.
+  void _showStoragePermissionDeniedTip() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 6),
+        backgroundColor: AppColors.surface(context),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        margin: const EdgeInsets.all(16),
+        content: Row(
+          children: [
+            const Icon(Icons.info_outline_rounded,
+                color: AppColors.paused, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Without storage access, downloads may be limited. '
+                'Go to Settings → Apps → Meitorrent → Permissions to enable it.',
+                style: TextStyle(
+                    color: AppColors.text(context),
+                    fontSize: 12,
+                    height: 1.4),
+              ),
+            ),
+          ],
+        ),
+        action: SnackBarAction(
+          label: 'Open Settings',
+          textColor: AppColors.downloading,
+          onPressed: () => openAppSettings(),
+        ),
+      ),
+    );
   }
 
   void _setStatus(String text) {
