@@ -110,7 +110,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: _scheme,
-      scaffoldBackgroundColor: _torinoko,
+      scaffoldBackgroundColor: Colors.transparent,
 
       // Outfit for UI, Shippori Mincho for headers
       textTheme: GoogleFonts.outfitTextTheme(

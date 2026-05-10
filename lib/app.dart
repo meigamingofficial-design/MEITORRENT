@@ -121,26 +121,27 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
         return Stack(
           fit: StackFit.expand,
           children: [
-            // All routes (now opaque parchment in light mode)
-            scaled,
-            // Subtle pink blush overlay for a gorgeous unified Sakura theme
+            // 1. Solid traditional parchment base color under the background image
+            Container(
+              color: const Color(0xFFF9F6F0),
+            ),
+            // 2. Sakura background image (behind the content routes)
+            Opacity(
+              opacity: 0.15,
+              child: Image.asset(
+                'assets/images/sakura_bg_light.png',
+                fit: BoxFit.cover,
+                alignment: Alignment.topRight,
+              ),
+            ),
+            // 3. Subtle pink blush overlay for a gorgeous unified Sakura theme
             IgnorePointer(
               child: Container(
                 color: const Color(0xFFFFC0CB).withValues(alpha: 0.04), // 4% opacity soft pink tint
               ),
             ),
-            // Sakura watermark — on top of UI with IgnorePointer to prevent interference
-            // This prevents "ghosting" during transitions because routes are now opaque
-            IgnorePointer(
-              child: Opacity(
-                opacity: 0.15,
-                child: Image.asset(
-                  'assets/images/sakura_bg_light.png',
-                  fit: BoxFit.cover,
-                  alignment: Alignment.topRight,
-                ),
-              ),
-            ),
+            // 4. All routes on top (transparent scaffolds allow the background to show through, but solid cards mask it!)
+            scaled,
           ],
         );
       },

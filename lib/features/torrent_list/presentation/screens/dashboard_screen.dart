@@ -688,10 +688,12 @@ class _CompactSpeedTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: Theme.of(context).brightness == Brightness.light
+              ? Color.alphaBlend(color.withValues(alpha: 0.15), AppColors.surface(context))
+              : color.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: color.withValues(alpha: 0.3),
+            color: color.withValues(alpha: 0.4),
             width: 1.5,
           ),
         ),
