@@ -83,14 +83,18 @@ class TorrentTaskHandler extends TaskHandler {
       final torrents = engine.torrents.values.toList();
       if (torrents.isEmpty) return;
 
-      // Simple summary for notification (properly check isPaused to prevent 'Ready to download' conflicts)
+      // Simple summary for notification (background isolate — TorrentInfo fields only)
       final active = torrents.where((t) => t.state.isActive && !t.isPaused).toList();
+      // progress >= 1.0 is the only reliable completion signal in the bg isolate
+      final finished = torrents.where((t) => t.progress >= 1.0).toList();
       final String text;
       if (active.isNotEmpty) {
         final totalDown = active.fold<int>(0, (s, t) => s + t.downloadRate);
         text = '${active.length} active · ↓ ${SpeedFormatter.format(totalDown)}';
+      } else if (finished.isNotEmpty) {
+        text = '${finished.length} download${finished.length == 1 ? '' : 's'} complete';
       } else {
-        text = 'Ready to download';
+        text = '${torrents.length} torrent${torrents.length == 1 ? '' : 's'} paused';
       }
 
       FlutterForegroundTask.updateService(
@@ -168,7 +172,7 @@ class ForegroundServiceManager {
 
     final result = await FlutterForegroundTask.startService(
       notificationTitle: _pendingData?['title'] ?? 'Meitorrent',
-      notificationText: _pendingData?['text'] ?? 'Ready to download',
+      notificationText: _pendingData?['text'] ?? 'Starting…',
       callback: torrentServiceCallback,
     );
 
@@ -240,22 +244,28 @@ class ForegroundServiceManager {
       NotificationService.instance.updateTorrentNotification(status);
     }
 
-    // ── Build summary text ───────────────────────────────────────────
-    final active = statuses.where((t) => t.state.isActive).toList();
-    final finished = statuses.where((t) => t.state.isFinished).toList();
+    // ── Build summary text ───────────────────────────────────
+    final active = statuses.where((t) => t.state.isActive && !t.isPaused).toList();
+    final finished = statuses.where((t) =>
+        t.isCompleted ||
+        t.progress >= 1.0 ||
+        (t.totalSize > 0 && t.downloadedBytes >= t.totalSize)).toList();
+    final paused = statuses.where((t) => t.isPaused || t.isStopped).toList();
 
     const String title = 'Meitorrent';
     final String text;
 
     if (active.isNotEmpty) {
-      final totalDown =
-          active.fold<int>(0, (s, t) => s + t.downloadSpeed);
-      text =
-          '${active.length} active · ↓ ${SpeedFormatter.format(totalDown)}';
+      final totalDown = active.fold<int>(0, (s, t) => s + t.downloadSpeed);
+      text = '${active.length} active · ↓ ${SpeedFormatter.format(totalDown)}';
     } else if (finished.isNotEmpty) {
-      text = '${finished.length} download${finished.length == 1 ? '' : 's'} completed';
+      text = '${finished.length} download${finished.length == 1 ? '' : 's'} complete';
+    } else if (paused.isNotEmpty) {
+      text = '${paused.length} torrent${paused.length == 1 ? '' : 's'} paused';
+    } else if (statuses.isNotEmpty) {
+      text = '${statuses.length} torrent${statuses.length == 1 ? '' : 's'}';
     } else {
-      text = 'Ready to download';
+      text = 'No torrents added';
     }
 
     final payload = <String, dynamic>{

@@ -79,38 +79,48 @@ class NotificationService {
 
     final sizeStr = '${SizeFormatter.format(status.downloadedBytes)} / ${SizeFormatter.format(status.totalSize)}';
 
-    switch (status.state) {
-      case TorrentState.downloading:
-        final speedStr = SpeedFormatter.format(status.downloadSpeed);
-        final etaStr = status.etaSeconds != null
-            ? ' · ${_formatEta(status.etaSeconds!)} left'
-            : '';
-        body = '$progress% · $sizeStr · ↓ $speedStr$etaStr';
-        showProgress = true;
+    // Check effective completion FIRST — a paused torrent at 100% is "Finished",
+    // not "Paused". The engine emits paused state after auto-stop-seeding fires.
+    final isEffectivelyDone = status.isCompleted ||
+        status.progress >= 1.0 ||
+        (status.totalSize > 0 && status.downloadedBytes >= status.totalSize);
 
-      case TorrentState.seeding:
-        body = 'Seeding · $sizeStr · ↑ ${SpeedFormatter.format(status.uploadSpeed)}';
+    if (isEffectivelyDone) {
+      body = '✓ Download complete · ${SizeFormatter.format(status.totalSize)} · Tap to open';
+    } else {
+      switch (status.state) {
+        case TorrentState.downloading:
+          final speedStr = SpeedFormatter.format(status.downloadSpeed);
+          final etaStr = status.etaSeconds != null
+              ? ' · ${_formatEta(status.etaSeconds!)} left'
+              : '';
+          body = '$progress% · $sizeStr · ↓ $speedStr$etaStr';
+          showProgress = true;
 
-      case TorrentState.finished:
-        body = 'Completed ✔  —  ${SizeFormatter.format(status.totalSize)} · Tap to open';
+        case TorrentState.seeding:
+          body = 'Seeding · $sizeStr · ↑ ${SpeedFormatter.format(status.uploadSpeed)}';
 
-      case TorrentState.paused:
-        body = 'Paused · $progress% ($sizeStr)';
+        case TorrentState.finished:
+          body = '✓ Download complete · ${SizeFormatter.format(status.totalSize)} · Tap to open';
 
-      case TorrentState.downloadingMetadata:
-        body = 'Fetching metadata…';
+        case TorrentState.paused:
+          body = 'Paused · $progress% ($sizeStr)';
 
-      case TorrentState.checkingFiles:
-      case TorrentState.checkingResume:
-      case TorrentState.allocating:
-        body = '${status.state.displayName} · $progress% ($sizeStr)';
-        showProgress = true;
+        case TorrentState.downloadingMetadata:
+          body = 'Fetching metadata…';
 
-      case TorrentState.error:
-        body = 'Error: ${status.errorMessage ?? "Unknown error"}';
+        case TorrentState.checkingFiles:
+        case TorrentState.checkingResume:
+        case TorrentState.allocating:
+          body = '${status.state.displayName} · $progress% ($sizeStr)';
+          showProgress = true;
 
-      default:
-        body = '${status.state.displayName} · $sizeStr';
+        case TorrentState.error:
+          body = 'Error: ${status.errorMessage ?? "Unknown error"}';
+
+        default:
+          body = '${status.state.displayName} · $sizeStr';
+      }
     }
 
     // ── Identical-content guard ──────────────────────────────────────
