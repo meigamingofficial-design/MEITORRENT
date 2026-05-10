@@ -306,8 +306,29 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   }
 
   Future<void> deleteMultiple(List<String> ids, {bool deleteFiles = false}) async {
-    final repo = ref.read(torrentRepositoryProvider);
-    await repo.deleteMultiple(ids, deleteFiles: deleteFiles);
+    // Optimistic UI: remove all selected torrents from state immediately
+    final previousList = state.asData?.value;
+    if (previousList != null) {
+      final idSet = ids.toSet();
+      final updated = previousList.where((t) => !idSet.contains(t.id)).toList();
+      state = AsyncValue.data(updated);
+      ForegroundServiceManager.instance.pushUpdate(updated);
+    }
+
+    try {
+      final repo = ref.read(torrentRepositoryProvider);
+      await repo.deleteMultiple(ids, deleteFiles: deleteFiles);
+      AppLogger.i('[Notifier] deleteMultiple: removed ${ids.length} torrents (deleteFiles=$deleteFiles)');
+    } catch (e, st) {
+      // Rollback on failure
+      if (previousList != null) {
+        state = AsyncValue.data(previousList);
+        ForegroundServiceManager.instance.pushUpdate(previousList);
+      }
+      AppLogger.e('[Notifier] deleteMultiple failed', error: e, stack: st);
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
   }
 
   @override

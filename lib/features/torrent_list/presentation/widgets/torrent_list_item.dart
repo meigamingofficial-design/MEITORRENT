@@ -834,15 +834,21 @@ class _TorrentOptionsSheet extends StatelessWidget {
             iconColor: AppColors.error,
             label: 'Remove Torrent',
             onTap: () async {
-              navigator.pop();
+              // Show the delete dialog FIRST while the sheet's context is still valid,
+              // then pop the sheet only after the user makes a choice.
               final result = await showDialog<_DeleteChoice>(
                 context: context,
                 builder: (_) => _DeleteDialog(torrentName: status.name),
               );
+              navigator.pop(); // dismiss sheet after dialog resolves
               if (result == _DeleteChoice.removeOnly) {
-                notifier.deleteTorrent(status.id);
+                try {
+                  await notifier.deleteTorrent(status.id);
+                } catch (_) {}
               } else if (result == _DeleteChoice.removeWithFiles) {
-                notifier.deleteTorrent(status.id, deleteFiles: true);
+                try {
+                  await notifier.deleteTorrent(status.id, deleteFiles: true);
+                } catch (_) {}
               }
             },
           ),

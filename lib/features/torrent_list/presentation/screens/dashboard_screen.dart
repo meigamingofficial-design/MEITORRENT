@@ -224,7 +224,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     AsyncValue<List<TorrentStatus>> async,
   ) {
     final selectedIds = ref.watch(selectedTorrentsProvider);
-    final isSelectionMode = selectedIds.isNotEmpty;
+    final isSelectionMode = ref.watch(selectedTorrentsProvider.notifier).isSelectionMode;
 
     if (isSelectionMode) {
       return PreferredSize(
@@ -479,17 +479,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             const Icon(Icons.delete_sweep_outlined,
                 color: AppColors.error, size: 22),
             const SizedBox(width: 10),
-            Text(isAll ? 'Delete All Torrents?' : 'Delete Selected?',
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            Expanded(
+              child: Text(isAll ? 'Delete All Torrents?' : 'Delete Selected?',
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w800)),
+            ),
           ],
         ),
         content: Text(
           isAll
               ? 'This will remove all torrents from your list.'
-              : 'Remove ${ids.length} selected torrents?',
-          style:
-              TextStyle(color: AppColors.textSecondary(context), fontSize: 14),
+              : 'Remove ${ids.length} selected torrent${ids.length == 1 ? '' : 's'}?',
+          style: TextStyle(
+              color: AppColors.textSecondary(ctx), fontSize: 14),
         ),
         actions: [
           TextButton(
@@ -502,9 +504,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
             ),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              ref.read(torrentNotifierProvider.notifier).deleteMultiple(ids);
+              try {
+                await ref
+                    .read(torrentNotifierProvider.notifier)
+                    .deleteMultiple(ids);
+              } catch (_) {}
               ref.read(selectedTorrentsProvider.notifier).clear();
             },
             child: const Text('Remove Only'),
@@ -515,11 +521,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
             ),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              ref
-                  .read(torrentNotifierProvider.notifier)
-                  .deleteMultiple(ids, deleteFiles: true);
+              try {
+                await ref
+                    .read(torrentNotifierProvider.notifier)
+                    .deleteMultiple(ids, deleteFiles: true);
+              } catch (_) {}
               ref.read(selectedTorrentsProvider.notifier).clear();
             },
             child: const Text('Remove + Files'),
