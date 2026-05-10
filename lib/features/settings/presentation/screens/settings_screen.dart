@@ -527,8 +527,12 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _checkStatus();
-    _checkOem();
+    // Defer heavy async platform-channel calls to after the first frame
+    // so they never block the navigation transition animation.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkStatus();
+      _checkOem();
+    });
   }
 
   @override

@@ -337,7 +337,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         IconButton(
           icon: const Icon(Icons.settings_outlined, size: 22),
           onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+            PageRouteBuilder<void>(
+              pageBuilder: (_, __, ___) => const SettingsScreen(),
+              transitionsBuilder: (_, animation, __, child) {
+                final slide = Tween<Offset>(
+                  begin: const Offset(1.0, 0.0),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                ));
+                return SlideTransition(
+                  position: slide,
+                  child: FadeTransition(opacity: animation, child: child),
+                );
+              },
+              transitionDuration: const Duration(milliseconds: 280),
+            ),
           ),
         ),
         PopupMenuButton<String>(
@@ -615,8 +631,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       if (context.mounted) {
                         Navigator.push(
                           context,
-                          MaterialPageRoute<void>(
-                              builder: (_) => const SettingsScreen()),
+                          PageRouteBuilder<void>(
+                            pageBuilder: (_, __, ___) => const SettingsScreen(),
+                            transitionsBuilder: (_, animation, __, child) {
+                              final slide = Tween<Offset>(
+                                begin: const Offset(1.0, 0.0),
+                                end: Offset.zero,
+                              ).animate(CurvedAnimation(
+                                parent: animation,
+                                curve: Curves.easeOutCubic,
+                              ));
+                              return SlideTransition(
+                                position: slide,
+                                child: FadeTransition(opacity: animation, child: child),
+                              );
+                            },
+                            transitionDuration: const Duration(milliseconds: 280),
+                          ),
                         );
                       }
                     },

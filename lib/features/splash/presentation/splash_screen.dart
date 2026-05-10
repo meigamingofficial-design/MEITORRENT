@@ -122,19 +122,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _requestPermissions() async {
-    // Notification permission (Android 13+)
+    // Notification permission (Android 13+) — skip if already granted
     final notifPerm = await FlutterForegroundTask.checkNotificationPermission();
     if (notifPerm != NotificationPermission.granted) {
       await FlutterForegroundTask.requestNotificationPermission();
     }
 
-    // Request standard Storage permissions for compatibility (Android 10 and below)
-    if (await Permission.storage.isDenied) {
+    // Standard storage permission (Android 10 and below) — check once, request only if needed
+    final storageStatus = await Permission.storage.status;
+    if (storageStatus.isDenied) {
       await Permission.storage.request();
     }
 
-    // Request MANAGE_EXTERNAL_STORAGE permission for Android 11+
-    if (await Permission.manageExternalStorage.isDenied) {
+    // MANAGE_EXTERNAL_STORAGE (Android 11+) — only request if not already granted
+    // This is slow on some devices so we only invoke it when genuinely needed.
+    final manageStatus = await Permission.manageExternalStorage.status;
+    if (manageStatus.isDenied) {
       await Permission.manageExternalStorage.request();
     }
   }
