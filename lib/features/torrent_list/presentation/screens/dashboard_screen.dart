@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,6 +17,8 @@ import '../widgets/torrent_list_item.dart';
 import '../../../../core/utils/speed_formatter.dart';
 import '../../../../core/services/deep_link_service.dart';
 
+import '../../../../core/services/permission_service.dart';
+
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -22,15 +26,18 @@ class DashboardScreen extends ConsumerStatefulWidget {
   ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsBindingObserver {
   String? _newlyAddedId;
   int _zeroSpeedTicks = 0;
   bool _hasPromptedSpeedWarning = false;
+  bool _isStorageGranted = true;
 
   @override
   void initState() {
     super.initState();
-    // Cold-start deep links: handle preloaded torrents once DashboardScreen is fully mounted
+    WidgetsBinding.instance.addObserver(this);
+    _checkPermission();
+    // Cold-start deep links
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final initialLink = DeepLinkService.instance.pendingInitialLink;
       if (initialLink != null) {
@@ -40,8 +47,37 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermission();
+    }
+  }
+
+  Future<void> _checkPermission() async {
+    final granted = await PermissionService.isStorageGranted();
+    if (mounted && _isStorageGranted != granted) {
+      setState(() => _isStorageGranted = granted);
+    }
+  }
+
   void _addDirectly(String linkOrPath) async {
     if (!mounted) return;
+
+    if (!_isStorageGranted) {
+      final granted = await PermissionService.showStorageRationale(context);
+      if (granted) {
+        await Permission.manageExternalStorage.request();
+        await _checkPermission();
+      }
+      return;
+    }
 
     final isMagnet = linkOrPath.startsWith('magnet:');
     try {
@@ -96,7 +132,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  void _showAddTorrentDialog(BuildContext context, [String? prefilledLinkOrPath]) {
+  void _showAddTorrentDialog(BuildContext context, [String? prefilledLinkOrPath]) async {
+    if (!_isStorageGranted) {
+      final granted = await PermissionService.showStorageRationale(context);
+      if (granted) {
+        await Permission.manageExternalStorage.request();
+        await _checkPermission();
+      }
+      return;
+    }
+
     final isMagnet = prefilledLinkOrPath != null && prefilledLinkOrPath.startsWith('magnet:');
     showModalBottomSheet<void>(
       context: context,
@@ -131,7 +176,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         OemBatteryGuard.instance.promptIfNeeded(context);
       }
 
-      // 2. Failure Detection Loop (Agonistic Speed Throttling)
+      // 2. Failure Detection Loop
       final activeDownloading = nextTorrents
           .where((t) => t.state.isActive && !t.state.isFinished)
           .toList();
@@ -159,9 +204,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        _showExitConfirmation(context);
+        
+        final torrents = torrentsAsync.valueOrNull ?? [];
+        final hasActive = torrents.any((t) => t.state.isActive && !t.state.isFinished);
+        
+        if (!hasActive) {
+          // If nothing is active, just minimize to background silently
+          SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+          return;
+        }
+
+        // Check for remembered choice
+        final prefs = await SharedPreferences.getInstance();
+        final remembered = prefs.getString('meitorrent_exit_preference');
+        
+        if (remembered == 'background') {
+          SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+        } else if (remembered == 'exit') {
+          ref.read(torrentRepositoryProvider).forceSaveAllResumeData();
+          exit(0);
+        } else {
+          if (context.mounted) _showExitConfirmation(context);
+        }
       },
       child: Scaffold(
         extendBody: true,
@@ -175,37 +241,46 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           error: (e, _) => _ErrorBody(error: e.toString()),
           data: (torrents) {
-            if (torrents.isEmpty) {
-              return const SafeArea(child: EmptyStateWidget());
-            }
-
             return SafeArea(
               bottom: false,
               child: CustomScrollView(
                 physics: const BouncingScrollPhysics(),
                 slivers: [
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: _buildHeader(context, torrents),
+                  if (!_isStorageGranted)
+                    SliverToBoxAdapter(
+                      child: _PermissionBanner(
+                        onTap: () => _showAddTorrentDialog(context),
+                      ),
                     ),
-                  ),
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (_, i) {
-                        final torrent = torrents[i];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: TorrentListItem(
-                            torrentId: torrent.id,
-                            isNew: torrent.id == _newlyAddedId,
-                          ),
-                        );
-                      },
-                      childCount: torrents.length,
+                  if (torrents.isEmpty)
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: EmptyStateWidget(),
+                    )
+                  else ...[
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: _buildHeader(context, torrents),
+                      ),
                     ),
-                  ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 140)),
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (_, i) {
+                          final torrent = torrents[i];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: TorrentListItem(
+                              torrentId: torrent.id,
+                              isNew: torrent.id == _newlyAddedId,
+                            ),
+                          );
+                        },
+                        childCount: torrents.length,
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 140)),
+                  ],
                 ],
               ),
             );
@@ -426,35 +501,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   void _showExitConfirmation(BuildContext context) {
+    final torrents = ref.read(torrentNotifierProvider).valueOrNull ?? [];
+    final activeCount = torrents.where((t) => t.state.isActive && !t.state.isFinished).length;
+
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Exit Meitorrent?',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-        content: Text(
-          'This will stop all active downloads and completely close the application.',
-          style:
-              TextStyle(color: AppColors.textSecondary(context), fontSize: 14),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () {
-              ref.read(torrentRepositoryProvider).forceSaveAllResumeData();
-              exit(0);
-            },
-            child: const Text('Exit Now'),
-          ),
-        ],
+      builder: (ctx) => _ExitDialog(
+        activeCount: activeCount,
+        onBackground: () => SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
+        onExit: () {
+          ref.read(torrentRepositoryProvider).forceSaveAllResumeData();
+          exit(0);
+        },
       ),
     );
   }
@@ -892,6 +950,307 @@ class _ErrorBody extends StatelessWidget {
                   color: AppColors.textSecondary(context), fontSize: 13),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PermissionBanner extends StatelessWidget {
+  const _PermissionBanner({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.paused.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.paused.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded,
+                color: AppColors.paused, size: 24),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Limited Mode',
+                    style: TextStyle(
+                      color: AppColors.text(context),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Storage access is required to download and manage files.',
+                    style: TextStyle(
+                      color: AppColors.textSecondary(context),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded,
+                color: AppColors.textSecondary(context), size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExitDialog extends StatefulWidget {
+  const _ExitDialog({
+    required this.onBackground,
+    required this.onExit,
+    required this.activeCount,
+  });
+
+  final VoidCallback onBackground;
+  final VoidCallback onExit;
+  final int activeCount;
+
+  @override
+  State<_ExitDialog> createState() => _ExitDialogState();
+}
+
+class _ExitDialogState extends State<_ExitDialog> {
+  bool _remember = false;
+  String _selectedOption = 'background'; // Default
+
+  Future<void> _savePreference(String choice) async {
+    if (_remember) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('meitorrent_exit_preference', choice);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      backgroundColor: AppColors.surface(context),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Exit Meitorrent?',
+              style: GoogleFonts.shipporiMincho(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.text(context),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              widget.activeCount > 0 
+                ? '${widget.activeCount} download${widget.activeCount == 1 ? ' is' : 's are'} currently active.'
+                : 'Choose what you want to do.',
+              style: TextStyle(
+                color: AppColors.textSecondary(context),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Background Option
+            _ExitOption(
+              icon: Icons.bolt_rounded,
+              title: 'Run in Background',
+              description: 'Downloads continue with notification support.',
+              color: AppColors.downloading,
+              isSelected: _selectedOption == 'background',
+              onTap: () => setState(() => _selectedOption = 'background'),
+            ),
+            const SizedBox(height: 12),
+            
+            // Exit Option
+            _ExitOption(
+              icon: Icons.power_settings_new_outlined,
+              title: 'Exit Completely',
+              description: 'Stop downloads and exit application.',
+              color: AppColors.error,
+              isSelected: _selectedOption == 'exit',
+              onTap: () => setState(() => _selectedOption = 'exit'),
+            ),
+            const SizedBox(height: 18),
+            
+            // Remember choice
+            InkWell(
+              onTap: () => setState(() => _remember = !_remember),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: Checkbox(
+                        value: _remember,
+                        onChanged: (v) => setState(() => _remember = v ?? false),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                        activeColor: AppColors.downloading,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Remember my choice',
+                      style: TextStyle(
+                        color: AppColors.textSecondary(context),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Bottom Actions
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      side: BorderSide(color: AppColors.border(context)),
+                    ),
+                    child: Text('Cancel', style: TextStyle(color: AppColors.textSecondary(context), fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () {
+                      _savePreference(_selectedOption);
+                      Navigator.pop(context);
+                      if (_selectedOption == 'background') {
+                        widget.onBackground();
+                      } else {
+                        widget.onExit();
+                      }
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _selectedOption == 'background' ? AppColors.downloading : AppColors.error,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Continue', style: TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExitOption extends StatelessWidget {
+  const _ExitOption({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.color,
+    required this.onTap,
+    required this.isSelected,
+  });
+
+  final IconData icon;
+  final String title;
+  final String description;
+  final Color color;
+  final VoidCallback onTap;
+  final bool isSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isSelected 
+                  ? color.withValues(alpha: 0.08) 
+                  : AppColors.border(context).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected ? color : AppColors.border(context).withValues(alpha: 0.3),
+                width: isSelected ? 2 : 1,
+              ),
+              boxShadow: isSelected ? [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.15),
+                  blurRadius: 12,
+                  spreadRadius: 1,
+                )
+              ] : null,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isSelected ? color.withValues(alpha: 0.2) : color.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: AppColors.text(context),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        description,
+                        style: TextStyle(
+                          color: AppColors.textSecondary(context),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isSelected)
+                  Icon(Icons.check_circle_rounded, color: color, size: 20),
+              ],
+            ),
+          ),
         ),
       ),
     );

@@ -1,3 +1,6 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,30 +14,36 @@ import 'core/services/notification_service.dart';
 import 'core/services/shared_preferences_provider.dart';
 
 /// App entry point.
-///
-/// Initialises:
-/// 1. Flutter bindings
-/// 2. Deep link service (captures cold-start magnet before runApp)
-/// 3. Foreground task communication port
-/// 4. System UI overlay style
 @pragma('vm:entry-point')
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Allow Google Fonts to load dynamically and fall back gracefully if offline
+  // 1. Initialize Firebase
+  await Firebase.initializeApp();
+
+  // 2. Setup Crashlytics
+  // Pass all uncaught "fatal" errors from the framework to Crashlytics
+  FlutterError.onError = (errorDetails) {
+    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  };
+
+  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
+  // Allow Google Fonts to load dynamically
   GoogleFonts.config.allowRuntimeFetching = true;
 
-  // Required by flutter_foreground_task before runApp
+  // Required by flutter_foreground_task
   ForegroundServiceManager.initCommunicationPort();
   await NotificationService.instance.initialize();
 
-  // Load SharedPreferences synchronously for instant settings access
   final sharedPrefs = await SharedPreferences.getInstance();
-
-  // Capture cold-start link/path (if the app was opened via magnet:// or a local .torrent file)
   final initialLinkOrPath = await DeepLinkService.instance.initialize();
 
-  // Light system UI — parchment background
+  // Light system UI
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,

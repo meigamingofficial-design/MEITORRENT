@@ -1,10 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/folder_service.dart';
+import '../../../../core/services/permission_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/size_formatter.dart';
 import '../../../../core/utils/speed_formatter.dart';
@@ -519,6 +521,18 @@ class _ActionButtons extends ConsumerWidget {
             icon: Icons.play_arrow_rounded,
             color: AppColors.seeding,
             onTap: () async {
+              // ── Permission Guard ──
+              final granted = await PermissionService.isStorageGranted();
+              if (!granted) {
+                if (context.mounted) {
+                  final retry = await PermissionService.showStorageRationale(context);
+                  if (retry) {
+                    await Permission.manageExternalStorage.request();
+                  }
+                }
+                return;
+              }
+
               try {
                 await notifier.resumeTorrent(status.id);
               } catch (e) {
@@ -558,6 +572,18 @@ class _ActionButtons extends ConsumerWidget {
             icon: Icons.folder_open_rounded,
             color: AppColors.textSecondary(context),
             onTap: () async {
+              // ── Permission Guard ──
+              final granted = await PermissionService.isStorageGranted();
+              if (!granted) {
+                if (context.mounted) {
+                  final retry = await PermissionService.showStorageRationale(context);
+                  if (retry) {
+                    await Permission.manageExternalStorage.request();
+                  }
+                }
+                return;
+              }
+
               try {
                 await FolderService.instance.openDownloadTarget(
                   savePath: status.savePath,

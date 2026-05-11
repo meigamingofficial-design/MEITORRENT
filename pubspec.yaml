@@ -10,6 +10,11 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Firebase & Crashlytics
+  firebase_core: ^3.10.1
+  firebase_crashlytics: ^4.3.1
+  firebase_analytics: ^11.4.1
+
   # Torrent engine
   libtorrent_flutter: ^1.8.5
   ffi: ^2.1.3

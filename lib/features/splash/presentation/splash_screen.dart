@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/services/engine_process_manager.dart';
 import '../../../core/services/foreground_service_manager.dart';
 import '../../../core/services/logger_service.dart';
+import '../../../core/services/permission_service.dart';
 import '../../../data/models/torrent_model.dart';
 import '../../torrent_list/presentation/controllers/torrent_notifier.dart';
 import '../../torrent_list/presentation/screens/dashboard_screen.dart';
@@ -158,130 +159,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Future<void> _requestManageStorageWithRationale() async {
     if (!mounted) return;
 
-    final granted = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: AppColors.surface(ctx),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Icon
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: AppColors.downloading.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.folder_open_rounded,
-                    color: AppColors.downloading, size: 32),
-              ),
-              const SizedBox(height: 20),
-              // Title
-              Text(
-                'Storage Access Required',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: AppColors.text(ctx),
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Body
-              Text(
-                'Meitorrent needs "All files access" to:\n\n'
-                '• Save downloaded torrents to your storage\n'
-                '• Resume downloads after restarting\n'
-                '• Delete files when you remove a torrent\n\n'
-                'On the next screen, enable "Allow access to manage all files".',
-                textAlign: TextAlign.left,
-                style: TextStyle(
-                  color: AppColors.textSecondary(ctx),
-                  fontSize: 13,
-                  height: 1.6,
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Privacy reassurance chip
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.downloading.withValues(alpha: 0.07),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                      color: AppColors.downloading.withValues(alpha: 0.2)),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.lock_outline_rounded,
-                        color: AppColors.downloading, size: 14),
-                    SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        'We only access files needed for downloads and file management. '
-                        'Your data is never shared.',
-                        style: TextStyle(
-                          color: AppColors.downloading,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(ctx).pop(false),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        side: BorderSide(color: AppColors.border(ctx)),
-                      ),
-                      child: Text('Skip for now',
-                          style: TextStyle(
-                              color: AppColors.textSecondary(ctx),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () => Navigator.of(ctx).pop(true),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.downloading,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text('Grant Access',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    final granted = await PermissionService.showStorageRationale(context);
 
-    if (granted == true) {
+    if (granted) {
       // Open the system "All files access" settings page
       await Permission.manageExternalStorage.request();
 
@@ -307,8 +187,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         margin: const EdgeInsets.all(16),
         content: Row(
           children: [
-            const Icon(Icons.info_outline_rounded,
-                color: AppColors.paused, size: 20),
+            Icon(Icons.chevron_right_rounded,
+                color: AppColors.textSecondary(context), size: 20),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -495,7 +375,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 child: AnimatedBuilder(
                   animation: _logoOpacity,
                   builder: (_, __) => Opacity(
-                    opacity: _logoOpacity.value * 0.4,
+                    opacity: _logoOpacity.value * 0.25,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [

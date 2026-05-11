@@ -145,18 +145,35 @@ class TorrentRepositoryImpl implements TorrentRepository {
           seenFiles.add(s.torrentFilePath!);
         }
 
-        // C. Fingerprint Deduplication (Name + Size)
-        // Extremely useful for catching re-added files with different temp paths or magnets with metadata renames.
+        // C. Fingerprint Deduplication (Name + Size + Progress)
+        // Catch truncated names and re-added torrents.
         final isRealName = s.name.isNotEmpty && !s.name.startsWith('Torrent #') && s.name != '…';
-        if (isRealName && s.totalSize > 0) {
-          // Normalize name: lowercase, remove dots/underscores/dashes
-          final normName = s.name.toLowerCase().replaceAll(RegExp(r'[\.\-_\s]'), '');
-          final fingerprint = '${normName}_${s.totalSize}';
-          if (seenFingerprints.contains(fingerprint)) {
-            AppLogger.d('[Repo] Filtering duplicate by fingerprint: ${s.name}');
+        if (isRealName) {
+          // Normalize name: lowercase, remove ALL non-alphanumeric chars
+          final normName = s.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+          
+          bool isDuplicate = false;
+          for (final seen in seenFingerprints) {
+            final parts = seen.split('_');
+            final seenNorm = parts[0];
+            final seenSize = int.tryParse(parts[1]) ?? -1;
+            
+            // If names are very similar (one contains the other) AND sizes match (or one is 0)
+            final nameMatch = normName.contains(seenNorm) || seenNorm.contains(normName);
+            final sizeMatch = s.totalSize == seenSize || s.totalSize == 0 || seenSize == 0;
+            
+            if (nameMatch && sizeMatch) {
+              isDuplicate = true;
+              break;
+            }
+          }
+
+          if (isDuplicate) {
+            AppLogger.d('[Repo] Filtering duplicate content: ${s.name}');
             continue;
           }
-          seenFingerprints.add(fingerprint);
+          
+          seenFingerprints.add('${normName}_${s.totalSize}');
         }
 
         merged.add(s);
@@ -310,6 +327,10 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
   @override
   Future<String> addMagnet(String uri, {String? savePath}) async {
+    AppLogger.setCustomKey('last_action', 'add_magnet');
+    final freeSpace = await _getFreeDiskSpace();
+    AppLogger.setCustomKey('free_space_at_add', freeSpace);
+
     // ── Duplicate prevention — Engine check ─────────────────────────
     final existingEngineId = _engine.findIdByMagnet(uri);
     if (existingEngineId != null) {
@@ -354,6 +375,14 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
       await _assertHasDiskSpace();
 
+      // ── Duplicate prevention — Aggressive Fingerprint check ────────
+      final normName = name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+      final existingByFingerprint = await _findExistingByFingerprint(normName, 0); // 0 because metadata not yet fetched
+      if (existingByFingerprint != null) {
+        AppLogger.i('[Repo] Magnet fingerprint collision ($normName) with $existingByFingerprint — skipping add');
+        return existingByFingerprint;
+      }
+
       final id = _engine.addMagnet(uri, path);
       final idStr = id.toString();
       _engineActiveIds.add(id);
@@ -384,6 +413,10 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
   @override
   Future<String> addTorrentFile(String filePath, {String? savePath}) async {
+    AppLogger.setCustomKey('last_action', 'add_torrent_file');
+    final freeSpace = await _getFreeDiskSpace();
+    AppLogger.setCustomKey('free_space_at_add', freeSpace);
+
     // ── Duplicate prevention — Engine check ─────────────────────────
     final existingEngineId = _engine.findIdByFile(filePath);
     if (existingEngineId != null) {
@@ -419,6 +452,16 @@ class TorrentRepositoryImpl implements TorrentRepository {
       }
 
       await _assertHasDiskSpace();
+
+      // ── Duplicate prevention — Aggressive Fingerprint check ────────
+      // For files, we usually have the name and might have the size (if we parsed the file).
+      // Here we at least check the name fingerprint.
+      final normName = name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+      final existingByFingerprint = await _findExistingByFingerprint(normName, 0);
+      if (existingByFingerprint != null) {
+        AppLogger.i('[Repo] File fingerprint collision ($normName) with $existingByFingerprint — skipping add');
+        return existingByFingerprint;
+      }
 
       final id = _engine.addTorrentFile(filePath, path);
       final idStr = id.toString();
@@ -559,6 +602,9 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
   @override
   Future<void> deleteTorrent(String id, {bool deleteFiles = false}) async {
+    AppLogger.setCustomKey('last_action', 'delete_torrent');
+    AppLogger.setCustomKey('delete_files_flag', deleteFiles);
+    
     // Prevent ghosting in statusStream during the async deletion period
     _deletedIds.add(id);
 
@@ -738,6 +784,18 @@ class TorrentRepositoryImpl implements TorrentRepository {
     final rows = await _db.getAllTorrents();
     for (final r in rows) {
       if (r.name == name && r.savePath == savePath) return r.id;
+    }
+    return null;
+  }
+
+  Future<String?> _findExistingByFingerprint(String normName, int size) async {
+    final rows = await _db.getAllTorrents();
+    for (final r in rows) {
+      final rNorm = r.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+      final nameMatch = normName.contains(rNorm) || rNorm.contains(normName);
+      final sizeMatch = size == 0 || r.totalSize == 0 || size == r.totalSize;
+      
+      if (nameMatch && sizeMatch) return r.id;
     }
     return null;
   }
