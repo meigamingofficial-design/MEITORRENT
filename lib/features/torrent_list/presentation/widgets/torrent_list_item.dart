@@ -451,7 +451,8 @@ class _AnimatedStateBadge extends StatelessWidget {
   final TorrentStatus status;
 
   Color get _color {
-    if (status.isCompleted) {
+    final isDone = status.isEffectivelyComplete;
+    if (isDone) {
       return AppColors.finished;
     }
     switch (status.state) {
@@ -478,7 +479,8 @@ class _AnimatedStateBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = status.isCompleted ? 'Finished' : status.state.displayName;
+    final isDone = status.isEffectivelyComplete;
+    final text = isDone ? 'Finished' : status.state.displayName;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

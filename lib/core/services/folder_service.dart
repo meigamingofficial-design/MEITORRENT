@@ -21,15 +21,26 @@ class FolderService {
     required String name,
   }) async {
     try {
-      final targetPath = (savePath.isEmpty) ? await StorageService.instance.getDownloadPath() : savePath;
-      final parentDir = Directory(targetPath);
+      final basePath = (savePath.isEmpty) ? await StorageService.instance.getDownloadPath() : savePath;
       
-      if (parentDir.existsSync()) {
-        AppLogger.i('[Folder] Opening containing folder location: $targetPath');
-        await openDownloadFolder(targetPath);
+      // 🚀 Deep Dive: Try to open the specific torrent folder if it exists
+      // Most torrents create a sub-folder named after themselves.
+      final specificPath = '$basePath/$name';
+      final specificDir = Directory(specificPath);
+      
+      if (specificDir.existsSync()) {
+        AppLogger.i('[Folder] Opening specific torrent folder: $specificPath');
+        await openDownloadFolder(specificPath);
       } else {
-        AppLogger.w('[Folder] Folder location not found, opening root download folder');
-        await openDownloadFolder();
+        // Fallback to base save path if sub-folder doesn't exist (single file torrents)
+        final parentDir = Directory(basePath);
+        if (parentDir.existsSync()) {
+          AppLogger.i('[Folder] Opening base save path: $basePath');
+          await openDownloadFolder(basePath);
+        } else {
+          AppLogger.w('[Folder] Folder location not found, opening root download folder');
+          await openDownloadFolder();
+        }
       }
     } catch (e, st) {
       AppLogger.e(

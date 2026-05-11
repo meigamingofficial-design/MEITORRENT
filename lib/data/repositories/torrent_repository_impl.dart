@@ -210,7 +210,7 @@ class TorrentRepositoryImpl implements TorrentRepository {
         // Only force finished state for torrents NOT in the live engine
         if (!liveIds.contains(s.id) &&
             s.isCompleted &&
-            s.progress >= 0.99 &&
+            s.progress >= 1.0 &&
             s.state != TorrentState.finished &&
             s.state != TorrentState.seeding) {
           status = status.copyWith(state: TorrentState.finished);

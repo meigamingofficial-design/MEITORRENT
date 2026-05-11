@@ -16,6 +16,7 @@ import '../widgets/empty_state_widget.dart';
 import '../widgets/torrent_list_item.dart';
 import '../../../../core/utils/speed_formatter.dart';
 import '../../../../core/services/deep_link_service.dart';
+import '../widgets/filter_segmented_control.dart';
 
 import '../../../../core/services/permission_service.dart';
 
@@ -26,11 +27,15 @@ class DashboardScreen extends ConsumerStatefulWidget {
   ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
+enum TorrentFilter { all, downloading, completed }
+
+
 class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsBindingObserver {
   String? _newlyAddedId;
   int _zeroSpeedTicks = 0;
   bool _hasPromptedSpeedWarning = false;
   bool _isStorageGranted = true;
+  TorrentFilter _activeFilter = TorrentFilter.all;
 
   @override
   void initState() {
@@ -267,7 +272,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                     SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (_, i) {
-                          final torrent = torrents[i];
+                          // Filter the list for display
+                          final filtered = torrents.where((t) {
+                            switch (_activeFilter) {
+                              case TorrentFilter.downloading:
+                                return !t.isEffectivelyComplete && t.state.isActive;
+                              case TorrentFilter.completed:
+                                return t.isEffectivelyComplete;
+                              case TorrentFilter.all:
+                                return true;
+                            }
+                          }).toList();
+
+                          if (filtered.isEmpty) {
+                            if (i == 0) {
+                              return const Padding(
+                                padding: EdgeInsets.only(top: 80),
+                                child: EmptyStateWidget(),
+                              );
+                            }
+                            return null;
+                          }
+
+                          if (i >= filtered.length) return null;
+                          
+                          final torrent = filtered[i];
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 4),
                             child: TorrentListItem(
@@ -276,7 +305,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                             ),
                           );
                         },
-                        childCount: torrents.length,
+                        childCount: torrents.isEmpty ? 0 : torrents.length,
                       ),
                     ),
                     const SliverToBoxAdapter(child: SizedBox(height: 140)),
@@ -288,6 +317,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
         ),
         floatingActionButton: _GradientFAB(
           onPressed: () => _showAddTorrentDialog(context),
+          isLocked: !_isStorageGranted,
         ),
       ),
     );
@@ -479,21 +509,33 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
     final upTotal = torrents.fold<double>(0, (p, c) => p + c.uploadSpeed);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      child: Column(
         children: [
-          _CompactSpeedTile(
-            icon: Icons.arrow_downward_rounded,
-            value: SpeedFormatter.format(downTotal.toInt()),
-            label: 'Total Down',
-            color: AppColors.downloading,
+          Row(
+            children: [
+              _CompactSpeedTile(
+                icon: Icons.arrow_downward_rounded,
+                value: SpeedFormatter.format(downTotal.toInt()),
+                label: 'Total Down',
+                color: AppColors.downloading,
+              ),
+              const SizedBox(width: 12),
+              _CompactSpeedTile(
+                icon: Icons.arrow_upward_rounded,
+                value: SpeedFormatter.format(upTotal.toInt()),
+                label: 'Total Up',
+                color: AppColors.seeding,
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          _CompactSpeedTile(
-            icon: Icons.arrow_upward_rounded,
-            value: SpeedFormatter.format(upTotal.toInt()),
-            label: 'Total Up',
-            color: AppColors.seeding,
+          const SizedBox(height: 24),
+          FilterSegmentedControl(
+            activeFilter: _activeFilter,
+            onChanged: (filter) {
+              setState(() => _activeFilter = filter);
+              HapticFeedback.lightImpact();
+            },
           ),
         ],
       ),
@@ -842,8 +884,9 @@ class _MenuItem extends StatelessWidget {
 }
 
 class _GradientFAB extends StatefulWidget {
-  const _GradientFAB({required this.onPressed});
+  const _GradientFAB({required this.onPressed, this.isLocked = false});
   final VoidCallback onPressed;
+  final bool isLocked;
 
   @override
   State<_GradientFAB> createState() => _GradientFABState();
@@ -875,6 +918,20 @@ class _GradientFABState extends State<_GradientFAB>
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = widget.isLocked ? Colors.transparent : null;
+    final border = widget.isLocked 
+        ? Border.all(color: AppColors.border(context)) 
+        : null;
+    final shadow = widget.isLocked ? null : [
+      BoxShadow(
+        color: AppColors.downloading.withValues(alpha: 0.3),
+        blurRadius: 15,
+        offset: const Offset(0, 6),
+      ),
+    ];
+    final textColor = widget.isLocked ? AppColors.textSecondary(context) : Colors.white;
+    final iconColor = widget.isLocked ? AppColors.textSecondary(context) : Colors.white;
+
     return ScaleTransition(
       scale: _scale,
       child: GestureDetector(
@@ -886,29 +943,29 @@ class _GradientFABState extends State<_GradientFAB>
         onTapCancel: () => _ctrl.forward(),
         child: Container(
           decoration: BoxDecoration(
-            gradient: AppGradients.primary,
-            borderRadius: BorderRadius.circular(12), // Hanko stamp shape
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.downloading.withValues(alpha: 0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 6),
-              ),
-            ],
+            gradient: widget.isLocked ? null : AppGradients.primary,
+            color: bgColor,
+            borderRadius: BorderRadius.circular(12),
+            border: border,
+            boxShadow: shadow,
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.add_rounded, color: Colors.white, size: 22),
+                Icon(
+                  widget.isLocked ? Icons.lock_outline_rounded : Icons.add_rounded, 
+                  color: iconColor, 
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Add Torrent',
                   style: GoogleFonts.shipporiMincho(
-                    color: Colors.white,
+                    color: textColor,
                     fontWeight: FontWeight.w800,
-                    fontSize: 15,
+                    fontSize: 14,
                   ),
                 ),
               ],

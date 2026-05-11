@@ -229,10 +229,7 @@ class TorrentEngineService {
       etaSeconds: _computeEta(info),
       errorMessage: info.errorMsg.isEmpty ? null : info.errorMsg,
       isPaused: info.isPaused,
-      isCompleted: isActuallyComplete || 
-                   info.isFinished || 
-                   info.state == lt.TorrentState.seeding || 
-                   info.state == lt.TorrentState.finished,
+      isCompleted: isActuallyComplete,
       magnetUri: _idToMagnet[idInt],
       torrentFilePath: _idToFile[idInt],
     );
@@ -242,9 +239,12 @@ class TorrentEngineService {
     if (info.totalWanted > 0 && info.totalDone >= info.totalWanted) {
       return true;
     }
-    if (info.isFinished) return true;
-    // Add a tiny tolerance for floating point progress (99.9% = finished)
-    return progress >= 0.999;
+    // Only trust the engine's finished flag if we have at least SOME data
+    // to prevent transient/empty magnets from showing as finished.
+    if (info.isFinished && info.totalDone > 0 && info.totalDone >= info.totalWanted) {
+      return true;
+    }
+    return progress >= 1.0;
   }
 
   domain.TorrentState _mapState(

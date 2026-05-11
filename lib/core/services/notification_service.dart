@@ -79,14 +79,9 @@ class NotificationService {
 
     final sizeStr = '${SizeFormatter.format(status.downloadedBytes)} / ${SizeFormatter.format(status.totalSize)}';
 
-    // Check effective completion FIRST — a paused torrent at 100% is "Finished",
-    // not "Paused". The engine emits paused state after auto-stop-seeding fires.
-    // We use a small tolerance (100 bytes / 0.1%) to handle metadata padding edge cases.
-    final isEffectivelyDone = status.isCompleted ||
-        status.progress >= 0.999 ||
-        (status.totalSize > 0 && status.downloadedBytes >= (status.totalSize - 100));
+    final isFinished = status.state == TorrentState.finished || status.state == TorrentState.seeding;
 
-    if (isEffectivelyDone) {
+    if (isFinished) {
       body = '✓ Download complete · ${SizeFormatter.format(status.totalSize)} · Tap to open';
     } else {
       switch (status.state) {
@@ -132,8 +127,6 @@ class NotificationService {
     // ── Show / update notification ───────────────────────────────────
     final notifId = _notificationId(status.id);
 
-    final isFinished = status.state == TorrentState.finished;
-    
     final androidDetails = AndroidNotificationDetails(
       'torrent_individual',
       'Torrent Progress',
@@ -164,13 +157,16 @@ class NotificationService {
     );
   }
 
-  /// Cancels the notification for [torrentId].
-  /// Called by the repository immediately on delete.
   Future<void> cancelNotification(String torrentId) async {
-    if (!_initialized) return;
-    _lastUpdate.remove(torrentId);
-    _lastBody.remove(torrentId);
-    await _plugin.cancel(_notificationId(torrentId));
+    try {
+      if (!_initialized) return;
+      _lastUpdate.remove(torrentId);
+      _lastBody.remove(torrentId);
+      await _plugin.cancel(_notificationId(torrentId));
+    } catch (e) {
+      // PlatformException(error, Missing type parameter) can happen here
+      // during obfuscated release builds due to notification cache issues.
+    }
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────

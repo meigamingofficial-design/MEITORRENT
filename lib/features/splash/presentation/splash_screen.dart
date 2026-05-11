@@ -166,50 +166,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       await Permission.manageExternalStorage.request();
 
       // Check if the user actually granted it after returning from system settings
-      final newStatus = await Permission.manageExternalStorage.status;
-      if (!newStatus.isGranted && mounted) {
-        _showStoragePermissionDeniedTip();
-      }
+      // Permission handled, continue
     } else {
-      // User chose to skip — show a one-time helpful tip, then never bother again
-      if (mounted) _showStoragePermissionDeniedTip();
+      // User chose to skip
     }
   }
 
-  /// Shows a non-blocking snackbar tip when storage access is denied or skipped.
-  void _showStoragePermissionDeniedTip() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        duration: const Duration(seconds: 7),
-        backgroundColor: AppColors.surface(context),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        margin: const EdgeInsets.all(16),
-        content: Row(
-          children: [
-            Icon(Icons.chevron_right_rounded,
-                color: AppColors.textSecondary(context), size: 20),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Storage access not granted. Downloads may be limited. '
-                'Enable it anytime in Settings → Apps → Meitorrent → Permissions.',
-                style: TextStyle(
-                    color: AppColors.text(context),
-                    fontSize: 12,
-                    height: 1.4),
-              ),
-            ),
-          ],
-        ),
-        action: SnackBarAction(
-          label: 'Open Settings',
-          textColor: AppColors.downloading,
-          onPressed: () => openAppSettings(),
-        ),
-      ),
-    );
-  }
+
 
   void _setStatus(String text) {
     if (mounted) setState(() => _statusText = text);

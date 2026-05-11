@@ -69,16 +69,15 @@ extension TorrentStatusX on TorrentStatus {
   /// This protects the UI from transient engine flags that can briefly report
   /// a magnet as finished before real payload bytes are present.
   bool get isEffectivelyComplete {
-    if (state == TorrentState.seeding) {
-      return true;
-    }
-    if (progress >= 1.0) {
-      return true;
-    }
-    if (totalSize > 0 && downloadedBytes >= totalSize) {
-      return true;
-    }
-    return false;
+    // Strict Play Store Standard:
+    // A torrent is ONLY complete if it has ALL data (progress == 1.0)
+    // or if the engine has officially moved it to the seeding state.
+    if (state == TorrentState.seeding) return true;
+    
+    final hasAllBytes = totalSize > 0 && downloadedBytes >= totalSize;
+    final hasFullProgress = progress >= 1.0;
+    
+    return hasAllBytes || hasFullProgress;
   }
 }
 
