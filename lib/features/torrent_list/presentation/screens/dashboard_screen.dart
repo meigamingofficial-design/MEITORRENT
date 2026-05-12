@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:move_to_background/move_to_background.dart';
 
 import '../../../../core/services/oem_battery_guard.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -228,10 +229,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
         final remembered = prefs.getString('meitorrent_exit_preference');
         
         if (remembered == 'background') {
-          // 🚀 Instant Hand-off: Signal the background task to take over immediately
+          // 🚀 move_to_background logic: Keep the app alive and moving to the back
           unawaited(ref.read(torrentRepositoryProvider).forceSaveAllResumeData());
+          MoveToBackground.moveTaskToBack();
           FlutterForegroundTask.sendDataToTask({'minimize': true});
-          SystemChannels.platform.invokeMethod('SystemNavigator.pop');
         } else if (remembered == 'exit') {
           ref.read(torrentRepositoryProvider).forceSaveAllResumeData();
           exit(0);
@@ -557,8 +558,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
         activeCount: activeCount,
         onBackground: () {
           ref.read(torrentRepositoryProvider).forceSaveAllResumeData();
+          MoveToBackground.moveTaskToBack();
           FlutterForegroundTask.sendDataToTask({'minimize': true});
-          SystemChannels.platform.invokeMethod('SystemNavigator.pop');
         },
         onExit: () {
           ref.read(torrentRepositoryProvider).forceSaveAllResumeData();
