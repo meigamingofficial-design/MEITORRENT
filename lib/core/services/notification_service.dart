@@ -90,11 +90,11 @@ class NotificationService {
           final etaStr = status.etaSeconds != null
               ? ' · ${_formatEta(status.etaSeconds!)} left'
               : '';
-          body = '$progress% · $sizeStr · ↓ $speedStr$etaStr';
+          body = '$progress% · $sizeStr\n↓ $speedStr$etaStr';
           showProgress = true;
 
         case TorrentState.seeding:
-          body = 'Seeding · $sizeStr · ↑ ${SpeedFormatter.format(status.uploadSpeed)}';
+          body = 'Seeding · $sizeStr\n↑ ${SpeedFormatter.format(status.uploadSpeed)}';
 
         case TorrentState.finished:
           body = '✓ Download complete · ${SizeFormatter.format(status.totalSize)} · Tap to open';
