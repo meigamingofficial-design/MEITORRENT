@@ -82,7 +82,7 @@ class NotificationService {
     final isFinished = status.state == TorrentState.finished || status.state == TorrentState.seeding;
 
     if (isFinished) {
-      body = '✓ Download complete · ${SizeFormatter.format(status.totalSize)} · Tap to open';
+      body = '✓ Download complete · ${SizeFormatter.format(status.totalSize)}\nTap to open';
     } else {
       switch (status.state) {
         case TorrentState.downloading:
@@ -97,7 +97,7 @@ class NotificationService {
           body = 'Seeding · $sizeStr\n↑ ${SpeedFormatter.format(status.uploadSpeed)}';
 
         case TorrentState.finished:
-          body = '✓ Download complete · ${SizeFormatter.format(status.totalSize)} · Tap to open';
+          body = '✓ Download complete · ${SizeFormatter.format(status.totalSize)}\nTap to open';
 
         case TorrentState.paused:
           body = 'Paused · $progress% ($sizeStr)';
