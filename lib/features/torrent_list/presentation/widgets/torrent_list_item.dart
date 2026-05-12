@@ -569,34 +569,33 @@ class _ActionButtons extends ConsumerWidget {
             },
             tooltip: 'Stop',
           ),
-        if (!isDone)
-          _CircleIconButton(
-            icon: Icons.folder_open_rounded,
-            color: AppColors.textSecondary(context),
-            onTap: () async {
-              // ── Permission Guard ──
-              final granted = await PermissionService.isStorageGranted();
-              if (!granted) {
-                if (context.mounted) {
-                  final retry = await PermissionService.showStorageRationale(context);
-                  if (retry) {
-                    await Permission.manageExternalStorage.request();
-                  }
+        _CircleIconButton(
+          icon: Icons.folder_open_rounded,
+          color: isDone ? AppColors.finished : AppColors.textSecondary(context),
+          onTap: () async {
+            // ── Permission Guard ──
+            final granted = await PermissionService.isStorageGranted();
+            if (!granted) {
+              if (context.mounted) {
+                final retry = await PermissionService.showStorageRationale(context);
+                if (retry) {
+                  await Permission.manageExternalStorage.request();
                 }
-                return;
               }
+              return;
+            }
 
-              try {
-                await FolderService.instance.openDownloadTarget(
-                  savePath: status.savePath,
-                  name: status.name,
-                );
-              } catch (e) {
-                _showErrorSnackBar(messenger, 'Failed to open folder: $e');
-              }
-            },
-            tooltip: 'Open folder',
-          ),
+            try {
+              await FolderService.instance.openDownloadTarget(
+                savePath: status.savePath,
+                name: status.name,
+              );
+            } catch (e) {
+              _showErrorSnackBar(messenger, 'Failed to open folder: $e');
+            }
+          },
+          tooltip: 'Open folder',
+        ),
         const SizedBox(width: 4),
         _CircleIconButton(
           icon: Icons.delete_outline_rounded,
