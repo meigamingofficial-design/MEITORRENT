@@ -89,6 +89,10 @@ class MainActivity : FlutterActivity() {
                             result.error("INVALID_ARG", "uri is null", null)
                         }
                     }
+                    "minimizeApp" -> {
+                        moveTaskToBack(true)
+                        result.success(true)
+                    }
                     else -> result.notImplemented()
                 }
             }

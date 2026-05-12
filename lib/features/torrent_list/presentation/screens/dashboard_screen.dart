@@ -7,7 +7,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:move_to_background/move_to_background.dart';
 
 import '../../../../core/services/oem_battery_guard.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -229,9 +228,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
         final remembered = prefs.getString('meitorrent_exit_preference');
         
         if (remembered == 'background') {
-          // 🚀 move_to_background logic: Keep the app alive and moving to the back
+          // 🚀 Native Pro Minimize: The most stable way for production
           unawaited(ref.read(torrentRepositoryProvider).forceSaveAllResumeData());
-          MoveToBackground.moveTaskToBack();
+          const MethodChannel('com.meigaming.meitorrent/files').invokeMethod('minimizeApp');
           FlutterForegroundTask.sendDataToTask({'minimize': true});
         } else if (remembered == 'exit') {
           ref.read(torrentRepositoryProvider).forceSaveAllResumeData();
@@ -558,7 +557,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
         activeCount: activeCount,
         onBackground: () {
           ref.read(torrentRepositoryProvider).forceSaveAllResumeData();
-          MoveToBackground.moveTaskToBack();
+          const MethodChannel('com.meigaming.meitorrent/files').invokeMethod('minimizeApp');
           FlutterForegroundTask.sendDataToTask({'minimize': true});
         },
         onExit: () {
