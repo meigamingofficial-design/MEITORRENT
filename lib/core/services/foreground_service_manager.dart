@@ -33,8 +33,15 @@ class TorrentTaskHandler extends TaskHandler {
   /// Called when the main isolate pushes data via [FlutterForegroundTask.sendDataToTask].
   @override
   void onReceiveData(Object data) {
-    _lastMainIsolateUpdate = DateTime.now();
     if (data is Map<String, dynamic>) {
+      // 🚀 Instant Hand-off: If the app is minimizing, let the background take over NOW
+      if (data['minimize'] == true) {
+        _lastMainIsolateUpdate = null;
+        return;
+      }
+
+      _lastMainIsolateUpdate = DateTime.now();
+      
       // 1. Update notification text
       final title = data['title'] as String? ?? 'Meitorrent';
       final text = data['text'] as String? ?? '';
