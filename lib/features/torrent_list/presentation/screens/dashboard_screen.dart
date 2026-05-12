@@ -226,6 +226,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
         final remembered = prefs.getString('meitorrent_exit_preference');
         
         if (remembered == 'background') {
+          // 🔥 Critical: Save all resume data BEFORE minimizing to prevent progress ghosting
+          unawaited(ref.read(torrentRepositoryProvider).forceSaveAllResumeData());
           SystemChannels.platform.invokeMethod('SystemNavigator.pop');
         } else if (remembered == 'exit') {
           ref.read(torrentRepositoryProvider).forceSaveAllResumeData();
@@ -550,7 +552,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
       context: context,
       builder: (ctx) => _ExitDialog(
         activeCount: activeCount,
-        onBackground: () => SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
+        onBackground: () {
+          ref.read(torrentRepositoryProvider).forceSaveAllResumeData();
+          SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+        },
         onExit: () {
           ref.read(torrentRepositoryProvider).forceSaveAllResumeData();
           exit(0);

@@ -113,24 +113,32 @@ class TorrentTaskHandler extends TaskHandler {
 
   /// Minimal mapping for NotificationService from raw engine TorrentInfo.
   TorrentStatus _mapToStatus(lt_models.TorrentInfo info) {
+    // 🛡️ STRICT PROGRESS GUARD:
+    // Only report complete if progress is exactly 1.0 and we have bytes.
+    final bool isReallyDone = info.totalWanted > 0 && 
+                             info.totalDone >= info.totalWanted && 
+                             info.progress >= 1.0;
+    
     return TorrentStatus(
       id: info.id.toString(),
       name: info.name,
-      progress: info.progress,
+      progress: info.progress.clamp(0.0, 1.0),
       downloadSpeed: info.downloadRate,
       uploadSpeed: info.uploadRate,
       peers: info.numPeers,
       seeds: info.numSeeds,
       state: info.isPaused ? TorrentState.paused : 
-             (info.progress >= 1.0 ? TorrentState.finished : TorrentState.downloading),
+             (isReallyDone ? TorrentState.finished : TorrentState.downloading),
       totalSize: info.totalWanted,
       downloadedBytes: info.totalDone,
       uploadedBytes: info.totalUploaded,
       savePath: info.savePath,
-      addedAt: DateTime.now(), // Fallback
+      // 🔒 Stable Deterministic Timestamp: Use the ID's hash to ensure each torrent 
+      // stays in its own fixed notification slot without flickering or re-ordering.
+      addedAt: DateTime.fromMillisecondsSinceEpoch(info.id.hashCode & 0x0FFFFFFF), 
       ratio: info.totalWanted > 0 ? info.totalUploaded / info.totalWanted : 0.0,
       isPaused: info.isPaused,
-      isCompleted: info.progress >= 1.0 || info.isFinished,
+      isCompleted: isReallyDone,
     );
   }
 
