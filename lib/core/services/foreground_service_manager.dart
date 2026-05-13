@@ -41,11 +41,11 @@ class TorrentTaskHandler extends TaskHandler {
       }
 
       _lastMainIsolateUpdate = DateTime.now();
-      
+
       // 1. Update notification text
       final title = data['title'] as String? ?? 'Meitorrent';
       final text = data['text'] as String? ?? '';
-      
+
       FlutterForegroundTask.updateService(
         notificationTitle: title,
         notificationText: text,
@@ -67,8 +67,9 @@ class TorrentTaskHandler extends TaskHandler {
     _pollingTimer?.cancel();
     if (_sessionAddress == null) return;
 
-    AppLogger.i('[FGService] Attaching to native engine at 0x${_sessionAddress!.toRadixString(16)}');
-    
+    AppLogger.i(
+        '[FGService] Attaching to native engine at 0x${_sessionAddress!.toRadixString(16)}');
+
     // Initialize our local engine instance in THIS isolate using the shared pointer
     lt.LibtorrentFlutter.attach(
       sessionAddress: _sessionAddress!,
@@ -80,7 +81,8 @@ class TorrentTaskHandler extends TaskHandler {
     _pollingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       // Skip updating from background polling if the main isolate is actively pushing to prevent blinking / fighting
       if (_lastMainIsolateUpdate != null &&
-          DateTime.now().difference(_lastMainIsolateUpdate!) < const Duration(seconds: 4)) {
+          DateTime.now().difference(_lastMainIsolateUpdate!) <
+              const Duration(seconds: 4)) {
         return;
       }
 
@@ -88,19 +90,23 @@ class TorrentTaskHandler extends TaskHandler {
       if (engine == null) return;
 
       final torrents = engine.torrents.values.toList();
-      
+
       // Update summary notification
-      final active = torrents.where((t) => t.state.isActive && !t.isPaused).toList();
+      final active =
+          torrents.where((t) => t.state.isActive && !t.isPaused).toList();
       final finished = torrents.where((t) => t.progress >= 1.0).toList();
-      
+
       final String summaryText;
       if (active.isNotEmpty) {
         final totalDown = active.fold<int>(0, (s, t) => s + t.downloadRate);
-        summaryText = '${active.length} active · ↓ ${SpeedFormatter.format(totalDown)}';
+        summaryText =
+            '${active.length} active · ↓ ${SpeedFormatter.format(totalDown)}';
       } else if (finished.isNotEmpty) {
-        summaryText = '${finished.length} download${finished.length == 1 ? '' : 's'} complete';
+        summaryText =
+            '${finished.length} download${finished.length == 1 ? '' : 's'} complete';
       } else if (torrents.isNotEmpty) {
-        summaryText = '${torrents.length} torrent${torrents.length == 1 ? '' : 's'} paused';
+        summaryText =
+            '${torrents.length} torrent${torrents.length == 1 ? '' : 's'} paused';
       } else {
         summaryText = 'No torrents added';
       }
@@ -122,10 +128,10 @@ class TorrentTaskHandler extends TaskHandler {
   TorrentStatus _mapToStatus(lt_models.TorrentInfo info) {
     // 🛡️ STRICT PROGRESS GUARD:
     // Only report complete if progress is exactly 1.0 and we have bytes.
-    final bool isReallyDone = info.totalWanted > 0 && 
-                             info.totalDone >= info.totalWanted && 
-                             info.progress >= 1.0;
-    
+    final bool isReallyDone = info.totalWanted > 0 &&
+        info.totalDone >= info.totalWanted &&
+        info.progress >= 1.0;
+
     return TorrentStatus(
       id: info.id.toString(),
       name: info.name,
@@ -134,15 +140,20 @@ class TorrentTaskHandler extends TaskHandler {
       uploadSpeed: info.uploadRate,
       peers: info.numPeers,
       seeds: info.numSeeds,
-      state: info.isPaused ? TorrentState.paused : 
-             (isReallyDone ? TorrentState.finished : TorrentState.downloading),
+      state: info.isPaused
+          ? TorrentState.paused
+          : (isReallyDone ? TorrentState.finished : TorrentState.downloading),
       totalSize: info.totalWanted,
       downloadedBytes: info.totalDone,
       uploadedBytes: info.totalUploaded,
       savePath: info.savePath,
-      // 🔒 Stable Deterministic Timestamp: Use the ID's hash to ensure each torrent 
+      // 🔒 Stable Deterministic Timestamp: Use the ID's hash to ensure each torrent
       // stays in its own fixed notification slot without flickering or re-ordering.
-      addedAt: DateTime.fromMillisecondsSinceEpoch(info.id.hashCode & 0x0FFFFFFF), 
+      addedAt:
+          DateTime.fromMillisecondsSinceEpoch(info.id.hashCode & 0x0FFFFFFF),
+      lastActivityAt:
+          DateTime.fromMillisecondsSinceEpoch(info.id.hashCode & 0x0FFFFFFF),
+      completedAt: isReallyDone ? DateTime.now() : null,
       ratio: info.totalWanted > 0 ? info.totalUploaded / info.totalWanted : 0.0,
       isPaused: info.isPaused,
       isCompleted: isReallyDone,
@@ -296,11 +307,14 @@ class ForegroundServiceManager {
     }
 
     // ── Build summary text ───────────────────────────────────
-    final active = statuses.where((t) => t.state.isActive && !t.isPaused).toList();
-    final finished = statuses.where((t) =>
-        t.isCompleted ||
-        t.progress >= 1.0 ||
-        (t.totalSize > 0 && t.downloadedBytes >= t.totalSize)).toList();
+    final active =
+        statuses.where((t) => t.state.isActive && !t.isPaused).toList();
+    final finished = statuses
+        .where((t) =>
+            t.isCompleted ||
+            t.progress >= 1.0 ||
+            (t.totalSize > 0 && t.downloadedBytes >= t.totalSize))
+        .toList();
     final paused = statuses.where((t) => t.isPaused || t.isStopped).toList();
 
     const String title = 'Meitorrent';
@@ -310,7 +324,8 @@ class ForegroundServiceManager {
       final totalDown = active.fold<int>(0, (s, t) => s + t.downloadSpeed);
       text = '${active.length} active · ↓ ${SpeedFormatter.format(totalDown)}';
     } else if (finished.isNotEmpty) {
-      text = '${finished.length} download${finished.length == 1 ? '' : 's'} complete';
+      text =
+          '${finished.length} download${finished.length == 1 ? '' : 's'} complete';
     } else if (paused.isNotEmpty) {
       text = '${paused.length} torrent${paused.length == 1 ? '' : 's'} paused';
     } else {

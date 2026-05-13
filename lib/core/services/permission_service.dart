@@ -3,7 +3,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../../core/theme/app_theme.dart';
 
 /// Centralized service for handling the sensitive "All Files Access" permission.
-/// 
+///
 /// Designed for Play Store compliance with clear rationales and non-blocking UX.
 class PermissionService {
   PermissionService._();
@@ -90,7 +90,8 @@ class PermissionService {
               const SizedBox(height: 20),
               // Privacy reassurance
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
                   color: AppColors.downloading.withValues(alpha: 0.07),
                   borderRadius: BorderRadius.circular(12),
@@ -148,8 +149,7 @@ class PermissionService {
                       ),
                       child: const Text('Grant Access',
                           style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13)),
+                              fontWeight: FontWeight.w700, fontSize: 13)),
                     ),
                   ),
                 ],

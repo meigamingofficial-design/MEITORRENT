@@ -13,7 +13,7 @@ class FolderService {
   static const _channel = MethodChannel('com.meigaming.meitorrent/files');
 
   /// Opens the torrent's final download target directory.
-  /// 
+  ///
   /// Navigates the system file manager directly to the folder containing the downloaded
   /// files (the torrent's savePath / file location).
   Future<void> openDownloadTarget({
@@ -21,13 +21,15 @@ class FolderService {
     required String name,
   }) async {
     try {
-      final basePath = (savePath.isEmpty) ? await StorageService.instance.getDownloadPath() : savePath;
-      
+      final basePath = (savePath.isEmpty)
+          ? await StorageService.instance.getDownloadPath()
+          : savePath;
+
       // 🚀 Deep Dive: Try to open the specific torrent folder if it exists
       // Most torrents create a sub-folder named after themselves.
       final specificPath = '$basePath/$name';
       final specificDir = Directory(specificPath);
-      
+
       if (specificDir.existsSync()) {
         AppLogger.i('[Folder] Opening specific torrent folder: $specificPath');
         await openDownloadFolder(specificPath);
@@ -38,7 +40,8 @@ class FolderService {
           AppLogger.i('[Folder] Opening base save path: $basePath');
           await openDownloadFolder(basePath);
         } else {
-          AppLogger.w('[Folder] Folder location not found, opening root download folder');
+          AppLogger.w(
+              '[Folder] Folder location not found, opening root download folder');
           await openDownloadFolder();
         }
       }

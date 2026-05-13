@@ -14,7 +14,7 @@ class TrackerManager {
       final req = await client.getUrl(Uri.parse(
           'https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_best.txt'));
       final res = await req.close();
-      
+
       if (res.statusCode == 200) {
         final body = await res.transform(const SystemEncoding().decoder).join();
         final list = body
@@ -22,10 +22,11 @@ class TrackerManager {
             .map((s) => s.trim())
             .where((s) => s.isNotEmpty)
             .toList();
-            
+
         _extraTrackers.clear();
         _extraTrackers.addAll(list);
-        AppLogger.i('[TrackerManager] Fetched ${_extraTrackers.length} trackers');
+        AppLogger.i(
+            '[TrackerManager] Fetched ${_extraTrackers.length} trackers');
       }
       client.close(force: true);
     } catch (e) {
@@ -36,7 +37,7 @@ class TrackerManager {
   /// Inject extra trackers into a magnet URI for better peer discovery.
   static String injectTrackers(String magnetUri) {
     if (_extraTrackers.isEmpty) return magnetUri;
-    
+
     var uri = magnetUri;
     for (final tr in _extraTrackers) {
       final encodedTr = Uri.encodeComponent(tr);

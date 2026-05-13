@@ -20,7 +20,8 @@ void main() {
       ];
 
       for (final oem in knownOems) {
-        expect(guard.isSupportedOem(oem), isTrue, reason: 'Expected $oem to be supported');
+        expect(guard.isSupportedOem(oem), isTrue,
+            reason: 'Expected $oem to be supported');
       }
     });
 
@@ -31,9 +32,17 @@ void main() {
     });
 
     test('should reject non-restrictive or unknown manufacturers', () {
-      final safeOems = ['google', 'pixel', 'motorola', 'htc', 'sony', 'essential'];
+      final safeOems = [
+        'google',
+        'pixel',
+        'motorola',
+        'htc',
+        'sony',
+        'essential'
+      ];
       for (final oem in safeOems) {
-        expect(guard.isSupportedOem(oem), isFalse, reason: 'Expected $oem to not be restrictive');
+        expect(guard.isSupportedOem(oem), isFalse,
+            reason: 'Expected $oem to not be restrictive');
       }
     });
 

@@ -87,15 +87,18 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
       // 4. Cleanup _deletedIds: only stop guarding an ID once it's gone from BOTH engine AND DB.
       final engineIds = rawStatuses.map((s) => s.id).toSet();
-      _deletedIds.removeWhere((id) => !engineIds.contains(id) && !dbIds.contains(id));
+      _deletedIds
+          .removeWhere((id) => !engineIds.contains(id) && !dbIds.contains(id));
 
       // 5. Identify torrents that are in DB but NOT in live engine.
       //    Filter out ones that have matching magnet/file in live set to avoid duplication (Hardening #3)
       final liveIds = liveStatuses.map((s) => s.id).toSet();
       final liveMagnets =
           liveStatuses.map((s) => s.magnetUri).whereType<String>().toSet();
-      final liveFiles =
-          liveStatuses.map((s) => s.torrentFilePath).whereType<String>().toSet();
+      final liveFiles = liveStatuses
+          .map((s) => s.torrentFilePath)
+          .whereType<String>()
+          .toSet();
 
       final engineSkipped = dbTorrents
           .where((t) => !liveIds.contains(t.id))
@@ -104,7 +107,8 @@ class TorrentRepositoryImpl implements TorrentRepository {
         if (t.magnetUri != null && liveMagnets.contains(t.magnetUri)) {
           return false;
         }
-        if (t.torrentFilePath != null && liveFiles.contains(t.torrentFilePath)) {
+        if (t.torrentFilePath != null &&
+            liveFiles.contains(t.torrentFilePath)) {
           return false;
         }
         return true;
@@ -137,8 +141,8 @@ class TorrentRepositoryImpl implements TorrentRepository {
           }
           if (seenMagnets.contains(s.magnetUri)) continue;
           seenMagnets.add(s.magnetUri!);
-        } 
-        
+        }
+
         // B. File Path Deduplication
         else if (s.torrentFilePath != null && s.torrentFilePath!.isNotEmpty) {
           if (seenFiles.contains(s.torrentFilePath)) continue;
@@ -147,21 +151,26 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
         // C. Fingerprint Deduplication (Name + Size + Progress)
         // Catch truncated names and re-added torrents.
-        final isRealName = s.name.isNotEmpty && !s.name.startsWith('Torrent #') && s.name != '…';
+        final isRealName = s.name.isNotEmpty &&
+            !s.name.startsWith('Torrent #') &&
+            s.name != '…';
         if (isRealName) {
           // Normalize name: lowercase, remove ALL non-alphanumeric chars
-          final normName = s.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-          
+          final normName =
+              s.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+
           bool isDuplicate = false;
           for (final seen in seenFingerprints) {
             final parts = seen.split('_');
             final seenNorm = parts[0];
             final seenSize = int.tryParse(parts[1]) ?? -1;
-            
+
             // If names are very similar (one contains the other) AND sizes match (or one is 0)
-            final nameMatch = normName.contains(seenNorm) || seenNorm.contains(normName);
-            final sizeMatch = s.totalSize == seenSize || s.totalSize == 0 || seenSize == 0;
-            
+            final nameMatch =
+                normName.contains(seenNorm) || seenNorm.contains(normName);
+            final sizeMatch =
+                s.totalSize == seenSize || s.totalSize == 0 || seenSize == 0;
+
             if (nameMatch && sizeMatch) {
               isDuplicate = true;
               break;
@@ -172,27 +181,29 @@ class TorrentRepositoryImpl implements TorrentRepository {
             AppLogger.d('[Repo] Filtering duplicate content: ${s.name}');
             continue;
           }
-          
+
           seenFingerprints.add('${normName}_${s.totalSize}');
         }
 
         merged.add(s);
       }
 
-      // 8. Preserve addedAt from cache and ensure completed torrents have finished state
+      // 8. Preserve addedAt, lastActivityAt, completedAt, and ensure completed torrents have finished state
       final corrected = merged
           .where((s) => !_deletedIds.contains(s.id)) // Last-second guard
           .map((s) {
         var status = s;
 
-        // 1. Find the persisted record.
+        // Find the persisted record.
         // Try by ID first, then fallback to Magnet/File Path to handle ID sync races.
         var persisted = dbById[s.id];
         if (persisted == null) {
           if (s.magnetUri != null) {
-            persisted = dbTorrents.firstWhereOrNull((t) => t.magnetUri == s.magnetUri);
+            persisted =
+                dbTorrents.firstWhereOrNull((t) => t.magnetUri == s.magnetUri);
           } else if (s.torrentFilePath != null) {
-            persisted = dbTorrents.firstWhereOrNull((t) => t.torrentFilePath == s.torrentFilePath);
+            persisted = dbTorrents.firstWhereOrNull(
+                (t) => t.torrentFilePath == s.torrentFilePath);
           }
         }
 
@@ -207,6 +218,39 @@ class TorrentRepositoryImpl implements TorrentRepository {
           _addedAtCache[s.id] = status.addedAt;
         }
 
+        // Capture/Update completedAt
+        DateTime? completedAt = persisted?.completedAt;
+        if (status.isCompleted) {
+          completedAt ??= DateTime.now();
+        } else {
+          completedAt =
+              null; // Reset if rechecking or resumed in an incomplete state
+        }
+        status = status.copyWith(completedAt: completedAt);
+
+        // Capture/Update lastActivityAt (Throttled to prevent reshuffling and excessive DB writes)
+        DateTime lastActivityAt = persisted?.lastActivityAt ?? status.addedAt;
+        final progressDelta = persisted == null
+            ? 0.0
+            : (status.progress - persisted.progress).abs();
+        final progressChanged = progressDelta >= 0.01;
+        final stateChanged =
+            persisted != null && status.state != persisted.state;
+        final isActivelyTransferring =
+            status.downloadSpeed > 0 || status.uploadSpeed > 0;
+        final timePassed = persisted != null &&
+            DateTime.now().difference(persisted.lastActivityAt).inSeconds > 10;
+
+        final shouldRefreshActivity = persisted == null ||
+            stateChanged ||
+            progressChanged ||
+            (timePassed && isActivelyTransferring);
+
+        if (shouldRefreshActivity) {
+          lastActivityAt = DateTime.now();
+        }
+        status = status.copyWith(lastActivityAt: lastActivityAt);
+
         // Only force finished state for torrents NOT in the live engine
         if (!liveIds.contains(s.id) &&
             s.isCompleted &&
@@ -218,6 +262,13 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
         return status;
       }).toList();
+
+      // Default sorting: stable latest activity first
+      corrected.sort((a, b) {
+        final byActivity = b.lastActivityAt.compareTo(a.lastActivityAt);
+        if (byActivity != 0) return byActivity;
+        return b.id.compareTo(a.id);
+      });
 
       _scheduleDbWrite(corrected);
 
@@ -315,6 +366,13 @@ class TorrentRepositoryImpl implements TorrentRepository {
     final rows = await _db.getAllTorrents();
     final torrents = rows.map(TorrentModel.fromRow).toList();
 
+    // Default sorting on stored torrents: latest activity first
+    torrents.sort((a, b) {
+      final byActivity = b.lastActivityAt.compareTo(a.lastActivityAt);
+      if (byActivity != 0) return byActivity;
+      return b.id.compareTo(a.id);
+    });
+
     // Seed the cache
     for (final t in torrents) {
       _addedAtCache[t.id] = t.addedAt;
@@ -377,9 +435,11 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
       // ── Duplicate prevention — Aggressive Fingerprint check ────────
       final normName = name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-      final existingByFingerprint = await _findExistingByFingerprint(normName, 0); // 0 because metadata not yet fetched
+      final existingByFingerprint = await _findExistingByFingerprint(
+          normName, 0); // 0 because metadata not yet fetched
       if (existingByFingerprint != null) {
-        AppLogger.i('[Repo] Magnet fingerprint collision ($normName) with $existingByFingerprint — skipping add');
+        AppLogger.i(
+            '[Repo] Magnet fingerprint collision ($normName) with $existingByFingerprint — skipping add');
         return existingByFingerprint;
       }
 
@@ -401,6 +461,8 @@ class TorrentRepositoryImpl implements TorrentRepository {
           isPaused: const Value(false),
           isCompleted: const Value(false),
           addedAt: Value(DateTime.now()),
+          lastActivityAt: Value(DateTime.now()),
+          completedAt: const Value(null),
           isSequentialDownload: const Value(false),
         ),
       );
@@ -457,9 +519,11 @@ class TorrentRepositoryImpl implements TorrentRepository {
       // For files, we usually have the name and might have the size (if we parsed the file).
       // Here we at least check the name fingerprint.
       final normName = name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-      final existingByFingerprint = await _findExistingByFingerprint(normName, 0);
+      final existingByFingerprint =
+          await _findExistingByFingerprint(normName, 0);
       if (existingByFingerprint != null) {
-        AppLogger.i('[Repo] File fingerprint collision ($normName) with $existingByFingerprint — skipping add');
+        AppLogger.i(
+            '[Repo] File fingerprint collision ($normName) with $existingByFingerprint — skipping add');
         return existingByFingerprint;
       }
 
@@ -481,6 +545,8 @@ class TorrentRepositoryImpl implements TorrentRepository {
           isPaused: const Value(false),
           isCompleted: const Value(false),
           addedAt: Value(DateTime.now()),
+          lastActivityAt: Value(DateTime.now()),
+          completedAt: const Value(null),
           isSequentialDownload: const Value(false),
         ),
       );
@@ -571,7 +637,8 @@ class TorrentRepositoryImpl implements TorrentRepository {
             if (t.resumeData != null && t.resumeData!.isNotEmpty) {
               try {
                 // If the engine wrapper doesn't support it yet, this might fail/throw
-                _engine.addMagnetWithResume(t.magnetUri!, t.savePath, t.resumeData!);
+                _engine.addMagnetWithResume(
+                    t.magnetUri!, t.savePath, t.resumeData!);
                 AppLogger.i('[Repo] Resumed with fast-resume: $id');
               } catch (_) {
                 _engine.resume(newId);
@@ -584,7 +651,7 @@ class TorrentRepositoryImpl implements TorrentRepository {
               AppLogger.i('[Repo] Syncing ID on resume: $id → $targetId');
               // Cancel the notification for the OLD ID to prevent duplicates in tray
               unawaited(NotificationService.instance.cancelNotification(id));
-              
+
               await _db.deleteTorrentById(id);
               await _db.upsertTorrent(
                 TorrentModel.toCompanion(t.copyWith(id: targetId)),
@@ -604,7 +671,7 @@ class TorrentRepositoryImpl implements TorrentRepository {
   Future<void> deleteTorrent(String id, {bool deleteFiles = false}) async {
     AppLogger.setCustomKey('last_action', 'delete_torrent');
     AppLogger.setCustomKey('delete_files_flag', deleteFiles);
-    
+
     // Prevent ghosting in statusStream during the async deletion period
     _deletedIds.add(id);
 
@@ -619,7 +686,7 @@ class TorrentRepositoryImpl implements TorrentRepository {
           final targetPath = '${stored.savePath}/${stored.name}';
           final dir = Directory(targetPath);
           final file = File(targetPath);
-          
+
           String? parentPath;
 
           if (dir.existsSync()) {
@@ -631,14 +698,16 @@ class TorrentRepositoryImpl implements TorrentRepository {
             file.deleteSync();
             AppLogger.i('[Repo] Manually deleted file: $targetPath');
           } else {
-            AppLogger.w('[Repo] Deletion target not found on disk: $targetPath');
+            AppLogger.w(
+                '[Repo] Deletion target not found on disk: $targetPath');
           }
 
           if (parentPath != null) {
             _cleanupEmptyParents(parentPath, stored.savePath);
           }
         } catch (e, st) {
-          AppLogger.e('[Repo] Failed to manually delete files for $id', error: e, stack: st);
+          AppLogger.e('[Repo] Failed to manually delete files for $id',
+              error: e, stack: st);
         }
       }
     }
@@ -680,7 +749,8 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
         if (t.resumeData != null && t.resumeData!.isNotEmpty) {
           try {
-            _engine.addMagnetWithResume(t.magnetUri ?? '', t.savePath, t.resumeData!);
+            _engine.addMagnetWithResume(
+                t.magnetUri ?? '', t.savePath, t.resumeData!);
           } catch (_) {
             _engine.forceRecheck(newId);
           }
@@ -713,7 +783,8 @@ class TorrentRepositoryImpl implements TorrentRepository {
   }
 
   @override
-  Future<void> deleteMultiple(List<String> ids, {bool deleteFiles = false}) async {
+  Future<void> deleteMultiple(List<String> ids,
+      {bool deleteFiles = false}) async {
     for (final id in ids) {
       await deleteTorrent(id, deleteFiles: deleteFiles);
     }
@@ -723,8 +794,9 @@ class TorrentRepositoryImpl implements TorrentRepository {
   Future<void> forceSaveAllResumeData() async {
     if (_lastStatuses.isEmpty) return;
 
-    AppLogger.i('[Repo] Emergency save: capturing full status for ${_lastStatuses.length} torrents…');
-    
+    AppLogger.i(
+        '[Repo] Emergency save: capturing full status for ${_lastStatuses.length} torrents…');
+
     final companions = <TorrentsTableCompanion>[];
     for (final s in _lastStatuses) {
       final intId = int.tryParse(s.id);
@@ -732,14 +804,14 @@ class TorrentRepositoryImpl implements TorrentRepository {
       if (intId != null) {
         resume = _engine.getResumeDataSafe(intId);
       }
-      
+
       // Merge resume data into the companion if available
       final baseCompanion = TorrentModel.toCompanion(s);
       companions.add(baseCompanion.copyWith(
         resumeData: resume != null ? Value(resume) : const Value.absent(),
       ));
     }
-    
+
     await _db.batchUpdateTorrents(companions);
     await _flushDbWrite();
   }
@@ -794,7 +866,7 @@ class TorrentRepositoryImpl implements TorrentRepository {
       final rNorm = r.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
       final nameMatch = normName.contains(rNorm) || rNorm.contains(normName);
       final sizeMatch = size == 0 || r.totalSize == 0 || size == r.totalSize;
-      
+
       if (nameMatch && sizeMatch) return r.id;
     }
     return null;
@@ -863,9 +935,11 @@ class TorrentRepositoryImpl implements TorrentRepository {
           // 🔍 FALLBACK: If ID changed on restart, find by Magnet/File
           if (persisted == null) {
             if (s.magnetUri != null) {
-              persisted = dbTorrents.firstWhereOrNull((t) => t.magnetUri == s.magnetUri);
+              persisted = dbTorrents
+                  .firstWhereOrNull((t) => t.magnetUri == s.magnetUri);
             } else if (s.torrentFilePath != null) {
-              persisted = dbTorrents.firstWhereOrNull((t) => t.torrentFilePath == s.torrentFilePath);
+              persisted = dbTorrents.firstWhereOrNull(
+                  (t) => t.torrentFilePath == s.torrentFilePath);
             }
           }
 
@@ -873,18 +947,31 @@ class TorrentRepositoryImpl implements TorrentRepository {
             // 🧱 ANTI-REGRESSION: Never overwrite a completed state with an uncompleted one.
             // Never overwrite high progress with low progress during engine transitions.
             final isCompleted = persisted.isCompleted || status.isCompleted;
-            final progress = (persisted.isCompleted) ? 1.0 : (status.progress > persisted.progress ? status.progress : persisted.progress);
+            final progress = (persisted.isCompleted)
+                ? 1.0
+                : (status.progress > persisted.progress
+                    ? status.progress
+                    : persisted.progress);
 
             // Restore metadata if engine is warming up (totalSize == 0)
-            final totalSize = (status.totalSize == 0 && persisted.totalSize > 0) ? persisted.totalSize : status.totalSize;
-            final downloadedBytes = (isCompleted) ? totalSize : (status.downloadedBytes > persisted.downloadedBytes ? status.downloadedBytes : persisted.downloadedBytes);
+            final totalSize = (status.totalSize == 0 && persisted.totalSize > 0)
+                ? persisted.totalSize
+                : status.totalSize;
+            final downloadedBytes = (isCompleted)
+                ? totalSize
+                : (status.downloadedBytes > persisted.downloadedBytes
+                    ? status.downloadedBytes
+                    : persisted.downloadedBytes);
 
             status = status.copyWith(
               isCompleted: isCompleted,
               progress: progress,
               totalSize: totalSize,
               downloadedBytes: downloadedBytes,
-              name: (status.name == 'Torrent #${status.id}' || status.name.isEmpty) ? persisted.name : status.name,
+              name: (status.name == 'Torrent #${status.id}' ||
+                      status.name.isEmpty)
+                  ? persisted.name
+                  : status.name,
               addedAt: persisted.addedAt,
             );
 
@@ -912,7 +999,8 @@ class TorrentRepositoryImpl implements TorrentRepository {
                 status = status.copyWith(resumeData: resume);
                 _lastSavedResumeProgress[s.id] = status.progress;
                 if (isCompleted) {
-                  AppLogger.d('[Repo] Saved final 100% completed resume data for: ${status.name}');
+                  AppLogger.d(
+                      '[Repo] Saved final 100% completed resume data for: ${status.name}');
                 } else {
                   AppLogger.d(
                     '[Repo] Saved intermediate fast-resume data at ${(status.progress * 100).toStringAsFixed(1)}% for: ${status.name}',
@@ -924,7 +1012,8 @@ class TorrentRepositoryImpl implements TorrentRepository {
           enrichedStatuses.add(status);
         }
 
-        final companions = enrichedStatuses.map(TorrentModel.toCompanion).toList();
+        final companions =
+            enrichedStatuses.map(TorrentModel.toCompanion).toList();
         await _db.batchUpdateTorrents(companions);
         AppLogger.d(
             '[Repo] DB snapshot written (${companions.length} entries)');
@@ -1003,12 +1092,13 @@ class TorrentRepositoryImpl implements TorrentRepository {
     try {
       var currentDir = Directory(startParentPath);
       final rootDir = Directory(rootLimitPath);
-      
+
       // Normalize paths to make comparisons safe and robust
       final rootNorm = rootDir.absolute.path.replaceFirst(RegExp(r'/$'), '');
-      
+
       while (currentDir.path != rootNorm && currentDir.existsSync()) {
-        final currentNorm = currentDir.absolute.path.replaceFirst(RegExp(r'/$'), '');
+        final currentNorm =
+            currentDir.absolute.path.replaceFirst(RegExp(r'/$'), '');
         // STRICT GUARD: Never delete the root Meitorrent folder or anything above it
         if (currentNorm == rootNorm || !currentNorm.startsWith(rootNorm)) {
           break;
@@ -1018,7 +1108,8 @@ class TorrentRepositoryImpl implements TorrentRepository {
         final list = currentDir.listSync();
         if (list.isEmpty) {
           final nextParent = currentDir.parent;
-          AppLogger.i('[Repo] Deleting empty parent directory: ${currentDir.path}');
+          AppLogger.i(
+              '[Repo] Deleting empty parent directory: ${currentDir.path}');
           currentDir.deleteSync();
           currentDir = nextParent;
         } else {
@@ -1027,7 +1118,9 @@ class TorrentRepositoryImpl implements TorrentRepository {
         }
       }
     } catch (e, st) {
-      AppLogger.w('[Repo] Non-fatal: failed to clean up empty parent folders: $e', stack: st);
+      AppLogger.w(
+          '[Repo] Non-fatal: failed to clean up empty parent folders: $e',
+          stack: st);
     }
   }
 

@@ -105,11 +105,12 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppColors.downloading.withValues(alpha: 0.1),
+                                color: AppColors.downloading
+                                    .withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: const Icon(Icons.add_rounded,
-                                    color: AppColors.downloading, size: 24),
+                                  color: AppColors.downloading, size: 24),
                             ),
                             const SizedBox(width: 14),
                             Text(
@@ -140,7 +141,8 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.downloading.withValues(alpha: 0.3),
+                                  color: AppColors.downloading
+                                      .withValues(alpha: 0.3),
                                   blurRadius: 10,
                                   offset: const Offset(0, 2),
                                 ),
@@ -149,7 +151,8 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                             indicatorSize: TabBarIndicatorSize.tab,
                             dividerColor: Colors.transparent,
                             labelColor: Colors.white,
-                            unselectedLabelColor: AppColors.textSecondary(context),
+                            unselectedLabelColor:
+                                AppColors.textSecondary(context),
                             labelStyle: GoogleFonts.shipporiMincho(
                               fontWeight: FontWeight.w700,
                               fontSize: 14,
@@ -204,7 +207,8 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                     animation: _tabController,
                     builder: (_, __) {
                       final isMagnet = _tabController.index == 0;
-                      final canSubmit = isMagnet ? true : (_selectedFilePath != null);
+                      final canSubmit =
+                          isMagnet ? true : (_selectedFilePath != null);
 
                       return Padding(
                         padding: EdgeInsets.fromLTRB(24, 0, 24, safePad + 24),
@@ -212,7 +216,9 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                           children: [
                             Expanded(
                               child: _SecondaryButton(
-                                onPressed: _isLoading ? null : () => Navigator.pop(context),
+                                onPressed: _isLoading
+                                    ? null
+                                    : () => Navigator.pop(context),
                                 child: const Text('Cancel'),
                               ),
                             ),
@@ -222,7 +228,9 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                                 onPressed: _isLoading
                                     ? null
                                     : (canSubmit
-                                        ? (isMagnet ? _submitMagnet : _submitFile)
+                                        ? (isMagnet
+                                            ? _submitMagnet
+                                            : _submitFile)
                                         : null),
                                 child: _isLoading
                                     ? const SizedBox(
@@ -314,8 +322,10 @@ class _GradientButton extends StatelessWidget {
           foregroundColor: Colors.white,
           padding: EdgeInsets.zero,
           minimumSize: const Size.fromHeight(48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: GoogleFonts.shipporiMincho(fontWeight: FontWeight.w700, fontSize: 14),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: GoogleFonts.shipporiMincho(
+              fontWeight: FontWeight.w700, fontSize: 14),
         ),
         child: child,
       ),
@@ -341,8 +351,10 @@ class _SecondaryButton extends StatelessWidget {
           side: BorderSide(color: AppColors.border(context)),
           padding: EdgeInsets.zero,
           minimumSize: const Size.fromHeight(48),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: GoogleFonts.shipporiMincho(fontWeight: FontWeight.w600, fontSize: 14),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: GoogleFonts.shipporiMincho(
+              fontWeight: FontWeight.w600, fontSize: 14),
         ),
         child: child,
       ),
@@ -382,13 +394,19 @@ class _MagnetTab extends StatelessWidget {
               expands: true,
               textAlign: TextAlign.center,
               textAlignVertical: TextAlignVertical.center,
-              style: TextStyle(color: AppColors.text(context), fontSize: 14, height: 1.4),
+              style: TextStyle(
+                  color: AppColors.text(context), fontSize: 14, height: 1.4),
               decoration: InputDecoration(
                 hintText: 'Paste magnet link here',
-                hintStyle: TextStyle(color: AppColors.textSecondary(context).withValues(alpha: 0.5)),
+                hintStyle: TextStyle(
+                    color: AppColors.textSecondary(context)
+                        .withValues(alpha: 0.5)),
                 prefixIcon: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [Icon(Icons.link_rounded, color: AppColors.textSecondary(context), size: 20)],
+                  children: [
+                    Icon(Icons.link_rounded,
+                        color: AppColors.textSecondary(context), size: 20)
+                  ],
                 ),
                 suffixIcon: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -396,7 +414,8 @@ class _MagnetTab extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: IconButton(
-                        icon: const Icon(Icons.content_paste_rounded, color: AppColors.downloading, size: 20),
+                        icon: const Icon(Icons.content_paste_rounded,
+                            color: AppColors.downloading, size: 20),
                         onPressed: onPasteFromClipboard,
                       ),
                     ),
@@ -414,7 +433,8 @@ class _MagnetTab extends StatelessWidget {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: AppColors.downloading, width: 1.5),
+                  borderSide: const BorderSide(
+                      color: AppColors.downloading, width: 1.5),
                 ),
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
@@ -501,13 +521,15 @@ class _FileTabState extends State<_FileTab> {
                   )
                 : _selectedPath != null
                     ? Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: AppColors.downloading.withValues(alpha: 0.1),
+                                color: AppColors.downloading
+                                    .withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: const Icon(
@@ -544,7 +566,8 @@ class _FileTabState extends State<_FileTab> {
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.close_rounded, color: AppColors.downloading),
+                              icon: const Icon(Icons.close_rounded,
+                                  color: AppColors.downloading),
                               onPressed: () {
                                 setState(() => _selectedPath = null);
                                 widget.onFilePicked(null);
@@ -559,7 +582,8 @@ class _FileTabState extends State<_FileTab> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: AppColors.downloading.withValues(alpha: 0.1),
+                              color:
+                                  AppColors.downloading.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: const Icon(
@@ -590,7 +614,8 @@ class _FileTabState extends State<_FileTab> {
           ),
         ),
         const SizedBox(height: 12),
-        _SequentialRow(value: widget.sequential, onChanged: widget.onSequentialChanged),
+        _SequentialRow(
+            value: widget.sequential, onChanged: widget.onSequentialChanged),
       ],
     );
   }
@@ -630,7 +655,8 @@ class _SequentialRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.auto_awesome_motion_rounded, size: 20, color: AppColors.textSecondary(context)),
+          Icon(Icons.auto_awesome_motion_rounded,
+              size: 20, color: AppColors.textSecondary(context)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(

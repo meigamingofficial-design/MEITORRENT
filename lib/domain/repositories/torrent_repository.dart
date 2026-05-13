@@ -95,13 +95,15 @@ class EngineConfig {
     return EngineConfig(
       downloadLimit: downloadLimit ?? this.downloadLimit,
       uploadLimit: uploadLimit ?? this.uploadLimit,
-      maxConnectionsPerTorrent: maxConnectionsPerTorrent ?? this.maxConnectionsPerTorrent,
+      maxConnectionsPerTorrent:
+          maxConnectionsPerTorrent ?? this.maxConnectionsPerTorrent,
       maxGlobalConnections: maxGlobalConnections ?? this.maxGlobalConnections,
       dhtEnabled: dhtEnabled ?? this.dhtEnabled,
       pexEnabled: pexEnabled ?? this.pexEnabled,
       lsdEnabled: lsdEnabled ?? this.lsdEnabled,
       wifiOnlyMode: wifiOnlyMode ?? this.wifiOnlyMode,
-      stopSeedingWhenFinished: stopSeedingWhenFinished ?? this.stopSeedingWhenFinished,
+      stopSeedingWhenFinished:
+          stopSeedingWhenFinished ?? this.stopSeedingWhenFinished,
     );
   }
 

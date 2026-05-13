@@ -104,6 +104,20 @@ class $TorrentsTableTable extends TorrentsTable
   late final GeneratedColumn<DateTime> addedAt = GeneratedColumn<DateTime>(
       'added_at', aliasedName, false,
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _lastActivityAtMeta =
+      const VerificationMeta('lastActivityAt');
+  @override
+  late final GeneratedColumn<DateTime> lastActivityAt =
+      GeneratedColumn<DateTime>('last_activity_at', aliasedName, false,
+          type: DriftSqlType.dateTime,
+          requiredDuringInsert: false,
+          defaultValue: currentDateAndTime);
+  static const VerificationMeta _completedAtMeta =
+      const VerificationMeta('completedAt');
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+      'completed_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _isSequentialDownloadMeta =
       const VerificationMeta('isSequentialDownload');
   @override
@@ -135,6 +149,8 @@ class $TorrentsTableTable extends TorrentsTable
         progress,
         state,
         addedAt,
+        lastActivityAt,
+        completedAt,
         isSequentialDownload,
         resumeData
       ];
@@ -213,6 +229,18 @@ class $TorrentsTableTable extends TorrentsTable
     } else if (isInserting) {
       context.missing(_addedAtMeta);
     }
+    if (data.containsKey('last_activity_at')) {
+      context.handle(
+          _lastActivityAtMeta,
+          lastActivityAt.isAcceptableOrUnknown(
+              data['last_activity_at']!, _lastActivityAtMeta));
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+          _completedAtMeta,
+          completedAt.isAcceptableOrUnknown(
+              data['completed_at']!, _completedAtMeta));
+    }
     if (data.containsKey('is_sequential_download')) {
       context.handle(
           _isSequentialDownloadMeta,
@@ -260,6 +288,10 @@ class $TorrentsTableTable extends TorrentsTable
           .read(DriftSqlType.string, data['${effectivePrefix}state'])!,
       addedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}added_at'])!,
+      lastActivityAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_activity_at'])!,
+      completedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}completed_at']),
       isSequentialDownload: attachedDatabase.typeMapping.read(
           DriftSqlType.bool, data['${effectivePrefix}is_sequential_download'])!,
       resumeData: attachedDatabase.typeMapping
@@ -314,6 +346,12 @@ class TorrentsTableData extends DataClass
   /// Timestamp when torrent was added.
   final DateTime addedAt;
 
+  /// Timestamp of the latest torrent transfer activity/state change.
+  final DateTime lastActivityAt;
+
+  /// Timestamp when torrent completed downloading.
+  final DateTime? completedAt;
+
   /// Whether sequential piece download is enabled.
   final bool isSequentialDownload;
 
@@ -333,6 +371,8 @@ class TorrentsTableData extends DataClass
       required this.progress,
       required this.state,
       required this.addedAt,
+      required this.lastActivityAt,
+      this.completedAt,
       required this.isSequentialDownload,
       this.resumeData});
   @override
@@ -355,6 +395,10 @@ class TorrentsTableData extends DataClass
     map['progress'] = Variable<double>(progress);
     map['state'] = Variable<String>(state);
     map['added_at'] = Variable<DateTime>(addedAt);
+    map['last_activity_at'] = Variable<DateTime>(lastActivityAt);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
     map['is_sequential_download'] = Variable<bool>(isSequentialDownload);
     if (!nullToAbsent || resumeData != null) {
       map['resume_data'] = Variable<Uint8List>(resumeData);
@@ -381,6 +425,10 @@ class TorrentsTableData extends DataClass
       progress: Value(progress),
       state: Value(state),
       addedAt: Value(addedAt),
+      lastActivityAt: Value(lastActivityAt),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
       isSequentialDownload: Value(isSequentialDownload),
       resumeData: resumeData == null && nullToAbsent
           ? const Value.absent()
@@ -405,6 +453,8 @@ class TorrentsTableData extends DataClass
       progress: serializer.fromJson<double>(json['progress']),
       state: serializer.fromJson<String>(json['state']),
       addedAt: serializer.fromJson<DateTime>(json['addedAt']),
+      lastActivityAt: serializer.fromJson<DateTime>(json['lastActivityAt']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
       isSequentialDownload:
           serializer.fromJson<bool>(json['isSequentialDownload']),
       resumeData: serializer.fromJson<Uint8List?>(json['resumeData']),
@@ -427,6 +477,8 @@ class TorrentsTableData extends DataClass
       'progress': serializer.toJson<double>(progress),
       'state': serializer.toJson<String>(state),
       'addedAt': serializer.toJson<DateTime>(addedAt),
+      'lastActivityAt': serializer.toJson<DateTime>(lastActivityAt),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
       'isSequentialDownload': serializer.toJson<bool>(isSequentialDownload),
       'resumeData': serializer.toJson<Uint8List?>(resumeData),
     };
@@ -446,6 +498,8 @@ class TorrentsTableData extends DataClass
           double? progress,
           String? state,
           DateTime? addedAt,
+          DateTime? lastActivityAt,
+          Value<DateTime?> completedAt = const Value.absent(),
           bool? isSequentialDownload,
           Value<Uint8List?> resumeData = const Value.absent()}) =>
       TorrentsTableData(
@@ -464,6 +518,8 @@ class TorrentsTableData extends DataClass
         progress: progress ?? this.progress,
         state: state ?? this.state,
         addedAt: addedAt ?? this.addedAt,
+        lastActivityAt: lastActivityAt ?? this.lastActivityAt,
+        completedAt: completedAt.present ? completedAt.value : this.completedAt,
         isSequentialDownload: isSequentialDownload ?? this.isSequentialDownload,
         resumeData: resumeData.present ? resumeData.value : this.resumeData,
       );
@@ -487,6 +543,11 @@ class TorrentsTableData extends DataClass
       progress: data.progress.present ? data.progress.value : this.progress,
       state: data.state.present ? data.state.value : this.state,
       addedAt: data.addedAt.present ? data.addedAt.value : this.addedAt,
+      lastActivityAt: data.lastActivityAt.present
+          ? data.lastActivityAt.value
+          : this.lastActivityAt,
+      completedAt:
+          data.completedAt.present ? data.completedAt.value : this.completedAt,
       isSequentialDownload: data.isSequentialDownload.present
           ? data.isSequentialDownload.value
           : this.isSequentialDownload,
@@ -511,6 +572,8 @@ class TorrentsTableData extends DataClass
           ..write('progress: $progress, ')
           ..write('state: $state, ')
           ..write('addedAt: $addedAt, ')
+          ..write('lastActivityAt: $lastActivityAt, ')
+          ..write('completedAt: $completedAt, ')
           ..write('isSequentialDownload: $isSequentialDownload, ')
           ..write('resumeData: $resumeData')
           ..write(')'))
@@ -532,6 +595,8 @@ class TorrentsTableData extends DataClass
       progress,
       state,
       addedAt,
+      lastActivityAt,
+      completedAt,
       isSequentialDownload,
       $driftBlobEquality.hash(resumeData));
   @override
@@ -551,6 +616,8 @@ class TorrentsTableData extends DataClass
           other.progress == this.progress &&
           other.state == this.state &&
           other.addedAt == this.addedAt &&
+          other.lastActivityAt == this.lastActivityAt &&
+          other.completedAt == this.completedAt &&
           other.isSequentialDownload == this.isSequentialDownload &&
           $driftBlobEquality.equals(other.resumeData, this.resumeData));
 }
@@ -569,6 +636,8 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
   final Value<double> progress;
   final Value<String> state;
   final Value<DateTime> addedAt;
+  final Value<DateTime> lastActivityAt;
+  final Value<DateTime?> completedAt;
   final Value<bool> isSequentialDownload;
   final Value<Uint8List?> resumeData;
   final Value<int> rowid;
@@ -586,6 +655,8 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
     this.progress = const Value.absent(),
     this.state = const Value.absent(),
     this.addedAt = const Value.absent(),
+    this.lastActivityAt = const Value.absent(),
+    this.completedAt = const Value.absent(),
     this.isSequentialDownload = const Value.absent(),
     this.resumeData = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -604,6 +675,8 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
     this.progress = const Value.absent(),
     this.state = const Value.absent(),
     required DateTime addedAt,
+    this.lastActivityAt = const Value.absent(),
+    this.completedAt = const Value.absent(),
     this.isSequentialDownload = const Value.absent(),
     this.resumeData = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -625,6 +698,8 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
     Expression<double>? progress,
     Expression<String>? state,
     Expression<DateTime>? addedAt,
+    Expression<DateTime>? lastActivityAt,
+    Expression<DateTime>? completedAt,
     Expression<bool>? isSequentialDownload,
     Expression<Uint8List>? resumeData,
     Expression<int>? rowid,
@@ -643,6 +718,8 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
       if (progress != null) 'progress': progress,
       if (state != null) 'state': state,
       if (addedAt != null) 'added_at': addedAt,
+      if (lastActivityAt != null) 'last_activity_at': lastActivityAt,
+      if (completedAt != null) 'completed_at': completedAt,
       if (isSequentialDownload != null)
         'is_sequential_download': isSequentialDownload,
       if (resumeData != null) 'resume_data': resumeData,
@@ -664,6 +741,8 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
       Value<double>? progress,
       Value<String>? state,
       Value<DateTime>? addedAt,
+      Value<DateTime>? lastActivityAt,
+      Value<DateTime?>? completedAt,
       Value<bool>? isSequentialDownload,
       Value<Uint8List?>? resumeData,
       Value<int>? rowid}) {
@@ -681,6 +760,8 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
       progress: progress ?? this.progress,
       state: state ?? this.state,
       addedAt: addedAt ?? this.addedAt,
+      lastActivityAt: lastActivityAt ?? this.lastActivityAt,
+      completedAt: completedAt ?? this.completedAt,
       isSequentialDownload: isSequentialDownload ?? this.isSequentialDownload,
       resumeData: resumeData ?? this.resumeData,
       rowid: rowid ?? this.rowid,
@@ -729,6 +810,12 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
     if (addedAt.present) {
       map['added_at'] = Variable<DateTime>(addedAt.value);
     }
+    if (lastActivityAt.present) {
+      map['last_activity_at'] = Variable<DateTime>(lastActivityAt.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
     if (isSequentialDownload.present) {
       map['is_sequential_download'] =
           Variable<bool>(isSequentialDownload.value);
@@ -758,6 +845,8 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
           ..write('progress: $progress, ')
           ..write('state: $state, ')
           ..write('addedAt: $addedAt, ')
+          ..write('lastActivityAt: $lastActivityAt, ')
+          ..write('completedAt: $completedAt, ')
           ..write('isSequentialDownload: $isSequentialDownload, ')
           ..write('resumeData: $resumeData, ')
           ..write('rowid: $rowid')
@@ -792,6 +881,8 @@ typedef $$TorrentsTableTableCreateCompanionBuilder = TorrentsTableCompanion
   Value<double> progress,
   Value<String> state,
   required DateTime addedAt,
+  Value<DateTime> lastActivityAt,
+  Value<DateTime?> completedAt,
   Value<bool> isSequentialDownload,
   Value<Uint8List?> resumeData,
   Value<int> rowid,
@@ -811,6 +902,8 @@ typedef $$TorrentsTableTableUpdateCompanionBuilder = TorrentsTableCompanion
   Value<double> progress,
   Value<String> state,
   Value<DateTime> addedAt,
+  Value<DateTime> lastActivityAt,
+  Value<DateTime?> completedAt,
   Value<bool> isSequentialDownload,
   Value<Uint8List?> resumeData,
   Value<int> rowid,
@@ -865,6 +958,13 @@ class $$TorrentsTableTableFilterComposer
 
   ColumnFilters<DateTime> get addedAt => $composableBuilder(
       column: $table.addedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastActivityAt => $composableBuilder(
+      column: $table.lastActivityAt,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get isSequentialDownload => $composableBuilder(
       column: $table.isSequentialDownload,
@@ -924,6 +1024,13 @@ class $$TorrentsTableTableOrderingComposer
   ColumnOrderings<DateTime> get addedAt => $composableBuilder(
       column: $table.addedAt, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get lastActivityAt => $composableBuilder(
+      column: $table.lastActivityAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get isSequentialDownload => $composableBuilder(
       column: $table.isSequentialDownload,
       builder: (column) => ColumnOrderings(column));
@@ -980,6 +1087,12 @@ class $$TorrentsTableTableAnnotationComposer
   GeneratedColumn<DateTime> get addedAt =>
       $composableBuilder(column: $table.addedAt, builder: (column) => column);
 
+  GeneratedColumn<DateTime> get lastActivityAt => $composableBuilder(
+      column: $table.lastActivityAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => column);
+
   GeneratedColumn<bool> get isSequentialDownload => $composableBuilder(
       column: $table.isSequentialDownload, builder: (column) => column);
 
@@ -1026,6 +1139,8 @@ class $$TorrentsTableTableTableManager extends RootTableManager<
             Value<double> progress = const Value.absent(),
             Value<String> state = const Value.absent(),
             Value<DateTime> addedAt = const Value.absent(),
+            Value<DateTime> lastActivityAt = const Value.absent(),
+            Value<DateTime?> completedAt = const Value.absent(),
             Value<bool> isSequentialDownload = const Value.absent(),
             Value<Uint8List?> resumeData = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -1044,6 +1159,8 @@ class $$TorrentsTableTableTableManager extends RootTableManager<
             progress: progress,
             state: state,
             addedAt: addedAt,
+            lastActivityAt: lastActivityAt,
+            completedAt: completedAt,
             isSequentialDownload: isSequentialDownload,
             resumeData: resumeData,
             rowid: rowid,
@@ -1062,6 +1179,8 @@ class $$TorrentsTableTableTableManager extends RootTableManager<
             Value<double> progress = const Value.absent(),
             Value<String> state = const Value.absent(),
             required DateTime addedAt,
+            Value<DateTime> lastActivityAt = const Value.absent(),
+            Value<DateTime?> completedAt = const Value.absent(),
             Value<bool> isSequentialDownload = const Value.absent(),
             Value<Uint8List?> resumeData = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -1080,6 +1199,8 @@ class $$TorrentsTableTableTableManager extends RootTableManager<
             progress: progress,
             state: state,
             addedAt: addedAt,
+            lastActivityAt: lastActivityAt,
+            completedAt: completedAt,
             isSequentialDownload: isSequentialDownload,
             resumeData: resumeData,
             rowid: rowid,

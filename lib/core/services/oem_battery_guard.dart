@@ -49,7 +49,8 @@ class OemBatteryGuard {
     return _oemNames[manufacturer.toLowerCase()];
   }
 
-  Future<void> promptIfNeeded(BuildContext context, {bool force = false}) async {
+  Future<void> promptIfNeeded(BuildContext context,
+      {bool force = false}) async {
     final androidInfo = await DeviceInfoPlugin().androidInfo;
     final manufacturer = androidInfo.manufacturer.toLowerCase();
 

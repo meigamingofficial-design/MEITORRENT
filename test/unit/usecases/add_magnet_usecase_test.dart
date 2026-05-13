@@ -40,7 +40,8 @@ void main() {
     });
 
     test('http URL throws ArgumentError', () {
-      expect(() => usecase('https://example.com/file.torrent'), throwsArgumentError);
+      expect(() => usecase('https://example.com/file.torrent'),
+          throwsArgumentError);
     });
 
     test('truncated hash throws ArgumentError', () {
@@ -48,7 +49,8 @@ void main() {
     });
 
     test('missing xt= parameter throws ArgumentError', () {
-      expect(() => usecase('magnet:?dn=ubuntu&tr=http://tracker.example.com'), throwsArgumentError);
+      expect(() => usecase('magnet:?dn=ubuntu&tr=http://tracker.example.com'),
+          throwsArgumentError);
     });
   });
 }

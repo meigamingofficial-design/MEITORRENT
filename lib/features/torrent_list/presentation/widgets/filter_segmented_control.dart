@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../screens/dashboard_screen.dart';
+import '../controllers/torrent_notifier.dart';
 
 class FilterSegmentedControl extends StatelessWidget {
   const FilterSegmentedControl({
@@ -73,8 +73,8 @@ class _FilterItem extends StatelessWidget {
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeInOutCubic,
           decoration: BoxDecoration(
-            color: isActive 
-                ? AppColors.downloading.withValues(alpha: 0.12) 
+            color: isActive
+                ? AppColors.downloading.withValues(alpha: 0.12)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
@@ -82,8 +82,8 @@ class _FilterItem extends StatelessWidget {
           child: Text(
             label,
             style: GoogleFonts.shipporiMincho(
-              color: isActive 
-                  ? AppColors.downloading 
+              color: isActive
+                  ? AppColors.downloading
                   : AppColors.textSecondary(context),
               fontSize: 13,
               fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,

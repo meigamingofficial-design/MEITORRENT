@@ -115,11 +115,17 @@ class SettingsScreen extends ConsumerWidget {
                   color: AppColors.paused.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.flash_on_rounded, color: AppColors.paused, size: 20),
+                child: const Icon(Icons.flash_on_rounded,
+                    color: AppColors.paused, size: 20),
               ),
-              title: Text('Test Crash', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text(context))),
+              title: Text('Test Crash',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.text(context))),
               subtitle: Text('Force a crash to test Firebase integration',
-                  style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12)),
+                  style: TextStyle(
+                      color: AppColors.textSecondary(context), fontSize: 12)),
               onTap: () {
                 AppLogger.wtf('User triggered a manual test crash');
                 // This will crash the app immediately
@@ -219,10 +225,16 @@ class _SpeedLimitTile extends StatelessWidget {
         ),
         child: Icon(icon, color: iconColor, size: 20),
       ),
-      title: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text(context))),
+      title: Text(label,
+          style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.text(context))),
       subtitle: Text(displayLabel,
-          style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12)),
-      trailing: Icon(Icons.chevron_right, color: AppColors.textSecondary(context), size: 18),
+          style:
+              TextStyle(color: AppColors.textSecondary(context), fontSize: 12)),
+      trailing: Icon(Icons.chevron_right,
+          color: AppColors.textSecondary(context), size: 18),
       onTap: () => _showPicker(context),
     );
   }
@@ -307,9 +319,14 @@ class _SwitchTile extends StatelessWidget {
         ),
         child: Icon(icon, color: AppColors.textSecondary(context), size: 20),
       ),
-      title: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text(context))),
+      title: Text(label,
+          style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.text(context))),
       subtitle: Text(subtitle,
-          style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12)),
+          style:
+              TextStyle(color: AppColors.textSecondary(context), fontSize: 12)),
       trailing: Switch(
         value: value,
         onChanged: onChanged,
@@ -340,10 +357,16 @@ class _ConnectionsTile extends StatelessWidget {
         child: Icon(Icons.people_outline,
             color: AppColors.textSecondary(context), size: 20),
       ),
-      title: Text('Max Connections', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text(context))),
+      title: Text('Max Connections',
+          style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.text(context))),
       subtitle: Text('$current peers',
-          style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12)),
-      trailing: Icon(Icons.chevron_right, color: AppColors.textSecondary(context), size: 18),
+          style:
+              TextStyle(color: AppColors.textSecondary(context), fontSize: 12)),
+      trailing: Icon(Icons.chevron_right,
+          color: AppColors.textSecondary(context), size: 18),
       onTap: () => showModalBottomSheet<void>(
         context: context,
         backgroundColor: Colors.transparent,
@@ -440,7 +463,8 @@ class _AboutTile extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             'v1.0.0 · Fast. Private. Reliable.',
-            style: TextStyle(color: AppColors.textSecondary(context), fontSize: 11),
+            style: TextStyle(
+                color: AppColors.textSecondary(context), fontSize: 11),
           ),
           const SizedBox(height: 1),
           const Text(
@@ -479,8 +503,13 @@ class _LegalTile extends StatelessWidget {
         ),
         child: Icon(icon, color: AppColors.textSecondary(context), size: 20),
       ),
-      title: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text(context))),
-      trailing: Icon(Icons.chevron_right, color: AppColors.textSecondary(context), size: 18),
+      title: Text(label,
+          style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.text(context))),
+      trailing: Icon(Icons.chevron_right,
+          color: AppColors.textSecondary(context), size: 18),
       onTap: () async {
         try {
           final content =
@@ -646,12 +675,16 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
             ),
           ),
           title: Text('Ignore Battery Optimizations',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text(context))),
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.text(context))),
           subtitle: Text(
             _isIgnored
                 ? 'Battery optimizations are disabled'
                 : 'Helps keep torrent downloads active when the app is in the background or screen is off',
-            style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12),
+            style: TextStyle(
+                color: AppColors.textSecondary(context), fontSize: 12),
           ),
           trailing: _isLoading
               ? const SizedBox(
@@ -711,7 +744,9 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
                   Text(
                     'Your device enforces custom battery restrictions. For stable downloads, please set Meitorrent to "Unrestricted" and enable "Auto-start".',
                     style: TextStyle(
-                        color: AppColors.textSecondary(context), fontSize: 11, height: 1.3),
+                        color: AppColors.textSecondary(context),
+                        fontSize: 11,
+                        height: 1.3),
                   ),
                   const SizedBox(height: 10),
                   InkWell(

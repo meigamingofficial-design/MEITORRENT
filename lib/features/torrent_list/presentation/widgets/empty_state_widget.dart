@@ -28,8 +28,8 @@ class EmptyStateWidget extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Icon(Icons.download_rounded, 
-                               color: AppColors.downloading, size: 48),
+              child: const Icon(Icons.download_rounded,
+                  color: AppColors.downloading, size: 48),
             ),
             const SizedBox(height: 32),
             Text(

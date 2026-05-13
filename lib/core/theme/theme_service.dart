@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
-
 // ─────────────────────────────────────────────────────────────────────────────
 // ThemeService — single source of truth for app theme mode.
 //
@@ -31,7 +29,7 @@ final themeServiceProvider =
 
 class ThemeService extends AsyncNotifier<ThemeMode> {
   static const _light = 'light';
-  static const _dark  = 'dark';
+  static const _dark = 'dark';
 
   @override
   Future<ThemeMode> build() async {

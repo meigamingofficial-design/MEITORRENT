@@ -57,8 +57,7 @@ class NotificationService {
   ///   - Always positive (no negative notification IDs)
   ///   - No modulo collision risk
   ///   - Deterministic — same ID always produces same notification slot
-  int _notificationId(String torrentId) =>
-      torrentId.hashCode & 0x7fffffff;
+  int _notificationId(String torrentId) => torrentId.hashCode & 0x7fffffff;
 
   /// Updates or creates a notification for a specific torrent.
   ///
@@ -77,12 +76,15 @@ class NotificationService {
     final String body;
     bool showProgress = false;
 
-    final sizeStr = '${SizeFormatter.format(status.downloadedBytes)} / ${SizeFormatter.format(status.totalSize)}';
+    final sizeStr =
+        '${SizeFormatter.format(status.downloadedBytes)} / ${SizeFormatter.format(status.totalSize)}';
 
-    final isFinished = status.state == TorrentState.finished || status.state == TorrentState.seeding;
+    final isFinished = status.state == TorrentState.finished ||
+        status.state == TorrentState.seeding;
 
     if (isFinished) {
-      body = '✓ Download complete · ${SizeFormatter.format(status.totalSize)}\nTap to open';
+      body =
+          '✓ Download complete · ${SizeFormatter.format(status.totalSize)}\nTap to open';
     } else {
       switch (status.state) {
         case TorrentState.downloading:
@@ -94,10 +96,12 @@ class NotificationService {
           showProgress = true;
 
         case TorrentState.seeding:
-          body = 'Seeding · $sizeStr\n↑ ${SpeedFormatter.format(status.uploadSpeed)}';
+          body =
+              'Seeding · $sizeStr\n↑ ${SpeedFormatter.format(status.uploadSpeed)}';
 
         case TorrentState.finished:
-          body = '✓ Download complete · ${SizeFormatter.format(status.totalSize)}\nTap to open';
+          body =
+              '✓ Download complete · ${SizeFormatter.format(status.totalSize)}\nTap to open';
 
         case TorrentState.paused:
           body = 'Paused · $progress% ($sizeStr)';
@@ -137,7 +141,7 @@ class NotificationService {
       maxProgress: 100,
       progress: progress,
       onlyAlertOnce: true,
-      autoCancel: false,
+      autoCancel: true,
       enableVibration: isFinished,
       playSound: isFinished,
       // Keep ongoing only while actively downloading/checking — not for

@@ -70,10 +70,12 @@ class SettingsNotifier extends _$SettingsNotifier {
     await prefs.setInt('meitorrent_download_limit', state.downloadLimit);
     await prefs.setInt('meitorrent_upload_limit', state.uploadLimit);
     await prefs.setBool('meitorrent_wifi_only', state.wifiOnlyMode);
-    await prefs.setBool('meitorrent_stop_seeding', state.stopSeedingWhenFinished);
+    await prefs.setBool(
+        'meitorrent_stop_seeding', state.stopSeedingWhenFinished);
     await prefs.setBool('meitorrent_dht', state.dhtEnabled);
     await prefs.setBool('meitorrent_pex', state.pexEnabled);
-    await prefs.setInt('meitorrent_max_connections', state.maxGlobalConnections);
+    await prefs.setInt(
+        'meitorrent_max_connections', state.maxGlobalConnections);
 
     await ref.read(torrentRepositoryProvider).applyEngineConfig(state);
   }

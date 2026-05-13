@@ -126,7 +126,8 @@ class TorrentEngineService {
   }
 
   /// Adds a .torrent file with fast-resume data.
-  int addTorrentFileWithResume(String filePath, String savePath, Uint8List resumeData) {
+  int addTorrentFileWithResume(
+      String filePath, String savePath, Uint8List resumeData) {
     final id = _engine.addTorrentFileWithResume(filePath, savePath, resumeData);
     _idToFile[id] = filePath;
     return id;
@@ -223,8 +224,11 @@ class TorrentEngineService {
       totalSize: info.totalWanted,
       downloadedBytes: info.totalDone,
       uploadedBytes: info.totalUploaded,
-      savePath: info.savePath.isEmpty ? (_defaultDownloadPath ?? '') : info.savePath,
+      savePath:
+          info.savePath.isEmpty ? (_defaultDownloadPath ?? '') : info.savePath,
       addedAt: _lastEmitted[idInt]?.addedAt ?? DateTime.now(),
+      lastActivityAt: _lastEmitted[idInt]?.lastActivityAt ?? DateTime.now(),
+      completedAt: _lastEmitted[idInt]?.completedAt,
       ratio: info.totalWanted > 0 ? info.totalUploaded / info.totalWanted : 0.0,
       etaSeconds: _computeEta(info),
       errorMessage: info.errorMsg.isEmpty ? null : info.errorMsg,
@@ -241,7 +245,9 @@ class TorrentEngineService {
     }
     // Only trust the engine's finished flag if we have at least SOME data
     // to prevent transient/empty magnets from showing as finished.
-    if (info.isFinished && info.totalDone > 0 && info.totalDone >= info.totalWanted) {
+    if (info.isFinished &&
+        info.totalDone > 0 &&
+        info.totalDone >= info.totalWanted) {
       return true;
     }
     return progress >= 1.0;
@@ -264,7 +270,9 @@ class TorrentEngineService {
     // 2. Verified Completion: If we are 100% done, favor finished/seeding
     // This prevents "Allocating" or "Downloading" from flickering at 100%.
     if (isActuallyComplete) {
-      if (raw == lt.TorrentState.seeding && !isPaused) return domain.TorrentState.seeding;
+      if (raw == lt.TorrentState.seeding && !isPaused) {
+        return domain.TorrentState.seeding;
+      }
       return domain.TorrentState.finished;
     }
 

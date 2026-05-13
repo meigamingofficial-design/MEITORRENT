@@ -2,7 +2,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:logger/logger.dart';
 
 /// Application-wide structured logger singleton.
-/// 
+///
 /// Enhanced with Firebase Crashlytics for production monitoring.
 class AppLogger {
   AppLogger._();
@@ -35,7 +35,8 @@ class AppLogger {
     _logger.w(message, error: error, stackTrace: stack);
     FirebaseCrashlytics.instance.log('[WARN] $message');
     if (error != null) {
-      FirebaseCrashlytics.instance.recordError(error, stack, reason: 'Warning: $message');
+      FirebaseCrashlytics.instance
+          .recordError(error, stack, reason: 'Warning: $message');
     }
   }
 

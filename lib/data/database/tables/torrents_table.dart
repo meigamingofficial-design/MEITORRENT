@@ -5,8 +5,6 @@ class TorrentsTable extends Table {
   /// Torrent info-hash (40 hex chars or 32 base32 chars).
   TextColumn get id => text()();
 
-
-
   /// Whether the torrent is logically paused.
   BoolColumn get isPaused => boolean().withDefault(const Constant(false))();
 
@@ -43,11 +41,16 @@ class TorrentsTable extends Table {
   /// Timestamp when torrent was added.
   DateTimeColumn get addedAt => dateTime()();
 
+  /// Timestamp of the latest torrent transfer activity/state change.
+  DateTimeColumn get lastActivityAt =>
+      dateTime().withDefault(currentDateAndTime)();
+
+  /// Timestamp when torrent completed downloading.
+  DateTimeColumn get completedAt => dateTime().nullable()();
+
   /// Whether sequential piece download is enabled.
   BoolColumn get isSequentialDownload =>
       boolean().withDefault(const Constant(false))();
-
-
 
   /// Fast-resume binary buffer from libtorrent.
   BlobColumn get resumeData => blob().nullable()();

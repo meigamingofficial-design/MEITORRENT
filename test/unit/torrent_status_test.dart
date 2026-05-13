@@ -17,6 +17,7 @@ void main() {
       uploadedBytes: 0,
       savePath: '/storage/downloads',
       addedAt: DateTime(2024, 1, 1),
+      lastActivityAt: DateTime(2024, 1, 1),
       ratio: 0.0,
     );
 

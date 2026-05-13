@@ -55,7 +55,8 @@ extension TorrentStateX on TorrentState {
       this == TorrentState.checkingResume ||
       this == TorrentState.allocating;
 
-  bool get isPausedState => this == TorrentState.paused || this == TorrentState.stopped;
+  bool get isPausedState =>
+      this == TorrentState.paused || this == TorrentState.stopped;
 
   bool get isFinished =>
       this == TorrentState.finished || this == TorrentState.seeding;
@@ -73,10 +74,10 @@ extension TorrentStatusX on TorrentStatus {
     // A torrent is ONLY complete if it has ALL data (progress == 1.0)
     // or if the engine has officially moved it to the seeding state.
     if (state == TorrentState.seeding) return true;
-    
+
     final hasAllBytes = totalSize > 0 && downloadedBytes >= totalSize;
     final hasFullProgress = progress >= 1.0;
-    
+
     return hasAllBytes || hasFullProgress;
   }
 }
@@ -98,6 +99,8 @@ class TorrentStatus extends Equatable {
   final int uploadedBytes;
   final String savePath;
   final DateTime addedAt;
+  final DateTime lastActivityAt;
+  final DateTime? completedAt;
   final double ratio;
   final int? etaSeconds;
   final String? errorMessage;
@@ -123,6 +126,8 @@ class TorrentStatus extends Equatable {
     required this.uploadedBytes,
     required this.savePath,
     required this.addedAt,
+    required this.lastActivityAt,
+    this.completedAt,
     required this.ratio,
     this.etaSeconds,
     this.errorMessage,
@@ -150,6 +155,8 @@ class TorrentStatus extends Equatable {
         uploadedBytes,
         savePath,
         addedAt,
+        lastActivityAt,
+        completedAt,
         ratio,
         etaSeconds,
         errorMessage,
@@ -178,6 +185,10 @@ class TorrentStatus extends Equatable {
         savePath == other.savePath &&
         addedAt.millisecondsSinceEpoch ==
             other.addedAt.millisecondsSinceEpoch &&
+        lastActivityAt.millisecondsSinceEpoch ==
+            other.lastActivityAt.millisecondsSinceEpoch &&
+        completedAt?.millisecondsSinceEpoch ==
+            other.completedAt?.millisecondsSinceEpoch &&
         ratio == other.ratio &&
         etaSeconds == other.etaSeconds &&
         errorMessage == other.errorMessage &&
@@ -214,6 +225,8 @@ class TorrentStatus extends Equatable {
     int? uploadedBytes,
     String? savePath,
     DateTime? addedAt,
+    DateTime? lastActivityAt,
+    DateTime? completedAt,
     double? ratio,
     int? etaSeconds,
     String? errorMessage,
@@ -239,6 +252,8 @@ class TorrentStatus extends Equatable {
       uploadedBytes: uploadedBytes ?? this.uploadedBytes,
       savePath: savePath ?? this.savePath,
       addedAt: addedAt ?? this.addedAt,
+      lastActivityAt: lastActivityAt ?? this.lastActivityAt,
+      completedAt: completedAt ?? this.completedAt,
       ratio: ratio ?? this.ratio,
       etaSeconds: etaSeconds ?? this.etaSeconds,
       errorMessage: errorMessage ?? this.errorMessage,

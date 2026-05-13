@@ -18,7 +18,7 @@ class AddMagnetUsecase {
     if (!_magnetRegex.hasMatch(trimmed)) {
       throw ArgumentError('Invalid magnet URI: $trimmed');
     }
-    
+
     // Safely encode any raw spaces/special characters (like emojis) in query parameters
     String formatted;
     try {
@@ -26,7 +26,7 @@ class AddMagnetUsecase {
     } catch (_) {
       formatted = trimmed;
     }
-    
+
     return _repository.addMagnet(formatted, savePath: savePath);
   }
 }

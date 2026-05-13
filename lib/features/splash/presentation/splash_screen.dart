@@ -142,7 +142,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final manageStatus = await Permission.manageExternalStorage.status;
     if (!manageStatus.isGranted) {
       final prefs = await SharedPreferences.getInstance();
-      final alreadyShown = prefs.getBool('meitorrent_storage_perm_shown') ?? false;
+      final alreadyShown =
+          prefs.getBool('meitorrent_storage_perm_shown') ?? false;
 
       if (!alreadyShown) {
         // Mark as shown so we never prompt again (unless user explicitly triggers it)
@@ -171,8 +172,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       // User chose to skip
     }
   }
-
-
 
   void _setStatus(String text) {
     if (mounted) setState(() => _statusText = text);
@@ -229,12 +228,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(24),
                                   border: Border.all(
-                                    color: AppColors.border(context).withValues(alpha: 0.8),
+                                    color: AppColors.border(context)
+                                        .withValues(alpha: 0.8),
                                     width: 1.5,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.08),
+                                      color:
+                                          Colors.black.withValues(alpha: 0.08),
                                       blurRadius: 16,
                                       offset: const Offset(0, 4),
                                     ),
@@ -262,11 +263,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       animation: _logoOpacity,
                       builder: (_, __) => Text(
                         'Meitorrent',
-                        style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                              color: AppColors.text(context)
-                                  .withValues(alpha: _logoOpacity.value),
-                              fontSize: 34,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.displayLarge?.copyWith(
+                                  color: AppColors.text(context)
+                                      .withValues(alpha: _logoOpacity.value),
+                                  fontSize: 34,
+                                ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -302,10 +304,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         child: Text(
                           _statusText,
                           key: ValueKey(_statusText),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppColors.textSecondary(context),
-                                fontSize: 13,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.textSecondary(context),
+                                    fontSize: 13,
+                                  ),
                         ),
                       ),
                     ] else ...[

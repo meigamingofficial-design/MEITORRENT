@@ -34,6 +34,59 @@ TorrentRepository torrentRepository(Ref ref) {
   return repo;
 }
 
+enum TorrentFilter { all, downloading, completed }
+
+@riverpod
+class ActiveFilter extends _$ActiveFilter {
+  @override
+  TorrentFilter build() => TorrentFilter.all;
+
+  void setFilter(TorrentFilter filter) {
+    state = filter;
+  }
+}
+
+@riverpod
+List<TorrentStatus> filteredTorrents(Ref ref) {
+  final torrentsAsync = ref.watch(torrentNotifierProvider);
+  final activeFilter = ref.watch(activeFilterProvider);
+
+  final torrents = torrentsAsync.valueOrNull ?? [];
+  if (torrents.isEmpty) return [];
+
+  // A. Filtering
+  final filtered = torrents.where((t) {
+    switch (activeFilter) {
+      case TorrentFilter.downloading:
+        return !t.isEffectivelyComplete && t.state.isActive;
+      case TorrentFilter.completed:
+        return t.isEffectivelyComplete;
+      case TorrentFilter.all:
+        return true;
+    }
+  }).toList();
+
+  // B. Immutable Sorting with Secondary Stability Fallback
+  final sorted = [...filtered];
+  if (activeFilter == TorrentFilter.completed) {
+    sorted.sort((a, b) {
+      final aTime = a.completedAt ?? a.addedAt;
+      final bTime = b.completedAt ?? b.addedAt;
+      final byCompleted = bTime.compareTo(aTime);
+      if (byCompleted != 0) return byCompleted;
+      return b.id.compareTo(a.id); // secondary stable sorting
+    });
+  } else {
+    sorted.sort((a, b) {
+      final byActivity = b.lastActivityAt.compareTo(a.lastActivityAt);
+      if (byActivity != 0) return byActivity;
+      return b.id.compareTo(a.id); // secondary stable sorting
+    });
+  }
+
+  return sorted;
+}
+
 // ─── Main Notifier ────────────────────────────────────────────────────────────
 
 /// Central state manager for all torrent operations.
@@ -48,7 +101,8 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   StreamSubscription<List<TorrentStatus>>? _sub;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   List<ConnectivityResult> _currentConnectivity = [ConnectivityResult.none];
-  final _wifiAutoPausedTorrents = <String, bool>{}; // Map of torrentId -> wasSeeding
+  final _wifiAutoPausedTorrents =
+      <String, bool>{}; // Map of torrentId -> wasSeeding
   final _pendingStopTimers = <String, Timer>{};
 
   @override
@@ -96,14 +150,19 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
         final config = ref.read(settingsNotifierProvider);
 
         // ── WiFi-only Mode Enforcement ────────────────────────────────
-        final hasWifiResult = _currentConnectivity.contains(ConnectivityResult.wifi);
+        final hasWifiResult =
+            _currentConnectivity.contains(ConnectivityResult.wifi);
         if (config.wifiOnlyMode && !hasWifiResult) {
           for (final torrent in statuses) {
-            final isDownloadingOrSeeding = torrent.state == TorrentState.downloading || torrent.state == TorrentState.seeding;
+            final isDownloadingOrSeeding =
+                torrent.state == TorrentState.downloading ||
+                    torrent.state == TorrentState.seeding;
             if (isDownloadingOrSeeding && !torrent.isPaused) {
-              _wifiAutoPausedTorrents[torrent.id] = torrent.state == TorrentState.seeding;
+              _wifiAutoPausedTorrents[torrent.id] =
+                  torrent.state == TorrentState.seeding;
               pauseTorrent(torrent.id);
-              AppLogger.i('[WiFi Guard] Live block: auto-paused active torrent: ${torrent.id}');
+              AppLogger.i(
+                  '[WiFi Guard] Live block: auto-paused active torrent: ${torrent.id}');
             }
           }
         }
@@ -113,19 +172,23 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
           for (final torrent in statuses) {
             if (torrent.state == TorrentState.finished && !torrent.isPaused) {
               if (!_pendingStopTimers.containsKey(torrent.id)) {
-                _pendingStopTimers[torrent.id] = Timer(const Duration(seconds: 15), () {
+                _pendingStopTimers[torrent.id] =
+                    Timer(const Duration(seconds: 15), () {
                   _pendingStopTimers.remove(torrent.id);
                   pauseTorrent(torrent.id);
-                  AppLogger.i('[Notifier] Auto-paused finished torrent after 15s delay: ${torrent.id}');
+                  AppLogger.i(
+                      '[Notifier] Auto-paused finished torrent after 15s delay: ${torrent.id}');
                 });
-                AppLogger.i('[Notifier] Scheduled 15s stop-seeding delay for torrent: ${torrent.id}');
+                AppLogger.i(
+                    '[Notifier] Scheduled 15s stop-seeding delay for torrent: ${torrent.id}');
               }
             } else {
               // Cancel pending timer if torrent is already paused, deleted or resumed back to downloading
               if (_pendingStopTimers.containsKey(torrent.id)) {
                 _pendingStopTimers[torrent.id]?.cancel();
                 _pendingStopTimers.remove(torrent.id);
-                AppLogger.i('[Notifier] Cancelled pending stop-seeding timer for torrent: ${torrent.id}');
+                AppLogger.i(
+                    '[Notifier] Cancelled pending stop-seeding timer for torrent: ${torrent.id}');
               }
             }
           }
@@ -136,7 +199,8 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
               timer.cancel();
             }
             _pendingStopTimers.clear();
-            AppLogger.i('[Notifier] Settings disabled: cleared all pending stop-seeding timers');
+            AppLogger.i(
+                '[Notifier] Settings disabled: cleared all pending stop-seeding timers');
           }
         }
       },
@@ -157,13 +221,15 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     if (!settings.wifiOnlyMode) {
       // If Wifi-only mode is turned OFF, resume any torrents we previously auto-paused
       if (_wifiAutoPausedTorrents.isNotEmpty) {
-        AppLogger.i('[WiFi Guard] WiFi-only mode disabled. Auto-resuming torrents: ${_wifiAutoPausedTorrents.keys}');
+        AppLogger.i(
+            '[WiFi Guard] WiFi-only mode disabled. Auto-resuming torrents: ${_wifiAutoPausedTorrents.keys}');
         for (final id in List.from(_wifiAutoPausedTorrents.keys)) {
           _wifiAutoPausedTorrents.remove(id);
           try {
             await resumeTorrent(id);
           } catch (e) {
-            AppLogger.w('[WiFi Guard] Failed to auto-resume torrent: $id', error: e);
+            AppLogger.w('[WiFi Guard] Failed to auto-resume torrent: $id',
+                error: e);
           }
         }
       }
@@ -175,27 +241,35 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
       // Not on WiFi! Pause any active downloading or seeding torrents
       final statuses = state.valueOrNull ?? [];
       for (final torrent in statuses) {
-        final isDownloadingOrSeeding = torrent.state == TorrentState.downloading || torrent.state == TorrentState.seeding;
+        final isDownloadingOrSeeding =
+            torrent.state == TorrentState.downloading ||
+                torrent.state == TorrentState.seeding;
         if (isDownloadingOrSeeding && !torrent.isPaused) {
-          _wifiAutoPausedTorrents[torrent.id] = torrent.state == TorrentState.seeding;
-          AppLogger.i('[WiFi Guard] Device not on WiFi. Auto-pausing torrent: ${torrent.id}');
+          _wifiAutoPausedTorrents[torrent.id] =
+              torrent.state == TorrentState.seeding;
+          AppLogger.i(
+              '[WiFi Guard] Device not on WiFi. Auto-pausing torrent: ${torrent.id}');
           try {
             await pauseTorrent(torrent.id);
           } catch (e) {
-            AppLogger.w('[WiFi Guard] Failed to auto-pause torrent: ${torrent.id}', error: e);
+            AppLogger.w(
+                '[WiFi Guard] Failed to auto-pause torrent: ${torrent.id}',
+                error: e);
           }
         }
       }
     } else {
       // Back on WiFi! Resume any torrents we auto-paused
       if (_wifiAutoPausedTorrents.isNotEmpty) {
-        AppLogger.i('[WiFi Guard] Connected to WiFi! Auto-resuming torrents: ${_wifiAutoPausedTorrents.keys}');
+        AppLogger.i(
+            '[WiFi Guard] Connected to WiFi! Auto-resuming torrents: ${_wifiAutoPausedTorrents.keys}');
         for (final id in List.from(_wifiAutoPausedTorrents.keys)) {
           _wifiAutoPausedTorrents.remove(id);
           try {
             await resumeTorrent(id);
           } catch (e) {
-            AppLogger.w('[WiFi Guard] Failed to auto-resume torrent: $id', error: e);
+            AppLogger.w('[WiFi Guard] Failed to auto-resume torrent: $id',
+                error: e);
           }
         }
       }
@@ -324,7 +398,8 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     await repo.resumeAll();
   }
 
-  Future<void> deleteMultiple(List<String> ids, {bool deleteFiles = false}) async {
+  Future<void> deleteMultiple(List<String> ids,
+      {bool deleteFiles = false}) async {
     // Optimistic UI: remove all selected torrents from state immediately
     final previousList = state.asData?.value;
     if (previousList != null) {
@@ -337,7 +412,8 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     try {
       final repo = ref.read(torrentRepositoryProvider);
       await repo.deleteMultiple(ids, deleteFiles: deleteFiles);
-      AppLogger.i('[Notifier] deleteMultiple: removed ${ids.length} torrents (deleteFiles=$deleteFiles)');
+      AppLogger.i(
+          '[Notifier] deleteMultiple: removed ${ids.length} torrents (deleteFiles=$deleteFiles)');
     } catch (e, st) {
       // Rollback on failure
       if (previousList != null) {
@@ -352,7 +428,8 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
       // 🛡️ Emergency save on background/kill
       final repo = ref.read(torrentRepositoryProvider);
       repo.forceSaveAllResumeData();

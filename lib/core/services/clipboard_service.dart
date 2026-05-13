@@ -23,7 +23,8 @@ class ClipboardService {
       final prefs = await SharedPreferences.getInstance();
       _lastHandledMagnet = prefs.getString(_keyLastMagnet);
       _initialized = true;
-      AppLogger.d('[Clipboard] Initialized with last handled: ${_lastHandledMagnet?.substring(0, 20)}...');
+      AppLogger.d(
+          '[Clipboard] Initialized with last handled: ${_lastHandledMagnet?.substring(0, 20)}...');
     } catch (e) {
       AppLogger.e('[Clipboard] Init failed', error: e);
     }
@@ -36,7 +37,7 @@ class ClipboardService {
     List<TorrentStatus> existingTorrents = const [],
   }) async {
     if (!_initialized) await init();
-    
+
     try {
       final data = await Clipboard.getData(Clipboard.kTextPlain);
       final text = data?.text?.trim();
@@ -46,8 +47,7 @@ class ClipboardService {
 
         // 2. Check if already in our download list
         final alreadyExists = existingTorrents.any(
-          (t) => t.magnetUri == text || (t.id == _extractInfoHash(text))
-        );
+            (t) => t.magnetUri == text || (t.id == _extractInfoHash(text)));
         if (alreadyExists) return null;
 
         return text;

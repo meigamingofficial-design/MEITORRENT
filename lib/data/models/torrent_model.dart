@@ -13,8 +13,7 @@ class TorrentModel {
   /// finished/seeding torrent so the UI never shows 0% after a cold restart.
   static TorrentStatus fromRow(TorrentsTableData row) {
     final state = _parseState(row.state);
-    final isComplete =
-        state == TorrentState.finished ||
+    final isComplete = state == TorrentState.finished ||
         state == TorrentState.seeding ||
         row.isCompleted;
 
@@ -38,10 +37,11 @@ class TorrentModel {
       uploadedBytes: 0,
       savePath: row.savePath,
       addedAt: row.addedAt,
+      lastActivityAt: row.lastActivityAt,
+      completedAt: row.completedAt,
       ratio: 0.0,
       magnetUri: row.magnetUri,
       torrentFilePath: row.torrentFilePath,
-
       isPaused: row.isPaused,
       isStopped: row.isStopped,
       isCompleted: row.isCompleted,
@@ -63,8 +63,9 @@ class TorrentModel {
       progress: Value(status.progress),
       state: Value(status.state.name),
       addedAt: Value(status.addedAt),
+      lastActivityAt: Value(status.lastActivityAt),
+      completedAt: Value(status.completedAt),
       isSequentialDownload: Value(status.isSequentialDownload),
-
       isPaused: Value(status.isPaused),
       isStopped: Value(status.isStopped),
       isCompleted: Value(status.isCompleted),

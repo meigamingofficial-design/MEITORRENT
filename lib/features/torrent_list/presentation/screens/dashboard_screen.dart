@@ -29,15 +29,12 @@ class DashboardScreen extends ConsumerStatefulWidget {
   ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-enum TorrentFilter { all, downloading, completed }
-
-
-class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsBindingObserver {
+class _DashboardScreenState extends ConsumerState<DashboardScreen>
+    with WidgetsBindingObserver {
   String? _newlyAddedId;
   int _zeroSpeedTicks = 0;
   bool _hasPromptedSpeedWarning = false;
   bool _isStorageGranted = true;
-  TorrentFilter _activeFilter = TorrentFilter.all;
 
   @override
   void initState() {
@@ -89,9 +86,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
     final isMagnet = linkOrPath.startsWith('magnet:');
     try {
       if (isMagnet) {
-        await ref
-            .read(torrentNotifierProvider.notifier)
-            .addMagnet(linkOrPath);
+        await ref.read(torrentNotifierProvider.notifier).addMagnet(linkOrPath);
         if (mounted) {
           _showToast('Magnet link added successfully');
         }
@@ -117,7 +112,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
         content: Row(
           children: [
             Icon(
-              isError ? Icons.error_outline_rounded : Icons.check_circle_rounded,
+              isError
+                  ? Icons.error_outline_rounded
+                  : Icons.check_circle_rounded,
               color: isError ? AppColors.error : const Color(0xFF2ECC71),
               size: 18,
             ),
@@ -132,14 +129,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
         ),
         backgroundColor: AppColors.surface(context),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 3),
       ),
     );
   }
 
-  void _showAddTorrentDialog(BuildContext context, [String? prefilledLinkOrPath]) async {
+  void _showAddTorrentDialog(BuildContext context,
+      [String? prefilledLinkOrPath]) async {
     if (!_isStorageGranted) {
       final granted = await PermissionService.showStorageRationale(context);
       if (granted) {
@@ -149,7 +146,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
       return;
     }
 
-    final isMagnet = prefilledLinkOrPath != null && prefilledLinkOrPath.startsWith('magnet:');
+    final isMagnet = prefilledLinkOrPath != null &&
+        prefilledLinkOrPath.startsWith('magnet:');
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -213,10 +211,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        
+
         final torrents = torrentsAsync.valueOrNull ?? [];
-        final hasActive = torrents.any((t) => t.state.isActive && !t.state.isFinished);
-        
+        final hasActive =
+            torrents.any((t) => t.state.isActive && !t.state.isFinished);
+
         if (!hasActive) {
           // If nothing is active, just minimize to background silently
           SystemChannels.platform.invokeMethod('SystemNavigator.pop');
@@ -226,11 +225,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
         // Check for remembered choice
         final prefs = await SharedPreferences.getInstance();
         final remembered = prefs.getString('meitorrent_exit_preference');
-        
+
         if (remembered == 'background') {
           // 🚀 Native Pro Minimize: The most stable way for production
-          unawaited(ref.read(torrentRepositoryProvider).forceSaveAllResumeData());
-          const MethodChannel('com.meigaming.meitorrent/files').invokeMethod('minimizeApp');
+          unawaited(
+              ref.read(torrentRepositoryProvider).forceSaveAllResumeData());
+          const MethodChannel('com.meigaming.meitorrent/files')
+              .invokeMethod('minimizeApp');
           FlutterForegroundTask.sendDataToTask({'minimize': true});
         } else if (remembered == 'exit') {
           ref.read(torrentRepositoryProvider).forceSaveAllResumeData();
@@ -251,6 +252,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
           ),
           error: (e, _) => _ErrorBody(error: e.toString()),
           data: (torrents) {
+            final filtered = ref.watch(filteredTorrentsProvider);
             return SafeArea(
               bottom: false,
               child: CustomScrollView(
@@ -274,45 +276,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                         child: _buildHeader(context, torrents),
                       ),
                     ),
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (_, i) {
-                          // Filter the list for display
-                          final filtered = torrents.where((t) {
-                            switch (_activeFilter) {
-                              case TorrentFilter.downloading:
-                                return !t.isEffectivelyComplete && t.state.isActive;
-                              case TorrentFilter.completed:
-                                return t.isEffectivelyComplete;
-                              case TorrentFilter.all:
-                                return true;
-                            }
-                          }).toList();
-
-                          if (filtered.isEmpty) {
-                            if (i == 0) {
-                              return const Padding(
-                                padding: EdgeInsets.only(top: 80),
-                                child: EmptyStateWidget(),
-                              );
-                            }
-                            return null;
-                          }
-
-                          if (i >= filtered.length) return null;
-                          
-                          final torrent = filtered[i];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: TorrentListItem(
-                              torrentId: torrent.id,
-                              isNew: torrent.id == _newlyAddedId,
-                            ),
-                          );
-                        },
-                        childCount: torrents.isEmpty ? 0 : torrents.length,
+                    if (filtered.isEmpty)
+                      const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 80),
+                          child: EmptyStateWidget(),
+                        ),
+                      )
+                    else
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (_, i) {
+                            final torrent = filtered[i];
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: TorrentListItem(
+                                torrentId: torrent.id,
+                                isNew: torrent.id == _newlyAddedId,
+                              ),
+                            );
+                          },
+                          childCount: filtered.length,
+                        ),
                       ),
-                    ),
                     const SliverToBoxAdapter(child: SizedBox(height: 140)),
                   ],
                 ],
@@ -334,7 +320,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
     AsyncValue<List<TorrentStatus>> async,
   ) {
     final selectedIds = ref.watch(selectedTorrentsProvider);
-    final isSelectionMode = ref.watch(selectedTorrentsProvider.notifier).isSelectionMode;
+    final isSelectionMode =
+        ref.watch(selectedTorrentsProvider.notifier).isSelectionMode;
 
     if (isSelectionMode) {
       return PreferredSize(
@@ -365,7 +352,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                 children: [
                   const SizedBox(width: 4),
                   IconButton(
-                    icon: Icon(Icons.close, color: AppColors.textSecondary(context)),
+                    icon: Icon(Icons.close,
+                        color: AppColors.textSecondary(context)),
                     onPressed: () =>
                         ref.read(selectedTorrentsProvider.notifier).clear(),
                   ),
@@ -387,7 +375,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                     icon: Icons.play_arrow_rounded,
                     tooltip: 'Resume',
                     onPressed: () async {
-                      final notifier = ref.read(torrentNotifierProvider.notifier);
+                      final notifier =
+                          ref.read(torrentNotifierProvider.notifier);
                       final ids = selectedIds.toList();
                       ref.read(selectedTorrentsProvider.notifier).clear();
                       await Future.wait(
@@ -398,7 +387,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                     icon: Icons.pause_rounded,
                     tooltip: 'Pause',
                     onPressed: () async {
-                      final notifier = ref.read(torrentNotifierProvider.notifier);
+                      final notifier =
+                          ref.read(torrentNotifierProvider.notifier);
                       final ids = selectedIds.toList();
                       ref.read(selectedTorrentsProvider.notifier).clear();
                       await Future.wait(
@@ -409,7 +399,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                     icon: Icons.stop_rounded,
                     tooltip: 'Stop',
                     onPressed: () async {
-                      final notifier = ref.read(torrentNotifierProvider.notifier);
+                      final notifier =
+                          ref.read(torrentNotifierProvider.notifier);
                       final ids = selectedIds.toList();
                       ref.read(selectedTorrentsProvider.notifier).clear();
                       await Future.wait(
@@ -536,9 +527,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
           ),
           const SizedBox(height: 24),
           FilterSegmentedControl(
-            activeFilter: _activeFilter,
+            activeFilter: ref.watch(activeFilterProvider),
             onChanged: (filter) {
-              setState(() => _activeFilter = filter);
+              ref.read(activeFilterProvider.notifier).setFilter(filter);
               HapticFeedback.lightImpact();
             },
           ),
@@ -549,7 +540,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
 
   void _showExitConfirmation(BuildContext context) {
     final torrents = ref.read(torrentNotifierProvider).valueOrNull ?? [];
-    final activeCount = torrents.where((t) => t.state.isActive && !t.state.isFinished).length;
+    final activeCount =
+        torrents.where((t) => t.state.isActive && !t.state.isFinished).length;
 
     showDialog<void>(
       context: context,
@@ -557,7 +549,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
         activeCount: activeCount,
         onBackground: () {
           ref.read(torrentRepositoryProvider).forceSaveAllResumeData();
-          const MethodChannel('com.meigaming.meitorrent/files').invokeMethod('minimizeApp');
+          const MethodChannel('com.meigaming.meitorrent/files')
+              .invokeMethod('minimizeApp');
           FlutterForegroundTask.sendDataToTask({'minimize': true});
         },
         onExit: () {
@@ -593,8 +586,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
           isAll
               ? 'This will remove all torrents from your list.'
               : 'Remove ${ids.length} selected torrent${ids.length == 1 ? '' : 's'}?',
-          style: TextStyle(
-              color: AppColors.textSecondary(ctx), fontSize: 14),
+          style: TextStyle(color: AppColors.textSecondary(ctx), fontSize: 14),
         ),
         actions: [
           TextButton(
@@ -645,7 +637,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      final alreadyDismissed = prefs.getBool('meitorrent_speed_warning_dismissed') ?? false;
+      final alreadyDismissed =
+          prefs.getBool('meitorrent_speed_warning_dismissed') ?? false;
       if (alreadyDismissed) return;
     } catch (_) {}
 
@@ -717,7 +710,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                       Navigator.pop(ctx);
                       try {
                         final prefs = await SharedPreferences.getInstance();
-                        await prefs.setBool('meitorrent_speed_warning_dismissed', true);
+                        await prefs.setBool(
+                            'meitorrent_speed_warning_dismissed', true);
                       } catch (_) {}
                     },
                     child: const Text('Not Now',
@@ -737,21 +731,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                       Navigator.pop(ctx);
                       try {
                         final prefs = await SharedPreferences.getInstance();
-                        await prefs.setBool('meitorrent_speed_warning_dismissed', true);
+                        await prefs.setBool(
+                            'meitorrent_speed_warning_dismissed', true);
                       } catch (_) {}
                       if (context.mounted) {
                         Navigator.push(
                           context,
                           PageRouteBuilder<void>(
                             pageBuilder: (_, __, ___) => const SettingsScreen(),
-                            transitionsBuilder: (_, animation, __, child) => FadeTransition(
+                            transitionsBuilder: (_, animation, __, child) =>
+                                FadeTransition(
                               opacity: CurvedAnimation(
                                 parent: animation,
                                 curve: Curves.easeOut,
                               ),
                               child: child,
                             ),
-                            transitionDuration: const Duration(milliseconds: 220),
+                            transitionDuration:
+                                const Duration(milliseconds: 220),
                           ),
                         );
                       }
@@ -825,7 +822,8 @@ class _CompactSpeedTile extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Theme.of(context).brightness == Brightness.light
-              ? Color.alphaBlend(color.withValues(alpha: 0.15), AppColors.surface(context))
+              ? Color.alphaBlend(
+                  color.withValues(alpha: 0.15), AppColors.surface(context))
               : color.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
@@ -928,18 +926,21 @@ class _GradientFABState extends State<_GradientFAB>
   @override
   Widget build(BuildContext context) {
     final bgColor = widget.isLocked ? Colors.transparent : null;
-    final border = widget.isLocked 
-        ? Border.all(color: AppColors.border(context)) 
-        : null;
-    final shadow = widget.isLocked ? null : [
-      BoxShadow(
-        color: AppColors.downloading.withValues(alpha: 0.3),
-        blurRadius: 15,
-        offset: const Offset(0, 6),
-      ),
-    ];
-    final textColor = widget.isLocked ? AppColors.textSecondary(context) : Colors.white;
-    final iconColor = widget.isLocked ? AppColors.textSecondary(context) : Colors.white;
+    final border =
+        widget.isLocked ? Border.all(color: AppColors.border(context)) : null;
+    final shadow = widget.isLocked
+        ? null
+        : [
+            BoxShadow(
+              color: AppColors.downloading.withValues(alpha: 0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 6),
+            ),
+          ];
+    final textColor =
+        widget.isLocked ? AppColors.textSecondary(context) : Colors.white;
+    final iconColor =
+        widget.isLocked ? AppColors.textSecondary(context) : Colors.white;
 
     return ScaleTransition(
       scale: _scale,
@@ -964,8 +965,10 @@ class _GradientFABState extends State<_GradientFAB>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  widget.isLocked ? Icons.lock_outline_rounded : Icons.add_rounded, 
-                  color: iconColor, 
+                  widget.isLocked
+                      ? Icons.lock_outline_rounded
+                      : Icons.add_rounded,
+                  color: iconColor,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -1122,9 +1125,9 @@ class _ExitDialogState extends State<_ExitDialog> {
             ),
             const SizedBox(height: 6),
             Text(
-              widget.activeCount > 0 
-                ? '${widget.activeCount} download${widget.activeCount == 1 ? ' is' : 's are'} currently active.'
-                : 'Choose what you want to do.',
+              widget.activeCount > 0
+                  ? '${widget.activeCount} download${widget.activeCount == 1 ? ' is' : 's are'} currently active.'
+                  : 'Choose what you want to do.',
               style: TextStyle(
                 color: AppColors.textSecondary(context),
                 fontSize: 13,
@@ -1132,7 +1135,7 @@ class _ExitDialogState extends State<_ExitDialog> {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Background Option
             _ExitOption(
               icon: Icons.bolt_rounded,
@@ -1143,7 +1146,7 @@ class _ExitDialogState extends State<_ExitDialog> {
               onTap: () => setState(() => _selectedOption = 'background'),
             ),
             const SizedBox(height: 12),
-            
+
             // Exit Option
             _ExitOption(
               icon: Icons.power_settings_new_outlined,
@@ -1154,7 +1157,7 @@ class _ExitDialogState extends State<_ExitDialog> {
               onTap: () => setState(() => _selectedOption = 'exit'),
             ),
             const SizedBox(height: 18),
-            
+
             // Remember choice
             InkWell(
               onTap: () => setState(() => _remember = !_remember),
@@ -1168,8 +1171,10 @@ class _ExitDialogState extends State<_ExitDialog> {
                       height: 20,
                       child: Checkbox(
                         value: _remember,
-                        onChanged: (v) => setState(() => _remember = v ?? false),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                        onChanged: (v) =>
+                            setState(() => _remember = v ?? false),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4)),
                         activeColor: AppColors.downloading,
                       ),
                     ),
@@ -1187,7 +1192,7 @@ class _ExitDialogState extends State<_ExitDialog> {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Bottom Actions
             Row(
               children: [
@@ -1196,10 +1201,14 @@ class _ExitDialogState extends State<_ExitDialog> {
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       side: BorderSide(color: AppColors.border(context)),
                     ),
-                    child: Text('Cancel', style: TextStyle(color: AppColors.textSecondary(context), fontWeight: FontWeight.w600)),
+                    child: Text('Cancel',
+                        style: TextStyle(
+                            color: AppColors.textSecondary(context),
+                            fontWeight: FontWeight.w600)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1215,11 +1224,15 @@ class _ExitDialogState extends State<_ExitDialog> {
                       }
                     },
                     style: FilledButton.styleFrom(
-                      backgroundColor: _selectedOption == 'background' ? AppColors.downloading : AppColors.error,
+                      backgroundColor: _selectedOption == 'background'
+                          ? AppColors.downloading
+                          : AppColors.error,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Continue', style: TextStyle(fontWeight: FontWeight.w700)),
+                    child: const Text('Continue',
+                        style: TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ),
               ],
@@ -1261,28 +1274,34 @@ class _ExitOption extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isSelected 
-                  ? color.withValues(alpha: 0.08) 
+              color: isSelected
+                  ? color.withValues(alpha: 0.08)
                   : AppColors.border(context).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isSelected ? color : AppColors.border(context).withValues(alpha: 0.3),
+                color: isSelected
+                    ? color
+                    : AppColors.border(context).withValues(alpha: 0.3),
                 width: isSelected ? 2 : 1,
               ),
-              boxShadow: isSelected ? [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.15),
-                  blurRadius: 12,
-                  spreadRadius: 1,
-                )
-              ] : null,
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.15),
+                        blurRadius: 12,
+                        spreadRadius: 1,
+                      )
+                    ]
+                  : null,
             ),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: isSelected ? color.withValues(alpha: 0.2) : color.withValues(alpha: 0.1),
+                    color: isSelected
+                        ? color.withValues(alpha: 0.2)
+                        : color.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(icon, color: color, size: 20),

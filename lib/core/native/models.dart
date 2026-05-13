@@ -24,42 +24,66 @@ enum StreamState {
 
 StreamState streamStateFromInt(int v) {
   switch (v) {
-    case 0: return StreamState.idle;
-    case 1: return StreamState.buffering;
-    case 2: return StreamState.ready;
-    case 3: return StreamState.seeking;
-    case 4: return StreamState.error;
-    default: return StreamState.idle;
+    case 0:
+      return StreamState.idle;
+    case 1:
+      return StreamState.buffering;
+    case 2:
+      return StreamState.ready;
+    case 3:
+      return StreamState.seeking;
+    case 4:
+      return StreamState.error;
+    default:
+      return StreamState.idle;
   }
 }
 
 /// Convert native integer state to [TorrentState].
 TorrentState stateFromInt(int v) {
   switch (v) {
-    case -2: return TorrentState.error;
-    case  0: return TorrentState.checkingFiles;
-    case  1: return TorrentState.downloadingMetadata;
-    case  2: return TorrentState.downloading;
-    case  3: return TorrentState.finished;
-    case  4: return TorrentState.seeding;
-    case  5: return TorrentState.allocating;
-    case  6: return TorrentState.checkingResume;
-    default: return TorrentState.unknown;
+    case -2:
+      return TorrentState.error;
+    case 0:
+      return TorrentState.checkingFiles;
+    case 1:
+      return TorrentState.downloadingMetadata;
+    case 2:
+      return TorrentState.downloading;
+    case 3:
+      return TorrentState.finished;
+    case 4:
+      return TorrentState.seeding;
+    case 5:
+      return TorrentState.allocating;
+    case 6:
+      return TorrentState.checkingResume;
+    default:
+      return TorrentState.unknown;
   }
 }
 
 extension TorrentStateX on TorrentState {
   String get label {
     switch (this) {
-      case TorrentState.error:               return 'Error';
-      case TorrentState.unknown:             return 'Unknown';
-      case TorrentState.checkingFiles:       return 'Checking files';
-      case TorrentState.downloadingMetadata: return 'Getting metadata';
-      case TorrentState.downloading:         return 'Downloading';
-      case TorrentState.finished:            return 'Finished';
-      case TorrentState.seeding:             return 'Seeding';
-      case TorrentState.allocating:          return 'Allocating';
-      case TorrentState.checkingResume:      return 'Checking resume';
+      case TorrentState.error:
+        return 'Error';
+      case TorrentState.unknown:
+        return 'Unknown';
+      case TorrentState.checkingFiles:
+        return 'Checking files';
+      case TorrentState.downloadingMetadata:
+        return 'Getting metadata';
+      case TorrentState.downloading:
+        return 'Downloading';
+      case TorrentState.finished:
+        return 'Finished';
+      case TorrentState.seeding:
+        return 'Seeding';
+      case TorrentState.allocating:
+        return 'Allocating';
+      case TorrentState.checkingResume:
+        return 'Checking resume';
     }
   }
 
@@ -95,42 +119,62 @@ class TorrentInfo {
   final int queuePosition;
 
   const TorrentInfo({
-    required this.id, required this.name, required this.savePath,
-    required this.errorMsg, required this.state, required this.progress,
-    required this.downloadRate, required this.uploadRate,
-    required this.totalDone, required this.totalWanted,
-    required this.totalUploaded, required this.numPeers,
-    required this.numSeeds, required this.isPaused,
-    required this.isFinished, required this.hasMetadata,
+    required this.id,
+    required this.name,
+    required this.savePath,
+    required this.errorMsg,
+    required this.state,
+    required this.progress,
+    required this.downloadRate,
+    required this.uploadRate,
+    required this.totalDone,
+    required this.totalWanted,
+    required this.totalUploaded,
+    required this.numPeers,
+    required this.numSeeds,
+    required this.isPaused,
+    required this.isFinished,
+    required this.hasMetadata,
     required this.queuePosition,
   });
 
   TorrentInfo copyWith({
-    String? name, String? savePath, String? errorMsg,
-    TorrentState? state, double? progress,
-    int? downloadRate, int? uploadRate,
-    int? totalDone, int? totalWanted, int? totalUploaded,
-    int? numPeers, int? numSeeds,
-    bool? isPaused, bool? isFinished, bool? hasMetadata, int? queuePosition,
-  }) => TorrentInfo(
-    id: id,
-    name: name ?? this.name,
-    savePath: savePath ?? this.savePath,
-    errorMsg: errorMsg ?? this.errorMsg,
-    state: state ?? this.state,
-    progress: progress ?? this.progress,
-    downloadRate: downloadRate ?? this.downloadRate,
-    uploadRate: uploadRate ?? this.uploadRate,
-    totalDone: totalDone ?? this.totalDone,
-    totalWanted: totalWanted ?? this.totalWanted,
-    totalUploaded: totalUploaded ?? this.totalUploaded,
-    numPeers: numPeers ?? this.numPeers,
-    numSeeds: numSeeds ?? this.numSeeds,
-    isPaused: isPaused ?? this.isPaused,
-    isFinished: isFinished ?? this.isFinished,
-    hasMetadata: hasMetadata ?? this.hasMetadata,
-    queuePosition: queuePosition ?? this.queuePosition,
-  );
+    String? name,
+    String? savePath,
+    String? errorMsg,
+    TorrentState? state,
+    double? progress,
+    int? downloadRate,
+    int? uploadRate,
+    int? totalDone,
+    int? totalWanted,
+    int? totalUploaded,
+    int? numPeers,
+    int? numSeeds,
+    bool? isPaused,
+    bool? isFinished,
+    bool? hasMetadata,
+    int? queuePosition,
+  }) =>
+      TorrentInfo(
+        id: id,
+        name: name ?? this.name,
+        savePath: savePath ?? this.savePath,
+        errorMsg: errorMsg ?? this.errorMsg,
+        state: state ?? this.state,
+        progress: progress ?? this.progress,
+        downloadRate: downloadRate ?? this.downloadRate,
+        uploadRate: uploadRate ?? this.uploadRate,
+        totalDone: totalDone ?? this.totalDone,
+        totalWanted: totalWanted ?? this.totalWanted,
+        totalUploaded: totalUploaded ?? this.totalUploaded,
+        numPeers: numPeers ?? this.numPeers,
+        numSeeds: numSeeds ?? this.numSeeds,
+        isPaused: isPaused ?? this.isPaused,
+        isFinished: isFinished ?? this.isFinished,
+        hasMetadata: hasMetadata ?? this.hasMetadata,
+        queuePosition: queuePosition ?? this.queuePosition,
+      );
 
   @override
   String toString() => 'TorrentInfo(id=$id, name=$name, state=$state, '
@@ -146,8 +190,11 @@ class FileInfo {
   final bool isStreamable;
 
   const FileInfo({
-    required this.index, required this.name, required this.path,
-    required this.size, required this.isStreamable,
+    required this.index,
+    required this.name,
+    required this.path,
+    required this.size,
+    required this.isStreamable,
   });
 
   @override
@@ -171,17 +218,25 @@ class StreamInfo {
   final int downloadRate;
 
   const StreamInfo({
-    required this.id, required this.torrentId, required this.fileIndex,
-    required this.url, required this.fileSize, required this.readHead,
-    required this.streamState, required this.bufferSeconds,
-    required this.bufferPieces, required this.readaheadWindow,
-    required this.activePeers, required this.downloadRate,
+    required this.id,
+    required this.torrentId,
+    required this.fileIndex,
+    required this.url,
+    required this.fileSize,
+    required this.readHead,
+    required this.streamState,
+    required this.bufferSeconds,
+    required this.bufferPieces,
+    required this.readaheadWindow,
+    required this.activePeers,
+    required this.downloadRate,
   });
 
   bool get isReady => streamState == StreamState.ready;
   bool get isBuffering => streamState == StreamState.buffering;
   bool get isSeeking => streamState == StreamState.seeking;
-  bool get isActive => streamState != StreamState.idle && streamState != StreamState.error;
+  bool get isActive =>
+      streamState != StreamState.idle && streamState != StreamState.error;
 
   /// Backward-compatible buffer percentage (0.0–1.0).
   /// Derived from bufferPieces relative to readaheadWindow.
@@ -202,7 +257,10 @@ String formatBytes(int bytes, {int decimals = 1}) {
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
   int i = 0;
   double v = bytes.toDouble();
-  while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i++;
+  }
   return '${v.toStringAsFixed(decimals)} ${units[i]}';
 }
 
@@ -311,24 +369,26 @@ class BtConfig {
     int? uploadRateLimit,
     int? peersListenPort,
     bool? responsiveMode,
-  }) => BtConfig(
-    cacheSize: cacheSize ?? this.cacheSize,
-    readerReadAhead: readerReadAhead ?? this.readerReadAhead,
-    preloadCache: preloadCache ?? this.preloadCache,
-    connectionsLimit: connectionsLimit ?? this.connectionsLimit,
-    torrentDisconnectTimeout: torrentDisconnectTimeout ?? this.torrentDisconnectTimeout,
-    forceEncrypt: forceEncrypt ?? this.forceEncrypt,
-    disableTcp: disableTcp ?? this.disableTcp,
-    disableUtp: disableUtp ?? this.disableUtp,
-    disableUpload: disableUpload ?? this.disableUpload,
-    disableDht: disableDht ?? this.disableDht,
-    disableUpnp: disableUpnp ?? this.disableUpnp,
-    enableIpv6: enableIpv6 ?? this.enableIpv6,
-    downloadRateLimit: downloadRateLimit ?? this.downloadRateLimit,
-    uploadRateLimit: uploadRateLimit ?? this.uploadRateLimit,
-    peersListenPort: peersListenPort ?? this.peersListenPort,
-    responsiveMode: responsiveMode ?? this.responsiveMode,
-  );
+  }) =>
+      BtConfig(
+        cacheSize: cacheSize ?? this.cacheSize,
+        readerReadAhead: readerReadAhead ?? this.readerReadAhead,
+        preloadCache: preloadCache ?? this.preloadCache,
+        connectionsLimit: connectionsLimit ?? this.connectionsLimit,
+        torrentDisconnectTimeout:
+            torrentDisconnectTimeout ?? this.torrentDisconnectTimeout,
+        forceEncrypt: forceEncrypt ?? this.forceEncrypt,
+        disableTcp: disableTcp ?? this.disableTcp,
+        disableUtp: disableUtp ?? this.disableUtp,
+        disableUpload: disableUpload ?? this.disableUpload,
+        disableDht: disableDht ?? this.disableDht,
+        disableUpnp: disableUpnp ?? this.disableUpnp,
+        enableIpv6: enableIpv6 ?? this.enableIpv6,
+        downloadRateLimit: downloadRateLimit ?? this.downloadRateLimit,
+        uploadRateLimit: uploadRateLimit ?? this.uploadRateLimit,
+        peersListenPort: peersListenPort ?? this.peersListenPort,
+        responsiveMode: responsiveMode ?? this.responsiveMode,
+      );
 
   @override
   String toString() => 'BtConfig(cache=${cacheSize ~/ (1024 * 1024)}MB, '

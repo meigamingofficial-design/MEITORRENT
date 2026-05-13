@@ -39,7 +39,40 @@ final torrentRepositoryProvider = Provider<TorrentRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TorrentRepositoryRef = ProviderRef<TorrentRepository>;
-String _$torrentNotifierHash() => r'acd641319cbc1348bd1d012c01aadd6bf32a0a83';
+String _$filteredTorrentsHash() => r'3abfd78ed03bac4c826c3019ab6d00d6c723ef5d';
+
+/// See also [filteredTorrents].
+@ProviderFor(filteredTorrents)
+final filteredTorrentsProvider =
+    AutoDisposeProvider<List<TorrentStatus>>.internal(
+  filteredTorrents,
+  name: r'filteredTorrentsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$filteredTorrentsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef FilteredTorrentsRef = AutoDisposeProviderRef<List<TorrentStatus>>;
+String _$activeFilterHash() => r'c4b7cd1d564a83ba6fcbef2c594a69c80b4ba587';
+
+/// See also [ActiveFilter].
+@ProviderFor(ActiveFilter)
+final activeFilterProvider =
+    AutoDisposeNotifierProvider<ActiveFilter, TorrentFilter>.internal(
+  ActiveFilter.new,
+  name: r'activeFilterProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$activeFilterHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$ActiveFilter = AutoDisposeNotifier<TorrentFilter>;
+String _$torrentNotifierHash() => r'e74cc840ba05d451ce96d2b8d9b1fc42dd5216fc';
 
 /// Central state manager for all torrent operations.
 ///
@@ -63,7 +96,7 @@ final torrentNotifierProvider = AutoDisposeAsyncNotifierProvider<
 );
 
 typedef _$TorrentNotifier = AutoDisposeAsyncNotifier<List<TorrentStatus>>;
-String _$selectedTorrentsHash() => r'9f52d7b70cb21b2d12dba54c59b51fd523ad7227';
+String _$selectedTorrentsHash() => r'8895b358ee0521342cc34aafb78d7be45121e05a';
 
 /// See also [SelectedTorrents].
 @ProviderFor(SelectedTorrents)

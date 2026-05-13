@@ -31,7 +31,8 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
     super.initState();
 
     // ── Warm-start deep links ─────────────────────────────────────────
-    _deepLinkSub = DeepLinkService.instance.torrentStream.listen(_handleIncomingLink);
+    _deepLinkSub =
+        DeepLinkService.instance.torrentStream.listen(_handleIncomingLink);
   }
 
   @override
@@ -84,8 +85,7 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
         ),
         backgroundColor: AppColors.surface(ctx),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 3),
       ),
     );
@@ -137,7 +137,8 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
             // 3. Subtle pink blush overlay for a gorgeous unified Sakura theme
             IgnorePointer(
               child: Container(
-                color: const Color(0xFFFFC0CB).withValues(alpha: 0.04), // 4% opacity soft pink tint
+                color: const Color(0xFFFFC0CB)
+                    .withValues(alpha: 0.04), // 4% opacity soft pink tint
               ),
             ),
             // 4. All routes on top (transparent scaffolds allow the background to show through, but solid cards mask it!)

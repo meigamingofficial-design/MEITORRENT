@@ -6,7 +6,7 @@ part of 'settings_notifier.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$settingsNotifierHash() => r'68a475b69f66657116fc6f137f1a55e4e9a6471e';
+String _$settingsNotifierHash() => r'f5332cd314f50b88a56268d600a6b857e4dae7f6';
 
 /// Persists and applies engine configuration settings.
 ///

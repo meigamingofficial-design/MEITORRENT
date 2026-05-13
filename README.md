@@ -49,10 +49,10 @@ Meitorrent supports three separate build flavors (configured with separate Appli
 | **`staging`** | Meitorrent Staging | `com.meigaming.meitorrent.staging` |
 | **`prod`** | Meitorrent | `com.meigaming.meitorrent` |
 
-### 🛠️ Build Commands
+### 🛠️ Development & Build Commands
 
-To build the APK files:
-
+#### 📦 Building APKs
+To build the APK files for distribution:
 ```bash
 # Production Release Build
 flutter build apk --flavor prod --release
@@ -64,9 +64,42 @@ flutter build apk --flavor staging --release
 flutter build apk --flavor dev --release
 ```
 
-To run a specific flavor directly:
+To run a specific flavor directly on a connected device:
 ```bash
 flutter run --flavor dev
+```
+
+#### 🔄 Code Generation (Drift & Riverpod)
+To trigger the code generator for database models and providers:
+```bash
+# One-time build (Recommended after schema changes)
+dart run build_runner build --delete-conflicting-outputs
+
+# Live-watch mode (Automatically builds on save)
+dart run build_runner watch --delete-conflicting-outputs
+```
+
+#### 🩺 Quality Assurance (Formatting, Lints & Tests)
+To format code, analyze rules, and run all automated tests before making a commit:
+```bash
+# Auto-format all Dart files in the workspace
+dart format .
+
+# Check for code quality, analyzer warnings, and lints
+dart analyze
+
+# Run the complete unit and widget test suite
+flutter test
+```
+
+#### 🧹 Maintenance & Cleaning
+If you run into compilation caches or stale assets, perform a clean sweep:
+```bash
+# Wipe out build artifacts and build cache
+flutter clean
+
+# Fetch and sync package dependencies
+flutter pub get
 ```
 
 ---

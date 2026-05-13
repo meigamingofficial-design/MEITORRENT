@@ -76,10 +76,10 @@ class EngineProcessManager {
     int? engineId;
 
     var actuallyUsedFastResume = false;
-    final hasValidResume = t.resumeData != null && 
-                          t.resumeData!.length > 100 && 
-                          Directory(t.savePath).existsSync() &&
-                          t.totalSize > 0;
+    final hasValidResume = t.resumeData != null &&
+        t.resumeData!.length > 100 &&
+        Directory(t.savePath).existsSync() &&
+        t.totalSize > 0;
 
     if (hasValidResume) {
       try {
@@ -90,10 +90,12 @@ class EngineProcessManager {
           engineId = _engine.addTorrentFileWithResume(
               t.torrentFilePath!, t.savePath, t.resumeData!);
         }
-        AppLogger.i('[ProcessManager] Restored "${t.name}" with fast-resume (id $engineId)');
+        AppLogger.i(
+            '[ProcessManager] Restored "${t.name}" with fast-resume (id $engineId)');
         actuallyUsedFastResume = true;
       } catch (e) {
-        AppLogger.w('[ProcessManager] Fast-resume failed for "${t.name}", falling back to recheck: $e');
+        AppLogger.w(
+            '[ProcessManager] Fast-resume failed for "${t.name}", falling back to recheck: $e');
         // Fallback to normal add
         if ((t.magnetUri ?? '').isNotEmpty) {
           engineId = _engine.addMagnet(t.magnetUri!, t.savePath);
@@ -115,7 +117,8 @@ class EngineProcessManager {
 
       // 2. 🆔 ID Sync
       if (newId != t.id) {
-        AppLogger.i('[ProcessManager] Syncing ID for "${t.name}": ${t.id} → $newId');
+        AppLogger.i(
+            '[ProcessManager] Syncing ID for "${t.name}": ${t.id} → $newId');
         await db.deleteTorrentById(t.id);
         await db.upsertTorrent(TorrentModel.toCompanion(t.copyWith(id: newId)));
       }
@@ -129,10 +132,10 @@ class EngineProcessManager {
       // 4. 🔍 Sync with Disk (Fallback/Completion Logic)
       if (!actuallyUsedFastResume && filesExist) {
         _engine.forceRecheck(engineId);
-        AppLogger.d('[ProcessManager] Triggered fallback recheck for "${t.name}"');
+        AppLogger.d(
+            '[ProcessManager] Triggered fallback recheck for "${t.name}"');
       }
-    }
- else {
+    } else {
       await db.upsertTorrent(
         TorrentsTableCompanion(
           id: Value(t.id),

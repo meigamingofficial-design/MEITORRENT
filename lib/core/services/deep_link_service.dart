@@ -83,7 +83,7 @@ class DeepLinkService {
   /// Resolves an incoming Uri into either a validated magnet link or a locally copied file path.
   Future<String?> _resolveIncomingUri(Uri uri) async {
     final raw = uri.toString();
-    
+
     // Scheme 1: Magnet deep links
     if (uri.scheme == 'magnet' && isValidMagnetUri(raw)) {
       return raw;
@@ -91,15 +91,20 @@ class DeepLinkService {
 
     // Scheme 2: .torrent files from local storage (either file:// or content://)
     final pathLower = uri.path.toLowerCase();
-    if (uri.scheme == 'content' || uri.scheme == 'file' || pathLower.endsWith('.torrent')) {
+    if (uri.scheme == 'content' ||
+        uri.scheme == 'file' ||
+        pathLower.endsWith('.torrent')) {
       try {
-        AppLogger.i('[DeepLink] Copying incoming torrent URI to secure cache: $raw');
-        final String? cachedPath = await _channel.invokeMethod('copyContentUriToCache', {'uri': raw});
+        AppLogger.i(
+            '[DeepLink] Copying incoming torrent URI to secure cache: $raw');
+        final String? cachedPath =
+            await _channel.invokeMethod('copyContentUriToCache', {'uri': raw});
         if (cachedPath != null) {
           return cachedPath;
         }
       } catch (e, st) {
-        AppLogger.w('[DeepLink] Failed to resolve local torrent file content', error: e, stack: st);
+        AppLogger.w('[DeepLink] Failed to resolve local torrent file content',
+            error: e, stack: st);
       }
     }
 
