@@ -1,17 +1,59 @@
+import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/torrent_status.dart';
 import '../utils/speed_formatter.dart';
 import '../utils/size_formatter.dart';
 import 'folder_service.dart';
 
+/// Immutable constants for Notification Action buttons.
+abstract class NotificationActions {
+  static const String pause = 'pause_torrent';
+  static const String resume = 'resume_torrent';
+  static const String stop = 'stop_torrent';
+  static const String openFolder = 'open_folder';
+  static const String dismiss = 'dismiss_completed';
+}
+
+/// Payload model representing a notification action event.
+class NotificationActionEvent {
+  final String actionId;
+  final String torrentId;
+  final String savePath;
+  final String name;
+
+  NotificationActionEvent({
+    required this.actionId,
+    required this.torrentId,
+    required this.savePath,
+    required this.name,
+  });
+}
+
+/// Required top-level background notification responder.
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse details) {
+  final payload = details.payload;
+  final actionId = details.actionId;
+  if (payload != null && actionId == NotificationActions.dismiss) {
+    final parts = payload.split('|');
+    if (parts.length >= 3) {
+      final torrentId = parts[2];
+      final notifId = torrentId.hashCode & 0x7fffffff;
+      FlutterLocalNotificationsPlugin().cancel(notifId);
+      SharedPreferences.getInstance().then((prefs) {
+        final list =
+            prefs.getStringList('meitorrent_notified_completions') ?? [];
+        if (!list.contains(torrentId)) {
+          list.add(torrentId);
+          prefs.setStringList('meitorrent_notified_completions', list);
+        }
+      });
+    }
+  }
+}
+
 /// Handles individual per-torrent notifications using flutter_local_notifications.
-///
-/// Design decisions:
-/// - One notification per torrent (ID = torrentId.hashCode & 0x7fffffff)
-/// - Uses bitwise AND instead of modulo to avoid negative/collision issues
-/// - Per-torrent 500 ms throttle map prevents notification spam
-/// - Identical-content guard prevents redundant OS calls
-/// - cancelNotification() called by repository on delete
 class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
@@ -20,13 +62,27 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
+  /// Broadcast stream to dispatch action button presses to Riverpod state controllers.
+  final _actionController = StreamController<NotificationActionEvent>.broadcast();
+  Stream<NotificationActionEvent> get actionStream => _actionController.stream;
+
+  /// Channel IDs for separate active and completed alerts.
+  static const String _activeChannelId = 'meitorrent_active';
+  static const String _completedChannelId = 'meitorrent_completed';
+
   /// Last time we updated each torrent's notification (keyed by torrent ID).
   final Map<String, DateTime> _lastUpdate = {};
 
   /// Last body string sent for each torrent — prevents identical OS calls.
   final Map<String, String> _lastBody = {};
 
-  static const Duration _throttle = Duration(milliseconds: 500);
+  /// Currently active shown progress notification IDs.
+  final Set<String> _activeNotificationIds = {};
+
+  /// In-memory cache of notified completions for synchronous suppression.
+  final Set<String> _notifiedCompletionsMemory = {};
+
+  static const Duration _throttle = Duration(seconds: 2);
 
   Future<void> initialize() async {
     if (_initialized) return;
@@ -37,119 +93,143 @@ class NotificationService {
       const InitializationSettings(android: androidSettings),
       onDidReceiveNotificationResponse: (details) {
         final payload = details.payload;
+        final actionId = details.actionId;
         if (payload != null) {
           final parts = payload.split('|');
-          if (parts.length == 2) {
-            FolderService.instance.openDownloadTarget(
-              savePath: parts[0],
-              name: parts[1],
-            );
+          if (parts.length >= 3) {
+            final savePath = parts[0];
+            final name = parts[1];
+            final torrentId = parts[2];
+
+            if (actionId != null) {
+              _actionController.add(NotificationActionEvent(
+                actionId: actionId,
+                torrentId: torrentId,
+                savePath: savePath,
+                name: name,
+              ));
+              if (actionId == NotificationActions.dismiss ||
+                  actionId == NotificationActions.openFolder) {
+                cancelNotification(torrentId);
+              }
+            } else {
+              FolderService.instance.openDownloadTarget(
+                savePath: savePath,
+                name: name,
+              );
+              cancelNotification(torrentId);
+            }
           }
         }
       },
+      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
     _initialized = true;
   }
 
-  /// Converts a torrent's string ID to a safe Android notification integer ID.
-  ///
-  /// Uses bitwise AND with [0x7fffffff] (max positive int32) to guarantee:
-  ///   - Always positive (no negative notification IDs)
-  ///   - No modulo collision risk
-  ///   - Deterministic — same ID always produces same notification slot
   int _notificationId(String torrentId) => torrentId.hashCode & 0x7fffffff;
 
-  /// Updates or creates a notification for a specific torrent.
-  ///
-  /// Throttled to 500 ms per torrent and deduplicated against last body.
-  Future<void> updateTorrentNotification(TorrentStatus status) async {
+  Future<bool> _hasNotifiedCompletion(String torrentId) async {
+    if (_notifiedCompletionsMemory.contains(torrentId)) return true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = prefs.getStringList('meitorrent_notified_completions') ?? [];
+      if (list.contains(torrentId)) {
+        _notifiedCompletionsMemory.add(torrentId);
+        return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _markCompletionNotified(String torrentId) async {
+    _notifiedCompletionsMemory.add(torrentId);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = prefs.getStringList('meitorrent_notified_completions') ?? [];
+      if (!list.contains(torrentId)) {
+        list.add(torrentId);
+        await prefs.setStringList('meitorrent_notified_completions', list);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> clearCompletionNotified(String torrentId) async {
+    _notifiedCompletionsMemory.remove(torrentId);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = prefs.getStringList('meitorrent_notified_completions') ?? [];
+      if (list.contains(torrentId)) {
+        list.remove(torrentId);
+        await prefs.setStringList('meitorrent_notified_completions', list);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> showActiveNotification(TorrentStatus status) async {
     if (!_initialized) await initialize();
 
-    // ── Per-torrent 500 ms throttle ─────────────────────────────────
+    // Automatically clear completion tracking if torrent restarts downloading
+    await clearCompletionNotified(status.id);
+
     final now = DateTime.now();
     final last = _lastUpdate[status.id];
     if (last != null && now.difference(last) < _throttle) return;
     _lastUpdate[status.id] = now;
 
-    // ── Build notification content ───────────────────────────────────
     final progress = (status.progress * 100).toInt().clamp(0, 100);
-    final String body;
-    bool showProgress = false;
-
     final sizeStr =
         '${SizeFormatter.format(status.downloadedBytes)} / ${SizeFormatter.format(status.totalSize)}';
 
-    final isFinished = status.state == TorrentState.finished ||
-        status.state == TorrentState.seeding;
+    final String body;
+    bool showProgress = false;
 
-    if (isFinished) {
-      body =
-          '✓ Download complete · ${SizeFormatter.format(status.totalSize)}\nTap to open';
+    if (status.state == TorrentState.downloadingMetadata) {
+      body = 'Fetching metadata…';
+    } else if (status.state == TorrentState.checkingFiles ||
+        status.state == TorrentState.checkingResume ||
+        status.state == TorrentState.allocating) {
+      body = '${status.state.displayName} · $progress% ($sizeStr)';
+      showProgress = true;
     } else {
-      switch (status.state) {
-        case TorrentState.downloading:
-          final speedStr = SpeedFormatter.format(status.downloadSpeed);
-          final etaStr = status.etaSeconds != null
-              ? ' · ${_formatEta(status.etaSeconds!)} left'
-              : '';
-          body = '$progress% · $sizeStr\n↓ $speedStr$etaStr';
-          showProgress = true;
-
-        case TorrentState.seeding:
-          body =
-              'Seeding · $sizeStr\n↑ ${SpeedFormatter.format(status.uploadSpeed)}';
-
-        case TorrentState.finished:
-          body =
-              '✓ Download complete · ${SizeFormatter.format(status.totalSize)}\nTap to open';
-
-        case TorrentState.paused:
-          body = 'Paused · $progress% ($sizeStr)';
-
-        case TorrentState.downloadingMetadata:
-          body = 'Fetching metadata…';
-
-        case TorrentState.checkingFiles:
-        case TorrentState.checkingResume:
-        case TorrentState.allocating:
-          body = '${status.state.displayName} · $progress% ($sizeStr)';
-          showProgress = true;
-
-        case TorrentState.error:
-          body = 'Error: ${status.errorMessage ?? "Unknown error"}';
-
-        default:
-          body = '${status.state.displayName} · $sizeStr';
-      }
+      final speedStr = SpeedFormatter.format(status.downloadSpeed);
+      final etaStr = status.etaSeconds != null
+          ? ' · ${_formatEta(status.etaSeconds!)} left'
+          : '';
+      body = '$progress% · $sizeStr\n↓ $speedStr$etaStr';
+      showProgress = true;
     }
 
-    // ── Identical-content guard ──────────────────────────────────────
-    // Avoid redundant OS notification calls when nothing has changed.
     if (_lastBody[status.id] == body) return;
     _lastBody[status.id] = body;
 
-    // ── Show / update notification ───────────────────────────────────
     final notifId = _notificationId(status.id);
+    _activeNotificationIds.add(status.id);
 
     final androidDetails = AndroidNotificationDetails(
-      'torrent_individual',
-      'Torrent Progress',
-      channelDescription: 'Individual progress for each torrent',
-      importance: isFinished ? Importance.high : Importance.low,
-      priority: isFinished ? Priority.high : Priority.low,
+      _activeChannelId,
+      'Active Downloads',
+      channelDescription: 'Shows active torrent download progress',
+      importance: Importance.min,
+      priority: Priority.min,
       showProgress: showProgress,
       maxProgress: 100,
       progress: progress,
       onlyAlertOnce: true,
-      autoCancel: true,
-      enableVibration: isFinished,
-      playSound: isFinished,
-      // Keep ongoing only while actively downloading/checking — not for
-      // completed or paused torrents so the user can dismiss them.
-      ongoing: status.state.isActive,
-      // 🔒 Prevent "Flip-Up & Flip-Down" Shuffle: Force stable sorting based on addedAt
+      autoCancel: false,
+      ongoing: true,
+      visibility: NotificationVisibility.public,
+      actions: <AndroidNotificationAction>[
+        const AndroidNotificationAction(
+          NotificationActions.pause,
+          'Pause',
+          showsUserInterface: true,
+        ),
+      ],
       when: status.addedAt.millisecondsSinceEpoch,
-      showWhen: false,
+      showWhen: true,
     );
 
     await _plugin.show(
@@ -157,8 +237,68 @@ class NotificationService {
       status.name,
       body,
       NotificationDetails(android: androidDetails),
-      payload: '${status.savePath}|${status.name}',
+      payload: '${status.savePath}|${status.name}|${status.id}',
     );
+  }
+
+  Future<void> showCompletionNotification(TorrentStatus status) async {
+    if (!_initialized) await initialize();
+
+    if (await _hasNotifiedCompletion(status.id)) return;
+
+    final notifId = _notificationId(status.id);
+    _activeNotificationIds.remove(status.id);
+
+    final body =
+        '✓ Download complete · ${SizeFormatter.format(status.totalSize)}';
+
+    final androidDetails = AndroidNotificationDetails(
+      _completedChannelId,
+      'Completed Downloads',
+      channelDescription: 'Shows notifications for completed torrent downloads',
+      importance: Importance.high,
+      priority: Priority.high,
+      onlyAlertOnce: true,
+      autoCancel: true,
+      ongoing: false,
+      enableVibration: true,
+      playSound: true,
+      visibility: NotificationVisibility.private,
+      actions: <AndroidNotificationAction>[
+        const AndroidNotificationAction(
+          NotificationActions.openFolder,
+          'Open Folder',
+          showsUserInterface: true,
+        ),
+        const AndroidNotificationAction(
+          NotificationActions.dismiss,
+          'Dismiss',
+          showsUserInterface: false,
+        ),
+      ],
+      when: status.addedAt.millisecondsSinceEpoch,
+      showWhen: true,
+    );
+
+    await _plugin.show(
+      notifId,
+      status.name,
+      body,
+      NotificationDetails(android: androidDetails),
+      payload: '${status.savePath}|${status.name}|${status.id}',
+    );
+
+    await _markCompletionNotified(status.id);
+  }
+
+  Future<void> updateTorrentNotification(TorrentStatus status) async {
+    if (status.state.isFinished) {
+      await showCompletionNotification(status);
+    } else if (status.state.isPausedState) {
+      await cancelNotification(status.id);
+    } else {
+      await showActiveNotification(status);
+    }
   }
 
   Future<void> cancelNotification(String torrentId) async {
@@ -166,14 +306,23 @@ class NotificationService {
       if (!_initialized) return;
       _lastUpdate.remove(torrentId);
       _lastBody.remove(torrentId);
-      await _plugin.cancel(_notificationId(torrentId));
-    } catch (e) {
-      // PlatformException(error, Missing type parameter) can happen here
-      // during obfuscated release builds due to notification cache issues.
-    }
+      _activeNotificationIds.remove(torrentId);
+      _notifiedCompletionsMemory.add(torrentId);
+
+      final notifId = _notificationId(torrentId);
+      await _plugin.cancel(notifId);
+    } catch (_) {}
   }
 
-  // ─── Helpers ──────────────────────────────────────────────────────
+  Future<void> cancelAllActiveNotifications() async {
+    try {
+      if (!_initialized) return;
+      final List<String> idsToCancel = _activeNotificationIds.toList();
+      for (final id in idsToCancel) {
+        await cancelNotification(id);
+      }
+    } catch (_) {}
+  }
 
   String _formatEta(int seconds) {
     if (seconds < 60) return '${seconds}s';

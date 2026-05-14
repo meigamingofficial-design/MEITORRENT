@@ -1,7 +1,5 @@
 import 'dart:async';
-
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-
 import '../../core/utils/speed_formatter.dart';
 import '../../domain/entities/torrent_status.dart';
 import '../native/libtorrent_flutter_base.dart' as lt;
@@ -24,6 +22,7 @@ class TorrentTaskHandler extends TaskHandler {
   String? _savePath;
   Timer? _pollingTimer;
   DateTime? _lastMainIsolateUpdate;
+  final Map<String, int> _cachedTimestamps = {};
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
@@ -51,9 +50,16 @@ class TorrentTaskHandler extends TaskHandler {
         notificationText: text,
       );
 
-      // 2. Capture session address and save path for background polling
+      // 2. Capture session address, save path, and real timestamps
       final addr = data['sessionAddress'] as int?;
       final path = data['savePath'] as String?;
+      final timestamps = data['timestamps'] as Map?;
+
+      if (timestamps != null) {
+        for (final entry in timestamps.entries) {
+          _cachedTimestamps[entry.key.toString()] = entry.value as int;
+        }
+      }
 
       if (addr != null && addr != _sessionAddress) {
         _sessionAddress = addr;
@@ -70,16 +76,13 @@ class TorrentTaskHandler extends TaskHandler {
     AppLogger.i(
         '[FGService] Attaching to native engine at 0x${_sessionAddress!.toRadixString(16)}');
 
-    // Initialize our local engine instance in THIS isolate using the shared pointer
     lt.LibtorrentFlutter.attach(
       sessionAddress: _sessionAddress!,
       defaultSavePath: _savePath,
       pollInterval: const Duration(seconds: 1),
     );
 
-    // Update notification from our own polling too
     _pollingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      // Skip updating from background polling if the main isolate is actively pushing to prevent blinking / fighting
       if (_lastMainIsolateUpdate != null &&
           DateTime.now().difference(_lastMainIsolateUpdate!) <
               const Duration(seconds: 4)) {
@@ -89,24 +92,30 @@ class TorrentTaskHandler extends TaskHandler {
       final engine = lt.LibtorrentFlutter.instanceInternal;
       if (engine == null) return;
 
-      final torrents = engine.torrents.values.toList();
+      final rawTorrents = engine.torrents.values.toList();
+      final torrents = rawTorrents.map(_mapToStatus).toList();
 
-      // Update summary notification
-      final active =
-          torrents.where((t) => t.state.isActive && !t.isPaused).toList();
-      final finished = torrents.where((t) => t.progress >= 1.0).toList();
+      final active = torrents
+          .where((t) => t.state.isActive && !t.isPaused && !t.isCompleted)
+          .toList();
+      final completed = torrents
+          .where((t) => t.isCompleted || t.progress >= 1.0)
+          .toList();
+      final paused = torrents
+          .where((t) => (t.isPaused || t.isStopped) && !t.isCompleted && t.progress < 1.0)
+          .toList();
 
       final String summaryText;
       if (active.isNotEmpty) {
-        final totalDown = active.fold<int>(0, (s, t) => s + t.downloadRate);
+        final totalDown = active.fold<int>(0, (s, t) => s + t.downloadSpeed);
         summaryText =
             '${active.length} active · ↓ ${SpeedFormatter.format(totalDown)}';
-      } else if (finished.isNotEmpty) {
+      } else if (completed.isNotEmpty) {
         summaryText =
-            '${finished.length} download${finished.length == 1 ? '' : 's'} complete';
-      } else if (torrents.isNotEmpty) {
+            '${completed.length} download${completed.length == 1 ? '' : 's'} complete';
+      } else if (paused.isNotEmpty) {
         summaryText =
-            '${torrents.length} torrent${torrents.length == 1 ? '' : 's'} paused';
+            '${paused.length} torrent${paused.length == 1 ? '' : 's'} paused';
       } else {
         summaryText = 'No torrents added';
       }
@@ -115,19 +124,10 @@ class TorrentTaskHandler extends TaskHandler {
         notificationTitle: 'Meitorrent',
         notificationText: summaryText,
       );
-
-      // ── Update individual notifications from background ───────────
-      for (final info in torrents) {
-        final status = _mapToStatus(info);
-        NotificationService.instance.updateTorrentNotification(status);
-      }
     });
   }
 
-  /// Minimal mapping for NotificationService from raw engine TorrentInfo.
   TorrentStatus _mapToStatus(lt_models.TorrentInfo info) {
-    // 🛡️ STRICT PROGRESS GUARD:
-    // Only report complete if progress is exactly 1.0 and we have bytes.
     final bool isReallyDone = info.totalWanted > 0 &&
         info.totalDone >= info.totalWanted &&
         info.progress >= 1.0;
@@ -147,12 +147,12 @@ class TorrentTaskHandler extends TaskHandler {
       downloadedBytes: info.totalDone,
       uploadedBytes: info.totalUploaded,
       savePath: info.savePath,
-      // 🔒 Stable Deterministic Timestamp: Use the ID's hash to ensure each torrent
-      // stays in its own fixed notification slot without flickering or re-ordering.
-      addedAt:
-          DateTime.fromMillisecondsSinceEpoch(info.id.hashCode & 0x0FFFFFFF),
-      lastActivityAt:
-          DateTime.fromMillisecondsSinceEpoch(info.id.hashCode & 0x0FFFFFFF),
+      addedAt: DateTime.fromMillisecondsSinceEpoch(
+        _cachedTimestamps[info.id.toString()] ?? info.id.hashCode & 0x0FFFFFFF,
+      ),
+      lastActivityAt: DateTime.fromMillisecondsSinceEpoch(
+        _cachedTimestamps[info.id.toString()] ?? info.id.hashCode & 0x0FFFFFFF,
+      ),
       completedAt: isReallyDone ? DateTime.now() : null,
       ratio: info.totalWanted > 0 ? info.totalUploaded / info.totalWanted : 0.0,
       isPaused: info.isPaused,
@@ -161,9 +161,7 @@ class TorrentTaskHandler extends TaskHandler {
   }
 
   @override
-  void onRepeatEvent(DateTime timestamp) {
-    // Optional: could do additional polling or cleanup here
-  }
+  void onRepeatEvent(DateTime timestamp) {}
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
@@ -180,13 +178,12 @@ class ForegroundServiceManager {
   static final ForegroundServiceManager instance = ForegroundServiceManager._();
 
   bool _serviceStarted = false;
+  Timer? _stopServiceTimer;
 
-  /// Must be called in [main()] before [runApp].
   static void initCommunicationPort() {
     FlutterForegroundTask.initCommunicationPort();
   }
 
-  /// Requests notification permission and configures the foreground task.
   Future<void> setup() async {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
@@ -209,19 +206,21 @@ class ForegroundServiceManager {
     );
   }
 
-  // ── Pending state (queued before service is ready) ────────────────────────
   Map<String, dynamic>? _pendingData;
 
-  /// Starts the foreground service if not already running.
+  void _cancelStopServiceTimer() {
+    _stopServiceTimer?.cancel();
+    _stopServiceTimer = null;
+  }
+
   Future<void> startService() async {
+    _cancelStopServiceTimer();
     if (_serviceStarted) return;
 
-    // Check if Android already has our service running from a previous session.
     final alreadyRunning = await FlutterForegroundTask.isRunningService;
     if (alreadyRunning) {
       _serviceStarted = true;
       AppLogger.i('[FGService] Service already running — reconnected');
-      // Flush pending data into the existing notification immediately.
       _flushPending();
       return;
     }
@@ -252,8 +251,9 @@ class ForegroundServiceManager {
     }
   }
 
-  /// Stops the foreground service.
   Future<void> stopService() async {
+    _cancelStopServiceTimer();
+    await NotificationService.instance.cancelAllActiveNotifications();
     await FlutterForegroundTask.stopService();
     _serviceStarted = false;
     _pendingData = null;
@@ -262,23 +262,10 @@ class ForegroundServiceManager {
   }
 
   DateTime? _lastPush;
-
-  // Tracks last summary text to avoid sending identical data to the OS.
   String? _lastSummary;
-
-  // Tracks currently active individual torrent notification IDs to clean up orphaned notifications.
   final Set<String> _showingNotificationIds = {};
 
-  /// Push-based notification update.
-  ///
-  /// Behaviour:
-  /// - Updates individual per-torrent notifications via [NotificationService]
-  /// - Updates the foreground service summary notification
-  /// - Throttled globally at 500 ms
-  /// - Stores pending data when service is not yet started (no silent drops)
-  /// - Skips OS call if summary content is unchanged
   void pushUpdate(List<TorrentStatus> statuses) {
-    // ── Update individual notifications & Cancel obsolete ones ──────
     final currentIds = statuses.map((s) => s.id).toSet();
     final toCancel = _showingNotificationIds.difference(currentIds);
     for (final id in toCancel) {
@@ -288,13 +275,30 @@ class ForegroundServiceManager {
       ..clear()
       ..addAll(currentIds);
 
-    // If NO torrents exist at all, stop the service to remove the notification entirely.
+    final active = statuses
+        .where((t) => t.state.isActive && !t.isPaused && !t.isCompleted)
+        .toList();
+    final completed = statuses
+        .where((t) => t.isCompleted || t.progress >= 1.0)
+        .toList();
+    final paused = statuses
+        .where((t) => (t.isPaused || t.isStopped) && !t.isCompleted && t.progress < 1.0)
+        .toList();
+
+    if (active.isEmpty) {
+      if (_serviceStarted && _stopServiceTimer == null) {
+        _stopServiceTimer = Timer(const Duration(seconds: 10), () {
+          if (_serviceStarted) stopService();
+        });
+      }
+    } else {
+      _cancelStopServiceTimer();
+    }
+
     if (statuses.isEmpty) {
-      if (_serviceStarted) stopService();
       return;
     }
 
-    // ── 500 ms global throttle for summary notification and content updates ───────────────────────────────────────
     final now = DateTime.now();
     if (_lastPush != null &&
         now.difference(_lastPush!) < const Duration(milliseconds: 500)) {
@@ -302,20 +306,37 @@ class ForegroundServiceManager {
     }
     _lastPush = now;
 
-    for (final status in statuses) {
-      NotificationService.instance.updateTorrentNotification(status);
+    // 1. Stable notification ordering by addedAt and ID (never changes, zero jumping)
+    active.sort((a, b) {
+      final cmp = a.addedAt.compareTo(b.addedAt);
+      if (cmp != 0) return cmp;
+      return a.id.compareTo(b.id);
+    });
+
+    // Scale: pick top 3 active torrents.
+    final topActive = active.take(3).toList();
+    final visibleIds = topActive.map((e) => e.id).toSet();
+
+    for (final s in active) {
+      if (!visibleIds.contains(s.id)) {
+        NotificationService.instance.cancelNotification(s.id);
+      }
     }
 
-    // ── Build summary text ───────────────────────────────────
-    final active =
-        statuses.where((t) => t.state.isActive && !t.isPaused).toList();
-    final finished = statuses
-        .where((t) =>
-            t.isCompleted ||
-            t.progress >= 1.0 ||
-            (t.totalSize > 0 && t.downloadedBytes >= t.totalSize))
-        .toList();
-    final paused = statuses.where((t) => t.isPaused || t.isStopped).toList();
+    // 2. Suppress paused notifications
+    for (final s in paused) {
+      NotificationService.instance.cancelNotification(s.id);
+    }
+
+    // 3. Show completed notifications
+    for (final s in completed) {
+      NotificationService.instance.showCompletionNotification(s);
+    }
+
+    // 4. Show active notifications (top 3)
+    for (final s in topActive) {
+      NotificationService.instance.showActiveNotification(s);
+    }
 
     const String title = 'Meitorrent';
     final String text;
@@ -323,9 +344,9 @@ class ForegroundServiceManager {
     if (active.isNotEmpty) {
       final totalDown = active.fold<int>(0, (s, t) => s + t.downloadSpeed);
       text = '${active.length} active · ↓ ${SpeedFormatter.format(totalDown)}';
-    } else if (finished.isNotEmpty) {
+    } else if (completed.isNotEmpty) {
       text =
-          '${finished.length} download${finished.length == 1 ? '' : 's'} complete';
+          '${completed.length} download${completed.length == 1 ? '' : 's'} complete';
     } else if (paused.isNotEmpty) {
       text = '${paused.length} torrent${paused.length == 1 ? '' : 's'} paused';
     } else {
@@ -337,16 +358,17 @@ class ForegroundServiceManager {
       'text': text,
       'sessionAddress': TorrentEngineService.instance.sessionAddress,
       'savePath': TorrentEngineService.instance.defaultDownloadPath,
+      'timestamps': Map.fromEntries(
+        statuses.map((s) => MapEntry(s.id, s.addedAt.millisecondsSinceEpoch)),
+      ),
     };
 
-    if (!_serviceStarted) {
-      // ── Start service if we have torrents but it's not running ──────
+    if (!_serviceStarted && active.isNotEmpty) {
       _pendingData = payload;
       startService();
       return;
     }
 
-    // ── Identical-content guard ──────────────────────────────────────
     if (_lastSummary == text) return;
     _lastSummary = text;
 

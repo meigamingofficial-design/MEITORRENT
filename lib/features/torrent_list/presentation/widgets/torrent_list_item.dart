@@ -536,73 +536,100 @@ class _ActionButtons extends ConsumerWidget {
     final notifier = ref.read(torrentNotifierProvider.notifier);
     final messenger = ScaffoldMessenger.of(context);
 
+    final isDone = status.progress >= 1.0;
+    final isSeeding = status.state == TorrentState.seeding;
     final isPaused = status.isPaused;
     final isStopped = status.isStopped;
-    final isDone = status.isEffectivelyComplete;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (isPaused || isStopped)
-          _CircleIconButton(
-            icon: Icons.play_arrow_rounded,
-            color: AppColors.seeding,
-            onTap: () async {
-              // ── Permission Guard ──
-              final granted = await PermissionService.isStorageGranted();
-              if (!granted) {
-                if (context.mounted) {
-                  final retry =
-                      await PermissionService.showStorageRationale(context);
-                  if (retry) {
-                    await Permission.manageExternalStorage.request();
-                  }
+        if (isDone) ...[
+          if (isSeeding) ...[
+            // COMPLETED + SEEDING: Pause (Stop Seeding), Folder, Delete
+            _CircleIconButton(
+              icon: Icons.pause_rounded,
+              color: AppColors.textSecondary(context),
+              onTap: () async {
+                try {
+                  await notifier.pauseTorrent(status.id);
+                } catch (e) {
+                  _showErrorSnackBar(messenger, 'Failed to pause seeding: $e');
                 }
-                return;
-              }
-
-              try {
-                await notifier.resumeTorrent(status.id);
-              } catch (e) {
-                _showErrorSnackBar(messenger, 'Failed to resume: $e');
-              }
-            },
-            tooltip: 'Resume',
-          )
-        else
-          _CircleIconButton(
-            icon: isDone
-                ? Icons.check_circle_outline_rounded
-                : Icons.pause_rounded,
-            color:
-                isDone ? AppColors.finished : AppColors.textSecondary(context),
-            onTap: () async {
-              try {
-                await notifier.pauseTorrent(status.id);
-              } catch (e) {
-                _showErrorSnackBar(messenger, 'Failed to pause: $e');
-              }
-            },
-            tooltip: isDone ? 'Stop Seeding' : 'Pause',
-          ),
-        if (!isStopped)
-          _CircleIconButton(
-            icon: Icons.stop_rounded,
-            color: AppColors.textSecondary(context),
-            onTap: () async {
-              try {
-                await notifier.stopTorrent(status.id);
-              } catch (e) {
-                _showErrorSnackBar(messenger, 'Failed to stop: $e');
-              }
-            },
-            tooltip: 'Stop',
-          ),
+              },
+              tooltip: 'Pause Seeding',
+            ),
+          ] else ...[
+            // COMPLETED + NOT SEEDING: Completed checkmark icon (non-clickable / informative), Folder, Delete
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Icon(
+                Icons.check_circle_outline_rounded,
+                size: 20,
+                color: AppColors.finished.withValues(alpha: 0.8),
+              ),
+            ),
+          ],
+        ] else ...[
+          // DOWNLOADING or PAUSED
+          if (isPaused || isStopped) ...[
+            // PAUSED: Resume, Stop, Folder, Delete
+            _CircleIconButton(
+              icon: Icons.play_arrow_rounded,
+              color: AppColors.seeding,
+              onTap: () async {
+                final granted = await PermissionService.isStorageGranted();
+                if (!granted) {
+                  if (context.mounted) {
+                    final retry =
+                        await PermissionService.showStorageRationale(context);
+                    if (retry) {
+                      await Permission.manageExternalStorage.request();
+                    }
+                  }
+                  return;
+                }
+                try {
+                  await notifier.resumeTorrent(status.id);
+                } catch (e) {
+                  _showErrorSnackBar(messenger, 'Failed to resume: $e');
+                }
+              },
+              tooltip: 'Resume',
+            ),
+          ] else ...[
+            // DOWNLOADING: Pause, Stop, Folder, Delete
+            _CircleIconButton(
+              icon: Icons.pause_rounded,
+              color: AppColors.textSecondary(context),
+              onTap: () async {
+                try {
+                  await notifier.pauseTorrent(status.id);
+                } catch (e) {
+                  _showErrorSnackBar(messenger, 'Failed to pause: $e');
+                }
+              },
+              tooltip: 'Pause',
+            ),
+          ],
+          if (!isStopped)
+            _CircleIconButton(
+              icon: Icons.stop_rounded,
+              color: AppColors.textSecondary(context),
+              onTap: () async {
+                try {
+                  await notifier.stopTorrent(status.id);
+                } catch (e) {
+                  _showErrorSnackBar(messenger, 'Failed to stop: $e');
+                }
+              },
+              tooltip: 'Stop',
+            ),
+        ],
         _CircleIconButton(
           icon: Icons.folder_open_rounded,
           color: isDone ? AppColors.finished : AppColors.textSecondary(context),
           onTap: () async {
-            // ── Permission Guard ──
             final granted = await PermissionService.isStorageGranted();
             if (!granted) {
               if (context.mounted) {
@@ -614,7 +641,6 @@ class _ActionButtons extends ConsumerWidget {
               }
               return;
             }
-
             try {
               await FolderService.instance.openDownloadTarget(
                 savePath: status.savePath,

@@ -13,6 +13,8 @@ import '../../../../data/repositories/torrent_repository_impl.dart';
 import '../../../../domain/entities/torrent_status.dart';
 import '../../../../domain/repositories/torrent_repository.dart';
 import '../../../settings/presentation/controllers/settings_notifier.dart';
+import '../../../../core/services/folder_service.dart';
+import '../../../../core/services/notification_service.dart';
 
 part 'torrent_notifier.g.dart';
 
@@ -104,6 +106,7 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   final _wifiAutoPausedTorrents =
       <String, bool>{}; // Map of torrentId -> wasSeeding
   final _pendingStopTimers = <String, Timer>{};
+  StreamSubscription<NotificationActionEvent>? _actionSub;
 
   @override
   Future<List<TorrentStatus>> build() async {
@@ -128,10 +131,28 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
       }
     });
 
+    _actionSub = NotificationService.instance.actionStream.listen((event) {
+      if (event.actionId == NotificationActions.pause) {
+        pauseTorrent(event.torrentId);
+      } else if (event.actionId == NotificationActions.resume) {
+        resumeTorrent(event.torrentId);
+      } else if (event.actionId == NotificationActions.stop) {
+        stopTorrent(event.torrentId);
+      } else if (event.actionId == NotificationActions.openFolder) {
+        FolderService.instance.openDownloadTarget(
+          savePath: event.savePath,
+          name: event.name,
+        );
+      } else if (event.actionId == NotificationActions.dismiss) {
+        NotificationService.instance.cancelNotification(event.torrentId);
+      }
+    });
+
     ref.onDispose(() {
       WidgetsBinding.instance.removeObserver(this);
       _sub?.cancel();
       _connectivitySub?.cancel();
+      _actionSub?.cancel();
       for (final timer in _pendingStopTimers.values) {
         timer.cancel();
       }
@@ -353,7 +374,6 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     }).toList();
 
     state = AsyncValue.data(updated);
-    ForegroundServiceManager.instance.pushUpdate(updated);
   }
 
   Future<void> deleteTorrent(String id, {bool deleteFiles = false}) async {
@@ -363,7 +383,6 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
       final updated =
           previousList.where((torrent) => torrent.id != id).toList();
       state = AsyncValue.data(updated);
-      ForegroundServiceManager.instance.pushUpdate(updated);
     }
 
     try {
@@ -374,7 +393,6 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     } catch (e, st) {
       if (previousList != null) {
         state = AsyncValue.data(previousList);
-        ForegroundServiceManager.instance.pushUpdate(previousList);
       }
       AppLogger.e('[Notifier] Failed to delete torrent: $id',
           error: e, stack: st);
@@ -406,7 +424,6 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
       final idSet = ids.toSet();
       final updated = previousList.where((t) => !idSet.contains(t.id)).toList();
       state = AsyncValue.data(updated);
-      ForegroundServiceManager.instance.pushUpdate(updated);
     }
 
     try {
@@ -418,7 +435,6 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
       // Rollback on failure
       if (previousList != null) {
         state = AsyncValue.data(previousList);
-        ForegroundServiceManager.instance.pushUpdate(previousList);
       }
       AppLogger.e('[Notifier] deleteMultiple failed', error: e, stack: st);
       state = AsyncValue.error(e, st);
