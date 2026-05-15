@@ -83,6 +83,20 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
         status.state == TorrentState.downloadingMetadata;
     final isFinished = isEffectivelyComplete;
     final hasError = status.state == TorrentState.error;
+    final isDownloading = status.state == TorrentState.downloading;
+    final double progressHeight =
+        (isFinished || status.isPaused || status.isStopped) ? 2.0 : 5.0;
+    final Color accentColor = isFinished
+        ? AppColors.finished
+        : hasError
+            ? AppColors.error
+            : isDownloading
+                ? AppColors.downloading
+                : status.state == TorrentState.seeding
+                    ? AppColors.seeding
+                    : status.state == TorrentState.paused
+                        ? AppColors.paused
+                        : Colors.transparent;
 
     final isSelected =
         ref.watch(selectedTorrentsProvider).contains(widget.torrentId);
@@ -102,14 +116,10 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
             isSelected: isSelected,
             child: InkWell(
               onTap: () {
-                if (isSelectionMode) {
-                  ref
-                      .read(selectedTorrentsProvider.notifier)
-                      .toggle(widget.torrentId);
-                  HapticFeedback.lightImpact();
-                } else {
-                  _showOptions(context, ref, status);
-                }
+                ref
+                    .read(selectedTorrentsProvider.notifier)
+                    .toggle(widget.torrentId);
+                HapticFeedback.lightImpact();
               },
               onLongPress: () {
                 HapticFeedback.mediumImpact();
@@ -122,14 +132,47 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
               highlightColor: AppColors.downloading.withValues(alpha: 0.06),
               child: Stack(
                 children: [
+                  // ── State accent stripe ──────────────────────────────
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: isDownloading
+                        ? TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0.45, end: 1.0),
+                            duration: const Duration(milliseconds: 1100),
+                            curve: Curves.easeInOut,
+                            builder: (_, v, __) => Container(
+                              width: 4,
+                              decoration: BoxDecoration(
+                                color: accentColor.withValues(alpha: v),
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(24),
+                                  bottomLeft: Radius.circular(24),
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(
+                            width: 4,
+                            decoration: BoxDecoration(
+                              color: accentColor,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(24),
+                                bottomLeft: Radius.circular(24),
+                              ),
+                            ),
+                          ),
+                  ),
                   AnimatedPadding(
                     duration: const Duration(milliseconds: 250),
                     curve: Curves.easeOutCubic,
                     padding: EdgeInsets.fromLTRB(
-                        isSelectionMode ? 48 : 16, 14, 12, 14),
+                        isSelectionMode ? 52 : 20, 8, 12, 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // ── Row 1: Title + State Badge ──────────────────
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -138,25 +181,102 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                 status.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.shipporiMincho(
+                                style: GoogleFonts.outfit(
                                   color: AppColors.text(context),
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 15,
-                                  letterSpacing: -0.2,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14.5,
+                                  letterSpacing: -0.1,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            _AnimatedStateBadge(status: status),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
+                        // ── Row 2: Progress bar + percent ───────────────
                         Row(
                           children: [
-                            // ── Download Speed ──
+                            Expanded(
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    height: progressHeight,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.border(context)
+                                          .withValues(alpha: 0.5),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                  FractionallySizedBox(
+                                    widthFactor:
+                                        status.progress.clamp(0.0, 1.0),
+                                    child: isFinished
+                                        ? Container(
+                                            height: progressHeight,
+                                            decoration: BoxDecoration(
+                                              gradient: AppGradients.seeding,
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: AppColors.seeding
+                                                      .withValues(alpha: 0.4),
+                                                  blurRadius: 6,
+                                                ),
+                                              ],
+                                            ),
+                                          )
+                                        : AnimatedContainer(
+                                            duration: const Duration(
+                                                milliseconds: 600),
+                                            height: progressHeight,
+                                            decoration: BoxDecoration(
+                                              gradient: status.state ==
+                                                      TorrentState.paused
+                                                  ? AppGradients.paused
+                                                  : AppGradients.primary,
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                              boxShadow: isActive
+                                                  ? [
+                                                      BoxShadow(
+                                                        color: (status.state ==
+                                                                    TorrentState
+                                                                        .paused
+                                                                ? AppColors
+                                                                    .paused
+                                                                : AppColors
+                                                                    .downloading)
+                                                            .withValues(
+                                                                alpha: 0.35),
+                                                        blurRadius: 8,
+                                                        spreadRadius: 1,
+                                                      ),
+                                                    ]
+                                                  : null,
+                                            ),
+                                          ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              '${(status.progress * 100).toStringAsFixed(1)}%',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        // ── Row 3: ↓speed ↑speed seeds peers · size ─────
+                        Row(
+                          children: [
                             const Icon(Icons.arrow_downward_rounded,
-                                color: AppColors.downloading, size: 14),
-                            const SizedBox(width: 4),
+                                color: AppColors.downloading, size: 13),
+                            const SizedBox(width: 3),
                             Text(
                               SpeedFormatter.format(
                                   status.downloadSpeed.toInt()),
@@ -165,136 +285,71 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700),
                             ),
-                            const SizedBox(width: 12),
-
-                            // ── Seeds ──
-                            const Icon(Icons.keyboard_double_arrow_up_rounded,
-                                color: AppColors.seeding, size: 14),
-                            const SizedBox(width: 2),
+                            const SizedBox(width: 9),
+                            const Icon(Icons.arrow_upward_rounded,
+                                color: AppColors.seeding, size: 13),
+                            const SizedBox(width: 3),
                             Text(
-                              status.seeds.toString(),
+                              SpeedFormatter.format(
+                                  status.uploadSpeed.toInt()),
                               style: const TextStyle(
                                   color: AppColors.seeding,
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700),
                             ),
-                            const SizedBox(width: 8),
-
-                            // ── Peers ──
+                            const SizedBox(width: 9),
+                            Icon(Icons.keyboard_double_arrow_up_rounded,
+                                color: AppColors.textSecondary(context),
+                                size: 13),
+                            const SizedBox(width: 2),
+                            Text(
+                              status.seeds.toString(),
+                              style: TextStyle(
+                                  color: AppColors.textSecondary(context),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(width: 6),
                             Icon(Icons.people_outline_rounded,
                                 color: AppColors.textSecondary(context),
-                                size: 14),
+                                size: 13),
                             const SizedBox(width: 2),
                             Text(
                               status.peers.toString(),
                               style: TextStyle(
                                   color: AppColors.textSecondary(context),
                                   fontSize: 11,
-                                  fontWeight: FontWeight.w700),
+                                  fontWeight: FontWeight.w600),
                             ),
                             const Spacer(),
+                            Icon(
+                              status.magnetUri != null
+                                  ? Icons.link_rounded
+                                  : Icons.insert_drive_file_outlined,
+                              size: 12,
+                              color: AppColors.textSecondary(context)
+                                  .withValues(alpha: 0.5),
+                            ),
+                            const SizedBox(width: 4),
                             Text(
-                              '${(status.progress * 100).toStringAsFixed(1)}%',
+                              SizeFormatter.format(status.totalSize),
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Stack(
-                          children: [
-                            Container(
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: AppColors.border(context)
-                                    .withValues(alpha: 0.5),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ),
-                            FractionallySizedBox(
-                              widthFactor: status.progress.clamp(0.0, 1.0),
-                              child: isFinished
-                                  ? TweenAnimationBuilder<double>(
-                                      tween: Tween(begin: 0.3, end: 0.6),
-                                      duration:
-                                          const Duration(milliseconds: 1500),
-                                      builder: (context, value, child) {
-                                        return Container(
-                                          height: 4,
-                                          decoration: BoxDecoration(
-                                            gradient: AppGradients.seeding,
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: AppColors.seeding
-                                                    .withValues(alpha: value),
-                                                blurRadius: 8,
-                                                spreadRadius: 1,
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    )
-                                  : AnimatedContainer(
-                                      duration:
-                                          const Duration(milliseconds: 600),
-                                      height: 4,
-                                      decoration: BoxDecoration(
-                                        gradient:
-                                            status.state == TorrentState.paused
-                                                ? AppGradients.paused
-                                                : AppGradients.primary,
-                                        borderRadius: BorderRadius.circular(4),
-                                        boxShadow: isActive
-                                            ? [
-                                                BoxShadow(
-                                                  color: (status.state ==
-                                                              TorrentState
-                                                                  .paused
-                                                          ? AppColors.paused
-                                                          : AppColors
-                                                              .downloading)
-                                                      .withValues(alpha: 0.3),
-                                                  blurRadius: 8,
-                                                  spreadRadius: 1,
-                                                ),
-                                              ]
-                                            : null,
-                                      ),
-                                    ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Text(
-                              '${SizeFormatter.format(status.downloadedBytes)} / '
-                              '${SizeFormatter.format(status.totalSize)}',
-                              style: TextStyle(
-                                color:
-                                    AppColors.textSecondary(context).withValues(
-                                  alpha: isFinished ? 0.50 : 0.75,
-                                ),
+                                color: AppColors.textSecondary(context)
+                                    .withValues(alpha: 0.7),
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            const Spacer(),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        // ── Row 4: Actions (right-aligned) ──────────────
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
                             _ActionButtons(status: status),
                           ],
                         ),
-                        if (isFinished) ...[
-                          const SizedBox(height: 12),
-                          _CompletedBanner(
-                            onOpenFolder: () => _openFolder(status),
-                          ),
-                        ],
                       ],
                     ),
                   ),
@@ -343,36 +398,6 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
     );
   }
 
-  void _showOptions(BuildContext context, WidgetRef ref, TorrentStatus status) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _TorrentOptionsSheet(status: status, ref: ref),
-    );
-  }
-
-  void _openFolder(TorrentStatus status) {
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      FolderService.instance.openDownloadTarget(
-        savePath: status.savePath,
-        name: status.name,
-      );
-    } catch (e) {
-      _showError(messenger, 'Failed to open folder: $e');
-    }
-  }
-
-  void _showError(ScaffoldMessengerState messenger, String message) {
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(color: Colors.white)),
-        backgroundColor: AppColors.error,
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
 
   static TorrentStatus _placeholder(String id) => TorrentStatus(
         id: id,
@@ -471,61 +496,6 @@ class _GlassCard extends StatelessWidget {
   }
 }
 
-class _AnimatedStateBadge extends StatelessWidget {
-  const _AnimatedStateBadge({required this.status});
-  final TorrentStatus status;
-
-  Color get _color {
-    final isDone = status.isEffectivelyComplete;
-    if (isDone) {
-      return AppColors.finished;
-    }
-    switch (status.state) {
-      case TorrentState.downloading:
-        return AppColors.downloading;
-      case TorrentState.seeding:
-        return AppColors.seeding;
-      case TorrentState.paused:
-        return AppColors.paused;
-      case TorrentState.error:
-        return AppColors.error;
-      case TorrentState.finished:
-        return AppColors.finished;
-      case TorrentState.downloadingMetadata:
-        return AppColors.metadata;
-      case TorrentState.checkingFiles:
-      case TorrentState.checkingResume:
-      case TorrentState.allocating:
-        return AppColors.checking;
-      default:
-        return AppColors.unknown;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDone = status.isEffectivelyComplete;
-    final text = isDone ? 'Finished' : status.state.displayName;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: _color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _color.withValues(alpha: 0.3), width: 1),
-      ),
-      child: Text(
-        text.toUpperCase(),
-        style: GoogleFonts.shipporiMincho(
-          color: _color,
-          fontSize: 10, // Slightly smaller for calligraphic look
-          fontWeight: FontWeight.w900,
-          letterSpacing: 0.1,
-        ),
-      ),
-    );
-  }
-}
 
 class _ActionButtons extends ConsumerWidget {
   const _ActionButtons({required this.status});
@@ -770,227 +740,4 @@ class _DeleteDialog extends StatelessWidget {
   }
 }
 
-class _CompletedBanner extends StatelessWidget {
-  const _CompletedBanner({required this.onOpenFolder});
-  final VoidCallback onOpenFolder;
 
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onOpenFolder,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColors.finished.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.finished.withValues(alpha: 0.28)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.check_circle_outline_rounded,
-                color: AppColors.finished, size: 13),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                'Download complete · Tap to open',
-                style: GoogleFonts.shipporiMincho(
-                  color: AppColors.finished,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded,
-                color: AppColors.finished, size: 15),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TorrentOptionsSheet extends StatelessWidget {
-  const _TorrentOptionsSheet({required this.status, required this.ref});
-  final TorrentStatus status;
-  final WidgetRef ref;
-
-  @override
-  Widget build(BuildContext context) {
-    final notifier = ref.read(torrentNotifierProvider.notifier);
-    final navigator = Navigator.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    final isPaused = status.isPaused;
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border(context)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.border(context),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: AppGradients.primary,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.download_rounded,
-                      color: Colors.white, size: 16),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        status.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: AppColors.text(context),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        '${(status.progress * 100).toStringAsFixed(1)}%'
-                        ' · ${SizeFormatter.format(status.downloadedBytes)}'
-                        ' / ${SizeFormatter.format(status.totalSize)}',
-                        style: TextStyle(
-                            color: AppColors.textSecondary(context),
-                            fontSize: 11),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Divider(color: AppColors.border(context), height: 24),
-          if (isPaused)
-            _OptionTile(
-              icon: Icons.play_arrow_rounded,
-              iconColor: AppColors.seeding,
-              label: 'Resume Download',
-              onTap: () async {
-                navigator.pop();
-                try {
-                  await notifier.resumeTorrent(status.id);
-                } catch (e) {
-                  _showErrorSnackBar(messenger, 'Failed to resume: $e');
-                }
-              },
-            )
-          else
-            _OptionTile(
-              icon: Icons.pause_rounded,
-              iconColor: AppColors.textSecondary(context),
-              label: 'Pause Download',
-              onTap: () async {
-                navigator.pop();
-                try {
-                  await notifier.pauseTorrent(status.id);
-                } catch (e) {
-                  _showErrorSnackBar(messenger, 'Failed to pause: $e');
-                }
-              },
-            ),
-          _OptionTile(
-            icon: Icons.delete_outline_rounded,
-            iconColor: AppColors.error,
-            label: 'Remove Torrent',
-            onTap: () async {
-              // Show the delete dialog FIRST while the sheet's context is still valid,
-              // then pop the sheet only after the user makes a choice.
-              final result = await showDialog<_DeleteChoice>(
-                context: context,
-                builder: (_) => _DeleteDialog(torrentName: status.name),
-              );
-              navigator.pop(); // dismiss sheet after dialog resolves
-              if (result == _DeleteChoice.removeOnly) {
-                try {
-                  await notifier.deleteTorrent(status.id);
-                } catch (_) {}
-              } else if (result == _DeleteChoice.removeWithFiles) {
-                try {
-                  await notifier.deleteTorrent(status.id, deleteFiles: true);
-                } catch (_) {}
-              }
-            },
-          ),
-          const SizedBox(height: 12),
-        ],
-      ),
-    );
-  }
-
-  void _showErrorSnackBar(ScaffoldMessengerState messenger, String message) {
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(color: Colors.white)),
-        backgroundColor: AppColors.error,
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
-}
-
-class _OptionTile extends StatelessWidget {
-  const _OptionTile({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    required this.onTap,
-  });
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  final Future<void> Function() onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
-        child: Row(
-          children: [
-            Icon(icon, color: iconColor, size: 20),
-            const SizedBox(width: 16),
-            Text(
-              label,
-              style: TextStyle(
-                color: AppColors.text(context),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

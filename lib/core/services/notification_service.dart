@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/torrent_status.dart';
@@ -12,7 +13,6 @@ abstract class NotificationActions {
   static const String resume = 'resume_torrent';
   static const String stop = 'stop_torrent';
   static const String openFolder = 'open_folder';
-  static const String dismiss = 'dismiss_completed';
 }
 
 /// Payload model representing a notification action event.
@@ -32,25 +32,8 @@ class NotificationActionEvent {
 
 /// Required top-level background notification responder.
 @pragma('vm:entry-point')
-void notificationTapBackground(NotificationResponse details) {
-  final payload = details.payload;
-  final actionId = details.actionId;
-  if (payload != null && actionId == NotificationActions.dismiss) {
-    final parts = payload.split('|');
-    if (parts.length >= 3) {
-      final torrentId = parts[2];
-      final notifId = torrentId.hashCode & 0x7fffffff;
-      FlutterLocalNotificationsPlugin().cancel(notifId);
-      SharedPreferences.getInstance().then((prefs) {
-        final list =
-            prefs.getStringList('meitorrent_notified_completions') ?? [];
-        if (!list.contains(torrentId)) {
-          list.add(torrentId);
-          prefs.setStringList('meitorrent_notified_completions', list);
-        }
-      });
-    }
-  }
+void notificationTapBackground(NotificationResponse details) async {
+  // Currently no background actions require special handling after removing Dismiss
 }
 
 /// Handles individual per-torrent notifications using flutter_local_notifications.
@@ -95,11 +78,11 @@ class NotificationService {
         final payload = details.payload;
         final actionId = details.actionId;
         if (payload != null) {
-          final parts = payload.split('|');
-          if (parts.length >= 3) {
-            final savePath = parts[0];
-            final name = parts[1];
-            final torrentId = parts[2];
+          try {
+            final data = jsonDecode(payload) as Map<String, dynamic>;
+            final savePath = data['path'] as String;
+            final name = data['name'] as String;
+            final torrentId = data['id'] as String;
 
             if (actionId != null) {
               _actionController.add(NotificationActionEvent(
@@ -108,8 +91,7 @@ class NotificationService {
                 savePath: savePath,
                 name: name,
               ));
-              if (actionId == NotificationActions.dismiss ||
-                  actionId == NotificationActions.openFolder) {
+              if (actionId == NotificationActions.openFolder) {
                 cancelNotification(torrentId);
               }
             } else {
@@ -119,7 +101,7 @@ class NotificationService {
               );
               cancelNotification(torrentId);
             }
-          }
+          } catch (_) {}
         }
       },
       onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
@@ -237,7 +219,11 @@ class NotificationService {
       status.name,
       body,
       NotificationDetails(android: androidDetails),
-      payload: '${status.savePath}|${status.name}|${status.id}',
+      payload: jsonEncode({
+        'path': status.savePath,
+        'name': status.name,
+        'id': status.id,
+      }),
     );
   }
 
@@ -270,11 +256,6 @@ class NotificationService {
           'Open Folder',
           showsUserInterface: true,
         ),
-        const AndroidNotificationAction(
-          NotificationActions.dismiss,
-          'Dismiss',
-          showsUserInterface: false,
-        ),
       ],
       when: status.addedAt.millisecondsSinceEpoch,
       showWhen: true,
@@ -285,7 +266,11 @@ class NotificationService {
       status.name,
       body,
       NotificationDetails(android: androidDetails),
-      payload: '${status.savePath}|${status.name}|${status.id}',
+      payload: jsonEncode({
+        'path': status.savePath,
+        'name': status.name,
+        'id': status.id,
+      }),
     );
 
     await _markCompletionNotified(status.id);

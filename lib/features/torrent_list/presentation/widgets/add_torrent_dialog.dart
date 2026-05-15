@@ -1,12 +1,15 @@
-import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/services/clipboard_service.dart';
 import '../../../../core/theme/app_theme.dart';
 
-/// Bottom-sheet dialog for adding a torrent via magnet link or .torrent file.
+// ─────────────────────────────────────────────────────────────────────────────
+// Add Torrent Dialog
+// ─────────────────────────────────────────────────────────────────────────────
+
 class AddTorrentDialog extends StatefulWidget {
   const AddTorrentDialog({
     super.key,
@@ -32,18 +35,49 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
   final _magnetFormKey = GlobalKey<FormState>();
   bool _sequential = false;
   bool _isLoading = false;
+  bool _magnetError = false;
   String? _selectedFilePath;
+  String? _infoMessage;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() => setState(() {}));
+
     if (widget.initialMagnetUri != null) {
       _magnetController.text = widget.initialMagnetUri!;
+    } else {
+      _autoDetectClipboard();
     }
+
+    // Rebuild whenever magnet text changes (clears filled/empty state instantly)
+    _magnetController.addListener(() {
+      setState(() {
+        // Also clear error flag once user has typed something
+        if (_magnetError && _magnetController.text.trim().isNotEmpty) {
+          _magnetError = false;
+        }
+      });
+    });
+
     if (widget.initialTorrentFilePath != null) {
       _selectedFilePath = widget.initialTorrentFilePath;
-      _tabController.index = 1; // Open .torrent file tab directly!
+      _tabController.index = 1;
+    }
+  }
+
+  Future<void> _autoDetectClipboard() async {
+    final magnet = await ClipboardService.instance.getMagnetFromClipboard();
+    if (magnet != null && mounted) {
+      setState(() {
+        _magnetController.text = magnet;
+        _tabController.index = 0;
+        _infoMessage = 'Detected magnet in clipboard';
+      });
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) setState(() => _infoMessage = null);
+      });
     }
   }
 
@@ -52,210 +86,6 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
     _tabController.dispose();
     _magnetController.dispose();
     super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bottom = MediaQuery.of(context).viewInsets.bottom;
-    final safePad = MediaQuery.of(context).padding.bottom;
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: bottom),
-      child: Container(
-        margin: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.surface(context),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.border(context)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 30,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // ── Drag handle ────────────────────────────────────────────
-                  Container(
-                    margin: const EdgeInsets.only(top: 12),
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.border(context),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // ── Title ──────────────────────────────────────────────
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: AppColors.downloading
-                                    .withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(Icons.add_rounded,
-                                  color: AppColors.downloading, size: 24),
-                            ),
-                            const SizedBox(width: 14),
-                            Text(
-                              'Add Torrent',
-                              style: GoogleFonts.shipporiMincho(
-                                color: AppColors.text(context),
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.2,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // ── Tab bar ────────────────────────────────────────────
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: AppColors.inputFill(context),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: TabBar(
-                            controller: _tabController,
-                            indicator: BoxDecoration(
-                              gradient: AppGradients.primary,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.downloading
-                                      .withValues(alpha: 0.3),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            indicatorSize: TabBarIndicatorSize.tab,
-                            dividerColor: Colors.transparent,
-                            labelColor: Colors.white,
-                            unselectedLabelColor:
-                                AppColors.textSecondary(context),
-                            labelStyle: GoogleFonts.shipporiMincho(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                              letterSpacing: 0.1,
-                            ),
-                            unselectedLabelStyle: GoogleFonts.shipporiMincho(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                            tabs: const [
-                              Tab(text: 'Magnet Link'),
-                              Tab(text: '.torrent File'),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // ── Tab views ──────────────────────────────────────────
-                        SizedBox(
-                          height: 210,
-                          child: TabBarView(
-                            controller: _tabController,
-                            physics: const NeverScrollableScrollPhysics(),
-                            children: [
-                              _MagnetTab(
-                                formKey: _magnetFormKey,
-                                controller: _magnetController,
-                                sequential: _sequential,
-                                onSequentialChanged: (v) =>
-                                    setState(() => _sequential = v),
-                                onPasteFromClipboard: _pasteFromClipboard,
-                              ),
-                              _FileTab(
-                                sequential: _sequential,
-                                initialFilePath: _selectedFilePath,
-                                onSequentialChanged: (v) =>
-                                    setState(() => _sequential = v),
-                                onFilePicked: (path) {
-                                  setState(() => _selectedFilePath = path);
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // ── Action buttons ─────────────────────────────────────────
-                  AnimatedBuilder(
-                    animation: _tabController,
-                    builder: (_, __) {
-                      final isMagnet = _tabController.index == 0;
-                      final canSubmit =
-                          isMagnet ? true : (_selectedFilePath != null);
-
-                      return Padding(
-                        padding: EdgeInsets.fromLTRB(24, 0, 24, safePad + 24),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: _SecondaryButton(
-                                onPressed: _isLoading
-                                    ? null
-                                    : () => Navigator.pop(context),
-                                child: const Text('Cancel'),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _GradientButton(
-                                onPressed: _isLoading
-                                    ? null
-                                    : (canSubmit
-                                        ? (isMagnet
-                                            ? _submitMagnet
-                                            : _submitFile)
-                                        : null),
-                                child: _isLoading
-                                    ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.5,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Text('Add'),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   void _submitFile() {
@@ -268,107 +98,252 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
   Future<void> _pasteFromClipboard() async {
     final magnet = await ClipboardService.instance.getMagnetFromClipboard();
     if (magnet != null) {
-      _magnetController.text = magnet;
+      setState(() {
+        _magnetController.text = magnet;
+        _infoMessage = 'Pasted from clipboard';
+      });
       _magnetFormKey.currentState?.validate();
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) setState(() => _infoMessage = null);
+      });
     } else {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No valid magnet link in clipboard'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      setState(() => _infoMessage = 'No magnet found in clipboard');
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) setState(() => _infoMessage = null);
+      });
     }
   }
 
   void _submitMagnet() {
-    if (_magnetFormKey.currentState?.validate() != true) return;
-    setState(() => _isLoading = true);
-    widget.onMagnetAdded(_magnetController.text.trim(), null);
+    final text = _magnetController.text.trim();
+    if (text.isEmpty) {
+      setState(() => _magnetError = true);
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+      _magnetError = false;
+    });
+    // Clear clipboard so the same link won't auto-fill next time
+    Clipboard.setData(const ClipboardData(text: ''));
+    widget.onMagnetAdded(text, null);
     Navigator.pop(context);
   }
-}
-
-// ─── Gradient Button ──────────────────────────────────────────────────────────
-
-class _GradientButton extends StatelessWidget {
-  const _GradientButton({required this.onPressed, required this.child});
-  final VoidCallback? onPressed;
-  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        gradient: onPressed == null ? null : AppGradients.primary,
-        color: onPressed == null ? AppColors.border(context) : null,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: onPressed == null
-            ? null
-            : [
-                BoxShadow(
-                  color: AppColors.downloading.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+    final mq = MediaQuery.of(context);
+    final keyboardPad = mq.viewInsets.bottom;
+    final navBarPad = mq.padding.bottom;
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(bottom: keyboardPad),
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+          decoration: BoxDecoration(
+            color: AppColors.surface(context),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppColors.border(context)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 32,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(23),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  0,
+                  20,
+                  navBarPad > 0 ? navBarPad : 12,
                 ),
-              ],
-      ),
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          foregroundColor: Colors.white,
-          padding: EdgeInsets.zero,
-          minimumSize: const Size.fromHeight(48),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: GoogleFonts.shipporiMincho(
-              fontWeight: FontWeight.w700, fontSize: 14),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // ── Drag handle ──────────────────────────────────────────
+                    const _DragHandle(),
+
+                    const SizedBox(height: 12),
+
+                    // ── Header ───────────────────────────────────────────────
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: AppColors.downloading.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.add_rounded,
+                            color: AppColors.downloading,
+                            size: 17,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Add Torrent',
+                          style: GoogleFonts.shipporiMincho(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // ── Segmented tab ─────────────────────────────────────────
+                    Container(
+                      height: 48,
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: AppColors.inputFill(context),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: TabBar(
+                        controller: _tabController,
+                        indicator: BoxDecoration(
+                          gradient: AppGradients.primary,
+                          borderRadius: BorderRadius.circular(11),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.downloading
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        dividerColor: Colors.transparent,
+                        labelColor: Colors.white,
+                        unselectedLabelColor:
+                            AppColors.text(context).withValues(alpha: 0.5),
+                        labelStyle: GoogleFonts.shipporiMincho(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                        unselectedLabelStyle: GoogleFonts.shipporiMincho(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                        tabs: const [
+                          Tab(text: 'Magnet Link'),
+                          Tab(text: '.torrent File'),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // ── Tab content ───────────────────────────────────────────
+                    AnimatedBuilder(
+                      animation: _tabController,
+                      builder: (context, _) {
+                        if (_tabController.index == 0) {
+                          return _MagnetTab(
+                            formKey: _magnetFormKey,
+                            controller: _magnetController,
+                            sequential: _sequential,
+                            infoMessage: _magnetError
+                                ? 'Please paste a magnet link'
+                                : _infoMessage,
+                            isError: _magnetError,
+                            onSequentialChanged: (v) =>
+                                setState(() => _sequential = v),
+                            onPasteFromClipboard: _pasteFromClipboard,
+                          );
+                        }
+                        return _FileTab(
+                          sequential: _sequential,
+                          initialFilePath: _selectedFilePath,
+                          onSequentialChanged: (v) =>
+                              setState(() => _sequential = v),
+                          onFilePicked: (path) =>
+                              setState(() => _selectedFilePath = path),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // ── Action buttons ────────────────────────────────────────
+                    AnimatedBuilder(
+                      animation: _tabController,
+                      builder: (ctx, __) {
+                        final isMagnet = _tabController.index == 0;
+                        final canSubmit =
+                            isMagnet ? true : (_selectedFilePath != null);
+
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: _SecondaryButton(
+                                onPressed: _isLoading
+                                    ? null
+                                    : () => Navigator.pop(context),
+                                child: const Text('Cancel'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _GradientButton(
+                                onPressed: _isLoading
+                                    ? null
+                                    : (canSubmit
+                                        ? (isMagnet
+                                            ? _submitMagnet
+                                            : _submitFile)
+                                        : null),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Text('Add'),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
-        child: child,
       ),
     );
   }
 }
 
-// ─── Secondary Button ─────────────────────────────────────────────────────────
-
-class _SecondaryButton extends StatelessWidget {
-  const _SecondaryButton({required this.onPressed, required this.child});
-  final VoidCallback? onPressed;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 48,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.textSecondary(context),
-          side: BorderSide(color: AppColors.border(context)),
-          padding: EdgeInsets.zero,
-          minimumSize: const Size.fromHeight(48),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: GoogleFonts.shipporiMincho(
-              fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        child: child,
-      ),
-    );
-  }
-}
-
-// ─── Magnet Tab ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Magnet Tab
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _MagnetTab extends StatelessWidget {
   const _MagnetTab({
     required this.formKey,
     required this.controller,
     required this.sequential,
+    required this.infoMessage,
+    required this.isError,
     required this.onSequentialChanged,
     required this.onPasteFromClipboard,
   });
@@ -376,82 +351,176 @@ class _MagnetTab extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController controller;
   final bool sequential;
+  final String? infoMessage;
+  final bool isError;
   final ValueChanged<bool> onSequentialChanged;
   final VoidCallback onPasteFromClipboard;
 
+  String _getDisplayName(String magnet) {
+    final uri = Uri.tryParse(magnet);
+    if (uri == null) return magnet;
+    final name = uri.queryParameters['dn'];
+    if (name != null) return name;
+    if (magnet.length > 40) return '${magnet.substring(0, 37)}...';
+    return magnet;
+  }
+
+  String _getHashPreview(String magnet) {
+    if (!magnet.contains('xt=urn:btih:')) return 'Invalid magnet format';
+    final parts = magnet.split('xt=urn:btih:');
+    if (parts.length < 2) return 'Invalid hash';
+    final hash = parts[1].split('&').first;
+    if (hash.length > 12) {
+      return '${hash.substring(0, 6)}…${hash.substring(hash.length - 6)}';
+    }
+    return hash;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasContent = controller.text.trim().isNotEmpty;
+
     return Form(
       key: formKey,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            height: 100,
-            child: TextFormField(
-              controller: controller,
-              maxLines: null,
-              minLines: null,
-              expands: true,
-              textAlign: TextAlign.center,
-              textAlignVertical: TextAlignVertical.center,
-              style: TextStyle(
-                  color: AppColors.text(context), fontSize: 14, height: 1.4),
-              decoration: InputDecoration(
-                hintText: 'Paste magnet link here',
-                hintStyle: TextStyle(
-                    color: AppColors.textSecondary(context)
-                        .withValues(alpha: 0.5)),
-                prefixIcon: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.link_rounded,
-                        color: AppColors.textSecondary(context), size: 20)
-                  ],
-                ),
-                suffixIcon: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: IconButton(
-                        icon: const Icon(Icons.content_paste_rounded,
-                            color: AppColors.downloading, size: 20),
-                        onPressed: onPasteFromClipboard,
+          // Magnet input
+          Container(
+            height: 56,
+            decoration: BoxDecoration(
+              color: AppColors.inputFill(context),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isError
+                    ? Colors.red.shade400
+                    : hasContent
+                        ? AppColors.downloading
+                        : AppColors.border(context),
+                width: (isError || hasContent) ? 1.5 : 1,
+              ),
+            ),
+            child: hasContent
+                ? InkWell(
+                    onTap: () => controller.clear(),
+                    borderRadius: BorderRadius.circular(14),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.link_rounded,
+                              color: AppColors.downloading, size: 18),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _getDisplayName(controller.text),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: AppColors.text(context),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  _getHashPreview(controller.text),
+                                  style: TextStyle(
+                                    color: AppColors.textSecondary(context),
+                                    fontSize: 10.5,
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.close_rounded,
+                              color: AppColors.textSecondary(context), size: 16),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-                filled: true,
-                fillColor: AppColors.inputFill(context),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: AppColors.border(context)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(
-                      color: AppColors.downloading, width: 1.5),
-                ),
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-              ),
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Paste a magnet link';
-                return null;
-              },
-            ),
+                  )
+                : TextFormField(
+                    controller: controller,
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: AppColors.text(context), fontSize: 13),
+                    decoration: InputDecoration(
+                      hintText: 'Paste magnet link here',
+                      hintStyle: TextStyle(
+                        color: AppColors.textSecondary(context)
+                            .withValues(alpha: 0.5),
+                        fontSize: 13,
+                      ),
+                      prefixIcon: Icon(Icons.link_rounded,
+                          color: AppColors.textSecondary(context), size: 18),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.content_paste_rounded,
+                            color: AppColors.downloading, size: 18),
+                        onPressed: onPasteFromClipboard,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding:
+                          const EdgeInsets.symmetric(vertical: 18),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return '';
+                      return null;
+                    },
+                  ),
           ),
-          const SizedBox(height: 16),
+
+          // Status message
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            child: infoMessage != null
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isError
+                              ? Icons.error_outline_rounded
+                              : Icons.check_circle_outline_rounded,
+                          size: 13,
+                          color: isError
+                              ? Colors.red.shade400
+                              : AppColors.seeding,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          infoMessage!,
+                          style: TextStyle(
+                            color: isError
+                                ? Colors.red.shade400
+                                : AppColors.seeding,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+
+          const SizedBox(height: 10),
+
+          // Sequential row
           _SequentialRow(value: sequential, onChanged: onSequentialChanged),
         ],
       ),
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// File Tab
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _FileTab extends StatefulWidget {
   const _FileTab({
@@ -488,23 +557,23 @@ class _FileTabState extends State<_FileTab> {
     }
   }
 
-  String _getFileName(String path) {
-    return path.split('/').last;
-  }
+  String _getFileName(String path) => path.split('/').last;
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // File picker card
         GestureDetector(
           onTap: _picking ? null : _pickFile,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             width: double.infinity,
-            height: 110,
+            height: 76,
             decoration: BoxDecoration(
               color: AppColors.downloading.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: _picking
                     ? AppColors.downloading
@@ -521,24 +590,23 @@ class _FileTabState extends State<_FileTab> {
                   )
                 : _selectedPath != null
                     ? Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
                         child: Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(10),
+                              padding: const EdgeInsets.all(7),
                               decoration: BoxDecoration(
                                 color: AppColors.downloading
                                     .withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               child: const Icon(
                                 Icons.insert_drive_file_rounded,
                                 color: AppColors.downloading,
-                                size: 28,
+                                size: 20,
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -548,15 +616,14 @@ class _FileTabState extends State<_FileTab> {
                                     _getFileName(_selectedPath!),
                                     style: TextStyle(
                                       color: AppColors.text(context),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  const SizedBox(height: 4),
                                   Text(
-                                    'Pre-loaded torrent file',
+                                    'Tap to change file',
                                     style: TextStyle(
                                       color: AppColors.textSecondary(context),
                                       fontSize: 11,
@@ -566,8 +633,9 @@ class _FileTabState extends State<_FileTab> {
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.close_rounded,
-                                  color: AppColors.downloading),
+                              icon: Icon(Icons.close_rounded,
+                                  color: AppColors.textSecondary(context),
+                                  size: 18),
                               onPressed: () {
                                 setState(() => _selectedPath = null);
                                 widget.onFilePicked(null);
@@ -579,43 +647,42 @@ class _FileTabState extends State<_FileTab> {
                     : Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color:
-                                  AppColors.downloading.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Icon(
-                              Icons.cloud_upload_outlined,
-                              color: AppColors.downloading,
-                              size: 28,
-                            ),
+                          Icon(
+                            Icons.cloud_upload_outlined,
+                            color: AppColors.downloading.withValues(alpha: 0.5),
+                            size: 22,
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Choose .torrent file',
                             style: TextStyle(
                               color: AppColors.text(context),
-                              fontSize: 14,
+                              fontSize: 13.5,
                               fontWeight: FontWeight.w600,
+                              letterSpacing: -0.2,
                             ),
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Browse your internal storage',
+                            'Browse internal storage',
                             style: TextStyle(
-                              color: AppColors.textSecondary(context),
-                              fontSize: 11,
+                              color: AppColors.textSecondary(context)
+                                  .withValues(alpha: 0.6),
+                              fontSize: 11.5,
                             ),
                           ),
                         ],
                       ),
           ),
         ),
-        const SizedBox(height: 12),
+
+        const SizedBox(height: 10),
+
+        // Sequential row
         _SequentialRow(
-            value: widget.sequential, onChanged: widget.onSequentialChanged),
+          value: widget.sequential,
+          onChanged: widget.onSequentialChanged,
+        ),
       ],
     );
   }
@@ -638,7 +705,9 @@ class _FileTabState extends State<_FileTab> {
   }
 }
 
-// ─── Sequential Row ───────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Sequential Row
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _SequentialRow extends StatelessWidget {
   const _SequentialRow({required this.value, required this.onChanged});
@@ -648,33 +717,172 @@ class _SequentialRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: AppColors.border(context).withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.inputFill(context),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border(context)),
       ),
       child: Row(
         children: [
-          Icon(Icons.auto_awesome_motion_rounded,
-              size: 20, color: AppColors.textSecondary(context)),
-          const SizedBox(width: 12),
+          Icon(
+            Icons.auto_awesome_motion_rounded,
+            size: 18,
+            color: AppColors.textSecondary(context),
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               'Sequential download',
               style: TextStyle(
                 color: AppColors.text(context),
-                fontSize: 14,
+                fontSize: 13.5,
                 fontWeight: FontWeight.w500,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: 8),
-          Switch(
-            value: value,
-            onChanged: onChanged,
+          Transform.scale(
+            scale: 0.82,
+            child: Switch(
+              value: value,
+              onChanged: onChanged,
+              activeThumbColor: AppColors.downloading,
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Gradient Button
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _GradientButton extends StatelessWidget {
+  const _GradientButton({required this.onPressed, required this.child});
+  final VoidCallback? onPressed;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        gradient: onPressed == null ? null : AppGradients.primary,
+        color: onPressed == null ? AppColors.border(context) : null,
+        borderRadius: BorderRadius.circular(13),
+        boxShadow: onPressed == null
+            ? null
+            : [
+                BoxShadow(
+                  color: AppColors.downloading.withValues(alpha: 0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+      ),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.zero,
+          minimumSize: const Size.fromHeight(44),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(13)),
+          textStyle: GoogleFonts.shipporiMincho(
+              fontWeight: FontWeight.w700, fontSize: 14),
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Secondary Button
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SecondaryButton extends StatelessWidget {
+  const _SecondaryButton({required this.onPressed, required this.child});
+  final VoidCallback? onPressed;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 44,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.textSecondary(context),
+          side: BorderSide(color: AppColors.border(context)),
+          padding: EdgeInsets.zero,
+          minimumSize: const Size.fromHeight(44),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(13)),
+          textStyle: GoogleFonts.shipporiMincho(
+              fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Drag Handle
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DragHandle extends StatefulWidget {
+  const _DragHandle();
+
+  @override
+  State<_DragHandle> createState() => _DragHandleState();
+}
+
+class _DragHandleState extends State<_DragHandle>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: AnimatedBuilder(
+        animation: _animation,
+        builder: (context, _) => Center(
+          child: Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.border(context).withValues(alpha: _animation.value),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ),
       ),
     );
   }

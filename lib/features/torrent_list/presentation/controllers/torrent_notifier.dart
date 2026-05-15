@@ -143,8 +143,6 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
           savePath: event.savePath,
           name: event.name,
         );
-      } else if (event.actionId == NotificationActions.dismiss) {
-        NotificationService.instance.cancelNotification(event.torrentId);
       }
     });
 

@@ -206,6 +206,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     });
 
     final torrentsAsync = ref.watch(torrentNotifierProvider);
+    final activeFilter = ref.watch(activeFilterProvider);
 
     return PopScope(
       canPop: false,
@@ -265,9 +266,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       ),
                     ),
                   if (torrents.isEmpty)
-                    const SliverFillRemaining(
+                    SliverFillRemaining(
                       hasScrollBody: false,
-                      child: EmptyStateWidget(),
+                      child: EmptyStateWidget(filter: activeFilter),
                     )
                   else ...[
                     SliverToBoxAdapter(
@@ -277,10 +278,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       ),
                     ),
                     if (filtered.isEmpty)
-                      const SliverToBoxAdapter(
+                      SliverToBoxAdapter(
                         child: Padding(
-                          padding: EdgeInsets.only(top: 80),
-                          child: EmptyStateWidget(),
+                          padding: const EdgeInsets.only(top: 80),
+                          child: EmptyStateWidget(filter: activeFilter),
                         ),
                       )
                     else
@@ -503,29 +504,78 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   Widget _buildHeader(BuildContext context, List<TorrentStatus> torrents) {
     final downTotal = torrents.fold<double>(0, (p, c) => p + c.downloadSpeed);
     final upTotal = torrents.fold<double>(0, (p, c) => p + c.uploadSpeed);
+    final activeCount = torrents
+        .where((t) => t.state == TorrentState.downloading)
+        .length;
+
+    final isCompletedTab = ref.watch(activeFilterProvider) == TorrentFilter.completed;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
       child: Column(
         children: [
-          Row(
-            children: [
-              _CompactSpeedTile(
-                icon: Icons.arrow_downward_rounded,
-                value: SpeedFormatter.format(downTotal.toInt()),
-                label: 'Total Down',
-                color: AppColors.downloading,
-              ),
-              const SizedBox(width: 12),
-              _CompactSpeedTile(
-                icon: Icons.arrow_upward_rounded,
-                value: SpeedFormatter.format(upTotal.toInt()),
-                label: 'Total Up',
-                color: AppColors.seeding,
-              ),
-            ],
+          // ── Compact glass stats bar ─────────────────────────────────
+          Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: AppColors.surface(context),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border(context)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                // ↓ Download
+                const Icon(Icons.arrow_downward_rounded,
+                    color: AppColors.downloading, size: 14),
+                const SizedBox(width: 5),
+                Text(
+                  SpeedFormatter.format(downTotal.toInt()),
+                  style: const TextStyle(
+                    color: AppColors.downloading,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const Spacer(),
+                // ↑ Upload
+                const Icon(Icons.arrow_upward_rounded,
+                    color: AppColors.seeding, size: 14),
+                const SizedBox(width: 5),
+                Text(
+                  SpeedFormatter.format(upTotal.toInt()),
+                  style: const TextStyle(
+                    color: AppColors.seeding,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (!isCompletedTab) ...[
+                  const Spacer(),
+                  // Active count
+                  Icon(Icons.download_rounded,
+                      color: AppColors.textSecondary(context), size: 14),
+                  const SizedBox(width: 5),
+                  Text(
+                    '$activeCount Active',
+                    style: TextStyle(
+                      color: AppColors.textSecondary(context),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           FilterSegmentedControl(
             activeFilter: ref.watch(activeFilterProvider),
             onChanged: (filter) {
@@ -802,65 +852,6 @@ class _SelectionAction extends StatelessWidget {
   }
 }
 
-class _CompactSpeedTile extends StatelessWidget {
-  const _CompactSpeedTile({
-    required this.icon,
-    required this.value,
-    required this.label,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String value;
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.light
-              ? Color.alphaBlend(
-                  color.withValues(alpha: 0.15), AppColors.surface(context))
-              : color.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withValues(alpha: 0.4),
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 16),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    value,
-                    style: TextStyle(
-                      color: AppColors.text(context),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Text(
-                    label,
-                    style: TextStyle(
-                        color: AppColors.textSecondary(context), fontSize: 10),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _MenuItem extends StatelessWidget {
   const _MenuItem({required this.icon, required this.label, this.color});
@@ -932,9 +923,14 @@ class _GradientFABState extends State<_GradientFAB>
         ? null
         : [
             BoxShadow(
-              color: AppColors.downloading.withValues(alpha: 0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 6),
+              color: AppColors.downloading.withValues(alpha: 0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: AppColors.downloading.withValues(alpha: 0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
           ];
     final textColor =
