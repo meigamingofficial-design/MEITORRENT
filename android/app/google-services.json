@@ -23,6 +23,44 @@
           "other_platform_oauth_client": []
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:989423283183:android:23019c3893b79c2137e41a",
+        "android_client_info": {
+          "package_name": "com.meigaming.meitorrent.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDM3eFqPwViYrrg9rAf0vSzIt0E_FR3ncs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:989423283183:android:23019c3893b79c2137e41a",
+        "android_client_info": {
+          "package_name": "com.meigaming.meitorrent.staging"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDM3eFqPwViYrrg9rAf0vSzIt0E_FR3ncs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
     }
   ],
   "configuration_version": "1"

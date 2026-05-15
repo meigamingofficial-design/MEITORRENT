@@ -47,8 +47,8 @@ build/
 *.ipr
 
 # Secrets and local configurations
-android/key.properties
 *.jks
+
 *.keystore
 .env*
 pubspec_overrides.yaml
@@ -57,3 +57,8 @@ pubspec_overrides.yaml
 .metadata
 scratch/
 *.log
+
+# Release Signing
+android/key.properties
+android/upload-keystore.jks
+

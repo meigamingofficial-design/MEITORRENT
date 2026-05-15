@@ -49,7 +49,7 @@ class PermissionService {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Meitorrent needs "All files access" to:',
+                  'Meitorrent needs storage permission to:',
                   style: TextStyle(
                     color: AppColors.text(ctx),
                     fontSize: 14,
@@ -71,20 +71,12 @@ class PermissionService {
               ),
               const SizedBox(height: 16),
               Text(
-                'Android requires this permission for torrent downloads. On the next screen, enable:',
+                'Storage permission is needed to save and manage files in your selected download folder.\n\n'
+                'On the next screen, allow storage access for Meitorrent.',
                 style: TextStyle(
                   color: AppColors.textSecondary(ctx),
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '“Allow access to manage all files”',
-                style: TextStyle(
-                  color: AppColors.text(ctx),
                   fontSize: 13,
-                  fontWeight: FontWeight.w700,
+                  height: 1.5,
                 ),
               ),
               const SizedBox(height: 20),
