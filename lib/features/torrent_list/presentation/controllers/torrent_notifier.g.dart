@@ -72,7 +72,7 @@ final activeFilterProvider =
 );
 
 typedef _$ActiveFilter = AutoDisposeNotifier<TorrentFilter>;
-String _$torrentNotifierHash() => r'e74cc840ba05d451ce96d2b8d9b1fc42dd5216fc';
+String _$torrentNotifierHash() => r'bed4ea0de7124b1a661319754256fb9ef5146270';
 
 /// Central state manager for all torrent operations.
 ///

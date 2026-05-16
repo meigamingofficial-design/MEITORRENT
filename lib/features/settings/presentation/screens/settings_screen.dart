@@ -4,6 +4,7 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/logger_service.dart';
+import '../../../../core/services/package_info_provider.dart';
 import '../../../../core/services/oem_battery_guard.dart';
 
 import '../../../../core/utils/speed_formatter.dart';
@@ -419,9 +420,11 @@ class _ConnectionsTile extends StatelessWidget {
 
 // ─── About Tile ───────────────────────────────────────────────────────────────
 
-class _AboutTile extends StatelessWidget {
+class _AboutTile extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final versionAsync = ref.watch(appVersionProvider);
+
     return ListTile(
       leading: Container(
         decoration: BoxDecoration(
@@ -462,7 +465,11 @@ class _AboutTile extends StatelessWidget {
         children: [
           const SizedBox(height: 2),
           Text(
-            'v1.0.0 · Fast. Private. Reliable.',
+            versionAsync.when(
+              data: (v) => 'v$v · Fast. Private. Reliable.',
+              loading: () => 'Loading... · Fast. Private. Reliable.',
+              error: (_, __) => 'v1.0.1+2 · Fast. Private. Reliable.',
+            ),
             style: TextStyle(
                 color: AppColors.textSecondary(context), fontSize: 11),
           ),

@@ -1,7 +1,7 @@
 name: meitorrent
 description: "Production-grade Android torrent client powered by libtorrent 2.0"
-publish_to: 'none'
-version: 1.0.0+1
+publish_to: "none"
+version: 1.0.1+2
 
 environment:
   sdk: ^3.5.0
@@ -13,7 +13,6 @@ dependencies:
   # Firebase & Crashlytics
   firebase_core: ^3.10.1
   firebase_crashlytics: ^4.3.1
-  firebase_analytics: ^11.4.1
 
   # Torrent engine
   libtorrent_flutter: ^1.8.5
@@ -59,6 +58,7 @@ dependencies:
   collection: ^1.19.0
   equatable: ^2.0.5
   logger: ^2.4.0
+  package_info_plus: ^8.1.2
   shared_preferences: ^2.5.5
 
 dev_dependencies:
