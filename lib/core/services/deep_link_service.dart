@@ -6,9 +6,15 @@ import 'package:flutter/services.dart';
 import 'logger_service.dart';
 
 /// Validates that a string is a well-formed magnet URI.
-bool isValidMagnetUri(String uri) =>
-    RegExp(r'^magnet:\?xt=urn:btih:[a-fA-F0-9]{32,40}', caseSensitive: false)
-        .hasMatch(uri.trim());
+bool isValidMagnetUri(String uri) {
+  final trimmed = uri.trim();
+  if (!trimmed.toLowerCase().startsWith('magnet:?')) return false;
+
+  // Professional-grade regex: searches for the info-hash (xt parameter)
+  // anywhere in the URI, supporting both 40-char hex and 32-char base32 hashes.
+  return RegExp(r'xt=urn:btih:[a-z0-9]{32,40}', caseSensitive: false)
+      .hasMatch(trimmed);
+}
 
 /// Handles cold-start and warm-start magnet and local .torrent file links.
 ///

@@ -31,10 +31,11 @@ class ClipboardService {
   }
 
   /// Returns a validated magnet URI string from the clipboard, or null.
-  /// Deduplicates: returns null if the magnet is the same as [_lastHandledMagnet]
-  /// or if it already exists in [existingTorrents].
+  /// Deduplicates: returns null if the magnet is the same as [_lastHandledMagnet],
+  /// unless [force] is true.
   Future<String?> getMagnetFromClipboard({
     List<TorrentStatus> existingTorrents = const [],
+    bool force = false,
   }) async {
     if (!_initialized) await init();
 
@@ -43,12 +44,7 @@ class ClipboardService {
       final text = data?.text?.trim();
       if (text != null && isValidMagnetUri(text)) {
         // 1. Check persistence deduplication
-        if (text == _lastHandledMagnet) return null;
-
-        // 2. Check if already in our download list
-        final alreadyExists = existingTorrents.any(
-            (t) => t.magnetUri == text || (t.id == _extractInfoHash(text)));
-        if (alreadyExists) return null;
+        if (!force && text == _lastHandledMagnet) return null;
 
         return text;
       }

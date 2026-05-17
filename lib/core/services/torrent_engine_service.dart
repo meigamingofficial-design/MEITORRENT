@@ -137,6 +137,18 @@ class TorrentEngineService {
 
   void resume(int id) => _engine.resumeTorrent(id);
 
+  /// Gets the current engine-level status for a specific torrent ID.
+  domain.TorrentStatus? getTorrentStatus(int id) {
+    final raw = _engine.getStatus(id);
+    if (raw == null) return null;
+    return _toStatus(raw);
+  }
+
+  /// Gets the list of files for a specific torrent.
+  List<lt.FileInfo> getFiles(int id) {
+    return _engine.getFiles(id);
+  }
+
   void remove(int id, {bool deleteFiles = false}) {
     _engine.removeTorrent(id, deleteFiles: deleteFiles);
     _idToMagnet.remove(id);

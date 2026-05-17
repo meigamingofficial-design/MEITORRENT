@@ -317,6 +317,18 @@ class LibtorrentFlutter {
   /// Resume a paused torrent.
   void resumeTorrent(int id) => bindings.resumeTorrent(session, id);
 
+  /// Get the current status of a specific torrent.
+  TorrentInfo? getStatus(int id) {
+    final statusBuf = calloc<LtTorrentStatus>();
+    try {
+      final ok = bindings.getStatus(session, id, statusBuf);
+      if (ok == 0) return null;
+      return _toTorrentInfo(statusBuf.ref);
+    } finally {
+      calloc.free(statusBuf);
+    }
+  }
+
   /// Recheck torrent integrity.
   void recheckTorrent(int id) => bindings.recheckTorrent(session, id);
 

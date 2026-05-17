@@ -96,7 +96,9 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
   }
 
   Future<void> _pasteFromClipboard() async {
-    final magnet = await ClipboardService.instance.getMagnetFromClipboard();
+    // Force paste even if it was the last handled magnet
+    final magnet =
+        await ClipboardService.instance.getMagnetFromClipboard(force: true);
     if (magnet != null) {
       setState(() {
         _magnetController.text = magnet;
@@ -107,8 +109,18 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
         if (mounted) setState(() => _infoMessage = null);
       });
     } else {
+      // Check if there is ANY text in clipboard to give better feedback
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      final text = data?.text?.trim();
+
       if (!mounted) return;
-      setState(() => _infoMessage = 'No magnet found in clipboard');
+      setState(() {
+        if (text == null || text.isEmpty) {
+          _infoMessage = 'Clipboard is empty';
+        } else {
+          _infoMessage = 'No valid magnet found in clipboard';
+        }
+      });
       Future.delayed(const Duration(seconds: 3), () {
         if (mounted) setState(() => _infoMessage = null);
       });
@@ -125,8 +137,12 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
       _isLoading = true;
       _magnetError = false;
     });
-    // Clear clipboard so the same link won't auto-fill next time
-    Clipboard.setData(const ClipboardData(text: ''));
+
+    // 🛡️ FIX: Removed Clipboard.setData(const ClipboardData(text: ''))
+    // Clearing the system clipboard here was a "destructive" side effect.
+    // If the user wanted to re-add the same link or add it to another app,
+    // we just deleted their data. We'll let the user manage their clipboard.
+
     widget.onMagnetAdded(text, null);
     Navigator.pop(context);
   }

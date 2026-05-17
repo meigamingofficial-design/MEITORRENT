@@ -62,6 +62,9 @@ class TorrentRepositoryImpl implements TorrentRepository {
   /// Cache of the last emitted statuses to allow emergency saves during lifecycle events.
   List<TorrentStatus> _lastStatuses = [];
 
+  /// Tracks torrent IDs that are waiting for metadata to perform an advanced disk check.
+  final Set<String> _waitingForMetadataRecheck = {};
+
   // ─── Stream ───────────────────────────────────────────────────────
 
   @override
@@ -285,8 +288,81 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
       _lastStatuses = corrected;
       await _checkDiskSpace(corrected);
+      await _handleMetadataWaiters(corrected);
       return corrected;
     });
+  }
+
+  /// Performs a deep verification of the torrent's file list against the disk.
+  /// Returns true ONLY if EVERY file in the torrent exists and matches the expected size.
+  /// This is the professional standard for reliable data reuse.
+  Future<bool> _verifyExistingFiles(int id, String savePath) async {
+    try {
+      final files = _engine.getFiles(id);
+      if (files.isEmpty) return false;
+
+      AppLogger.d('[Repo] Starting deep verification for torrent T$id ($savePath)');
+
+      for (final f in files) {
+        final fullPath = "$savePath/${f.path}";
+        final file = File(fullPath);
+        
+        if (!file.existsSync()) {
+          AppLogger.d('[Repo] Deep verification FAILED: missing file ${f.path}');
+          return false;
+        }
+
+        final actualSize = file.lengthSync();
+        if (actualSize != f.size) {
+          AppLogger.d(
+              '[Repo] Deep verification FAILED: size mismatch for ${f.path} (Expected: ${f.size}, Actual: $actualSize)');
+          return false;
+        }
+      }
+
+      AppLogger.i('[Repo] Deep verification SUCCESS: All files match for torrent T$id');
+      return true;
+    } catch (e) {
+      AppLogger.w('[Repo] Deep file verification error: $e');
+      return false;
+    }
+  }
+
+  /// Advanced Disk Reuse: Performs a precise check for matching files on disk
+  /// once a magnet link has fetched its metadata.
+  Future<void> _handleMetadataWaiters(List<TorrentStatus> statuses) async {
+    if (_waitingForMetadataRecheck.isEmpty) return;
+
+    for (final s in statuses) {
+      if (_waitingForMetadataRecheck.contains(s.id)) {
+        // 🛡️ The "Professional Standard" Trigger:
+        // We MUST wait until 'hasMetadata' is true and 'totalSize' is known.
+        // This ensures the file list is correctly mapped in the engine.
+        if (s.totalSize > 0 && s.state != TorrentState.downloadingMetadata) {
+          _waitingForMetadataRecheck.remove(s.id);
+          final intId = int.tryParse(s.id);
+          if (intId == null) continue;
+
+          // Perform the ultra-precise "All-Files-Must-Match" verification
+          final isPerfectMatch = await _verifyExistingFiles(intId, s.savePath);
+          if (isPerfectMatch) {
+            AppLogger.i(
+                '[Repo] Metadata acquired for "${s.name}". Perfect disk match found. Issuing forceRecheck to recover data.');
+            _engine.forceRecheck(intId);
+          } else {
+            AppLogger.d(
+                '[Repo] Metadata acquired for "${s.name}". No perfect disk match found. Starting fresh download.');
+          }
+        }
+      }
+    }
+  }
+
+  bool _isPlaceholderName(String name) {
+    return name.isEmpty ||
+        name.startsWith('Torrent #') ||
+        name.startsWith('temp_') ||
+        name == '…';
   }
 
   TorrentStatus _mergePersistedFields(
@@ -300,9 +376,7 @@ class TorrentRepositoryImpl implements TorrentRepository {
     // 🧱 HARD LOCK: Completed torrents should NEVER go backwards to 0% or Checking.
     if (persisted.isCompleted) {
       return live.copyWith(
-        name: (live.name == 'Torrent #${live.id}' || live.name.isEmpty)
-            ? persisted.name
-            : live.name,
+        name: _isPlaceholderName(live.name) ? persisted.name : live.name,
         progress: 1.0,
         downloadedBytes: persisted.totalSize,
         totalSize: persisted.totalSize,
@@ -339,9 +413,7 @@ class TorrentRepositoryImpl implements TorrentRepository {
       isSequentialDownload:
           live.isSequentialDownload || persisted.isSequentialDownload,
       savePath: live.savePath.isEmpty ? persisted.savePath : live.savePath,
-      name: (live.name == 'Torrent #${live.id}' || live.name.isEmpty)
-          ? persisted.name
-          : live.name,
+      name: _isPlaceholderName(live.name) ? persisted.name : live.name,
       progress: mergedProgress,
       downloadedBytes: mergedDownloaded,
       totalSize: mergedTotal,
@@ -447,6 +519,15 @@ class TorrentRepositoryImpl implements TorrentRepository {
       final idStr = id.toString();
       _engineActiveIds.add(id);
 
+      // 🔍 Potential Existing Data Detection (Magnet)
+      // If the magnet has a 'dn' (display name), we check if that folder/file exists.
+      final exists = await _checkExistsOnDisk(name, path);
+      if (exists && name != uri.substring(0, uri.length.clamp(0, 20))) {
+        AppLogger.i(
+            '[Repo] Potential existing files found for magnet "$name" — will recheck once metadata is fetched');
+        _waitingForMetadataRecheck.add(idStr);
+      }
+
       await _db.upsertTorrent(
         TorrentsTableCompanion(
           id: Value(idStr),
@@ -466,7 +547,7 @@ class TorrentRepositoryImpl implements TorrentRepository {
           isSequentialDownload: const Value(false),
         ),
       );
-      AppLogger.i('[Repo] Added magnet: $idStr');
+      AppLogger.i('[Repo] Added magnet: $idStr (existsOnDisk=$exists)');
       return idStr;
     } finally {
       _addingKeys.remove(key);
@@ -531,17 +612,35 @@ class TorrentRepositoryImpl implements TorrentRepository {
       final idStr = id.toString();
       _engineActiveIds.add(id);
 
+      // 🔍 Better Naming & Existing Data Detection
+      // For .torrent files, libtorrent knows the name immediately after adding.
+      final engineStatus = _engine.getTorrentStatus(id);
+      final finalName = (engineStatus != null &&
+              engineStatus.name.isNotEmpty &&
+              !engineStatus.name.startsWith('Torrent #'))
+          ? engineStatus.name
+          : name;
+
+      final exists = await _checkExistsOnDisk(finalName, path);
+      if (exists) {
+        AppLogger.i(
+            '[Repo] Existing files found for "$finalName" at "$path" — triggering recheck to prevent data waste');
+        _engine.forceRecheck(id);
+      }
+
       await _db.upsertTorrent(
         TorrentsTableCompanion(
           id: Value(idStr),
-          name: Value(name),
+          name: Value(finalName),
           magnetUri: const Value(null),
           torrentFilePath: Value(filePath),
           savePath: Value(path),
-          totalSize: const Value(0),
+          totalSize: Value(engineStatus?.totalSize ?? 0),
           downloadedBytes: const Value(0),
           progress: const Value(0.0),
-          state: Value(TorrentState.downloading.name),
+          state: Value(exists
+              ? TorrentState.checkingFiles.name
+              : TorrentState.downloading.name),
           isPaused: const Value(false),
           isCompleted: const Value(false),
           addedAt: Value(DateTime.now()),
@@ -550,7 +649,7 @@ class TorrentRepositoryImpl implements TorrentRepository {
           isSequentialDownload: const Value(false),
         ),
       );
-      AppLogger.i('[Repo] Added torrent file: $idStr');
+      AppLogger.i('[Repo] Added torrent file: $idStr (name=$finalName)');
       return idStr;
     } finally {
       _addingKeys.remove(key);
@@ -1042,6 +1141,20 @@ class TorrentRepositoryImpl implements TorrentRepository {
     final storage = StorageService.instance;
     await storage.ensureDirectoryExists();
     return storage.getDownloadPath();
+  }
+
+  /// Checks if a torrent with the given name already has a matching folder or
+  /// file in the target save path.
+  Future<bool> _checkExistsOnDisk(String name, String savePath) async {
+    if (name.isEmpty) return false;
+    try {
+      final fullPath = "$savePath/$name";
+      final dir = Directory(fullPath);
+      final file = File(fullPath);
+      return dir.existsSync() || file.existsSync();
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> _updateState(String id, TorrentState state) async {
