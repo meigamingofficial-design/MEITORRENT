@@ -52,10 +52,19 @@ class _FakeTorrentRepository implements TorrentRepository {
   Future<void> pauseAll() async {}
 
   @override
+  Future<void> pauseMultiple(List<String> ids) async {}
+
+  @override
   Future<void> stopAll() async {}
 
   @override
+  Future<void> stopMultiple(List<String> ids) async {}
+
+  @override
   Future<void> resumeAll() async {}
+
+  @override
+  Future<void> resumeMultiple(List<String> ids) async {}
 
   @override
   Future<void> deleteMultiple(List<String> ids,

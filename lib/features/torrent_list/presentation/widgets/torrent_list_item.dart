@@ -13,6 +13,26 @@ import '../../../../core/utils/speed_formatter.dart';
 import '../../../../domain/entities/torrent_status.dart';
 import '../controllers/torrent_notifier.dart';
 
+/// Shared placeholder used by both the list item and action buttons
+/// while the real torrent data is still loading.
+TorrentStatus _placeholder(String id) => TorrentStatus(
+      id: id,
+      name: '…',
+      progress: 0,
+      downloadSpeed: 0,
+      uploadSpeed: 0,
+      peers: 0,
+      seeds: 0,
+      state: TorrentState.unknown,
+      totalSize: 0,
+      downloadedBytes: 0,
+      uploadedBytes: 0,
+      savePath: '',
+      addedAt: DateTime.now(),
+      lastActivityAt: DateTime.now(),
+      ratio: 0,
+    );
+
 /// Premium glassmorphism torrent card.
 /// Uses `.select()` — only rebuilds when THIS torrent's data changes.
 class TorrentListItem extends ConsumerStatefulWidget {
@@ -116,13 +136,18 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
             isSelected: isSelected,
             child: InkWell(
               onTap: () {
-                ref
-                    .read(selectedTorrentsProvider.notifier)
-                    .toggle(widget.torrentId);
-                HapticFeedback.lightImpact();
+                if (isSelectionMode) {
+                  ref
+                      .read(selectedTorrentsProvider.notifier)
+                      .toggle(widget.torrentId);
+                  HapticFeedback.lightImpact();
+                }
+                // When not in selection mode, tap does nothing
+                // (actions are in the row buttons below)
               },
               onLongPress: () {
                 HapticFeedback.mediumImpact();
+                // Long-press always enters selection mode and selects this item
                 ref
                     .read(selectedTorrentsProvider.notifier)
                     .toggle(widget.torrentId);
@@ -347,7 +372,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            _ActionButtons(status: status),
+                            _ActionButtons(torrentId: widget.torrentId),
                           ],
                         ),
                       ],
@@ -399,23 +424,6 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
   }
 
 
-  static TorrentStatus _placeholder(String id) => TorrentStatus(
-        id: id,
-        name: '…',
-        progress: 0,
-        downloadSpeed: 0,
-        uploadSpeed: 0,
-        peers: 0,
-        seeds: 0,
-        state: TorrentState.unknown,
-        totalSize: 0,
-        downloadedBytes: 0,
-        uploadedBytes: 0,
-        savePath: '',
-        addedAt: DateTime.now(),
-        lastActivityAt: DateTime.now(),
-        ratio: 0,
-      );
 }
 
 class _GlassCard extends StatelessWidget {
@@ -498,11 +506,22 @@ class _GlassCard extends StatelessWidget {
 
 
 class _ActionButtons extends ConsumerWidget {
-  const _ActionButtons({required this.status});
-  final TorrentStatus status;
+  const _ActionButtons({required this.torrentId});
+  final String torrentId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Watch the provider directly so we always get the latest optimistic state.
+    final status = ref.watch(
+      torrentNotifierProvider.select(
+        (s) => s.valueOrNull?.firstWhere(
+          (t) => t.id == torrentId,
+          orElse: () => _placeholder(torrentId),
+        ),
+      ),
+    );
+    if (status == null) return const SizedBox.shrink();
+
     final notifier = ref.read(torrentNotifierProvider.notifier);
     final messenger = ScaffoldMessenger.of(context);
 
@@ -626,7 +645,7 @@ class _ActionButtons extends ConsumerWidget {
         _CircleIconButton(
           icon: Icons.delete_outline_rounded,
           color: AppColors.error,
-          onTap: () => _confirmDelete(context, ref),
+          onTap: () => _confirmDelete(context, ref, status),
           tooltip: 'Delete',
         ),
       ],
@@ -643,7 +662,8 @@ class _ActionButtons extends ConsumerWidget {
     );
   }
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+  Future<void> _confirmDelete(
+      BuildContext context, WidgetRef ref, TorrentStatus status) async {
     final notifier = ref.read(torrentNotifierProvider.notifier);
     final result = await showDialog<_DeleteChoice>(
       context: context,

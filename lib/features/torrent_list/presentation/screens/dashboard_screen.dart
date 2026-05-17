@@ -372,39 +372,74 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  _SelectionAction(
-                    icon: Icons.play_arrow_rounded,
-                    tooltip: 'Resume',
-                    onPressed: () async {
-                      final notifier =
-                          ref.read(torrentNotifierProvider.notifier);
-                      final ids = selectedIds.toList();
-                      ref.read(selectedTorrentsProvider.notifier).clear();
-                      await notifier.resumeMultiple(ids);
-                    },
-                  ),
-                  _SelectionAction(
-                    icon: Icons.pause_rounded,
-                    tooltip: 'Pause',
-                    onPressed: () async {
-                      final notifier =
-                          ref.read(torrentNotifierProvider.notifier);
-                      final ids = selectedIds.toList();
-                      ref.read(selectedTorrentsProvider.notifier).clear();
-                      await notifier.pauseMultiple(ids);
-                    },
-                  ),
-                  _SelectionAction(
-                    icon: Icons.stop_rounded,
-                    tooltip: 'Stop',
-                    onPressed: () async {
-                      final notifier =
-                          ref.read(torrentNotifierProvider.notifier);
-                      final ids = selectedIds.toList();
-                      ref.read(selectedTorrentsProvider.notifier).clear();
-                      await notifier.stopMultiple(ids);
-                    },
-                  ),
+                  Builder(builder: (ctx) {
+                      // Derive state from the real torrent list so this
+                      // toggle always syncs with the per-card icons.
+                      final allTorrents =
+                          ref.watch(torrentNotifierProvider).valueOrNull ?? [];
+                      final selected = allTorrents
+                          .where((t) => selectedIds.contains(t.id))
+                          .toList();
+
+                      // ALL selected are paused/stopped → show Play
+                      // ANY selected is actively running → show Pause
+                      final allPausedOrStopped = selected.isNotEmpty &&
+                          selected.every((t) => t.isPaused || t.isStopped);
+
+                      // Show Stop only when at least one is NOT already stopped
+                      final anyNotStopped =
+                          selected.any((t) => !t.isStopped);
+
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // ── Play / Pause toggle ──────────────────────
+                          if (allPausedOrStopped)
+                            _SelectionAction(
+                              icon: Icons.play_arrow_rounded,
+                              tooltip: 'Resume',
+                              onPressed: () async {
+                                final notifier =
+                                    ref.read(torrentNotifierProvider.notifier);
+                                final ids = selectedIds.toList();
+                                ref
+                                    .read(selectedTorrentsProvider.notifier)
+                                    .clear();
+                                await notifier.resumeMultiple(ids);
+                              },
+                            )
+                          else
+                            _SelectionAction(
+                              icon: Icons.pause_rounded,
+                              tooltip: 'Pause',
+                              onPressed: () async {
+                                final notifier =
+                                    ref.read(torrentNotifierProvider.notifier);
+                                final ids = selectedIds.toList();
+                                ref
+                                    .read(selectedTorrentsProvider.notifier)
+                                    .clear();
+                                await notifier.pauseMultiple(ids);
+                              },
+                            ),
+                          // ── Stop (only when something is stoppable) ──
+                          if (anyNotStopped)
+                            _SelectionAction(
+                              icon: Icons.stop_rounded,
+                              tooltip: 'Stop',
+                              onPressed: () async {
+                                final notifier =
+                                    ref.read(torrentNotifierProvider.notifier);
+                                final ids = selectedIds.toList();
+                                ref
+                                    .read(selectedTorrentsProvider.notifier)
+                                    .clear();
+                                await notifier.stopMultiple(ids);
+                              },
+                            ),
+                        ],
+                      );
+                    }),
                   _SelectionAction(
                     icon: Icons.delete_outline_rounded,
                     color: AppColors.error,

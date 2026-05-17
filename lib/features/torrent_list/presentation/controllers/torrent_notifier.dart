@@ -108,6 +108,11 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   final _pendingStopTimers = <String, Timer>{};
   StreamSubscription<NotificationActionEvent>? _actionSub;
 
+  /// Optimistic state overrides applied immediately on user action.
+  /// These shield the UI from reverting during the DB-write race window.
+  /// Cleared once the live stream confirms the new state for each torrent.
+  final _optimisticOverrides = <String, ({bool isPaused, bool isStopped})>{};
+
   @override
   Future<List<TorrentStatus>> build() async {
     WidgetsBinding.instance.addObserver(this);
@@ -162,7 +167,46 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     // Subscribe to live stream; rebuild state on each emission
     _sub = repo.statusStream.listen(
       (statuses) {
-        state = AsyncValue.data(statuses);
+        // Apply any pending optimistic overrides and prune ones that have
+        // been confirmed by the live stream.
+        List<TorrentStatus> resolved = statuses;
+        if (_optimisticOverrides.isNotEmpty) {
+          final toRemove = <String>{};
+          resolved = statuses.map((t) {
+            final override = _optimisticOverrides[t.id];
+            if (override == null) return t;
+
+            // Check whether the live stream has caught up to our optimistic state.
+            final confirmed = t.isPaused == override.isPaused &&
+                t.isStopped == override.isStopped;
+            if (confirmed) {
+              toRemove.add(t.id);
+              return t;
+            }
+
+            // Not yet confirmed — keep overriding.
+            TorrentState overrideState = t.state;
+            if (override.isStopped) {
+              overrideState = TorrentState.stopped;
+            } else if (override.isPaused) {
+              overrideState = TorrentState.paused;
+            } else {
+              // Resuming
+              if (t.state == TorrentState.stopped ||
+                  t.state == TorrentState.paused) {
+                overrideState = TorrentState.downloading;
+              }
+            }
+            return t.copyWith(
+              isPaused: override.isPaused,
+              isStopped: override.isStopped,
+              state: overrideState,
+            );
+          }).toList();
+          toRemove.forEach(_optimisticOverrides.remove);
+        }
+
+        state = AsyncValue.data(resolved);
         // Push notification update (Hardening #5)
         ForegroundServiceManager.instance.pushUpdate(statuses);
 
@@ -318,12 +362,14 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   }
 
   Future<void> pauseTorrent(String id) async {
+    _optimisticOverrides[id] = (isPaused: true, isStopped: false);
     _updateOptimisticStatus(id, isPaused: true);
     try {
       final repo = ref.read(torrentRepositoryProvider);
       await repo.pauseTorrent(id);
       AppLogger.i('[Notifier] Successfully paused torrent: $id');
     } catch (e, st) {
+      _optimisticOverrides.remove(id);
       AppLogger.e('[Notifier] Failed to pause torrent: $id',
           error: e, stack: st);
       // Let the live stream handle the rollback/actual state
@@ -332,6 +378,9 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   }
 
   Future<void> pauseMultiple(List<String> ids) async {
+    for (final id in ids) {
+      _optimisticOverrides[id] = (isPaused: true, isStopped: false);
+    }
     _updateOptimisticStatusMultiple(ids, isPaused: true);
     try {
       final repo = ref.read(torrentRepositoryProvider);
@@ -339,6 +388,9 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
       await repo.pauseMultiple(ids);
       AppLogger.i('[Notifier] Successfully paused ${ids.length} torrents');
     } catch (e, st) {
+      for (final id in ids) {
+        _optimisticOverrides.remove(id);
+      }
       AppLogger.e('[Notifier] Failed to pause multiple torrents',
           error: e, stack: st);
       rethrow;
@@ -346,12 +398,14 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   }
 
   Future<void> stopTorrent(String id) async {
+    _optimisticOverrides[id] = (isPaused: true, isStopped: true);
     _updateOptimisticStatus(id, isPaused: true, isStopped: true);
     try {
       final repo = ref.read(torrentRepositoryProvider);
       await repo.stopTorrent(id);
       AppLogger.i('[Notifier] Successfully stopped torrent: $id');
     } catch (e, st) {
+      _optimisticOverrides.remove(id);
       AppLogger.e('[Notifier] Failed to stop torrent: $id',
           error: e, stack: st);
       rethrow;
@@ -359,12 +413,18 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   }
 
   Future<void> stopMultiple(List<String> ids) async {
+    for (final id in ids) {
+      _optimisticOverrides[id] = (isPaused: true, isStopped: true);
+    }
     _updateOptimisticStatusMultiple(ids, isPaused: true, isStopped: true);
     try {
       final repo = ref.read(torrentRepositoryProvider);
       await repo.stopMultiple(ids);
       AppLogger.i('[Notifier] Successfully stopped ${ids.length} torrents');
     } catch (e, st) {
+      for (final id in ids) {
+        _optimisticOverrides.remove(id);
+      }
       AppLogger.e('[Notifier] Failed to stop multiple torrents',
           error: e, stack: st);
       rethrow;
@@ -372,12 +432,14 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   }
 
   Future<void> resumeTorrent(String id) async {
+    _optimisticOverrides[id] = (isPaused: false, isStopped: false);
     _updateOptimisticStatus(id, isPaused: false, isStopped: false);
     try {
       final repo = ref.read(torrentRepositoryProvider);
       await repo.resumeTorrent(id);
       AppLogger.i('[Notifier] Successfully resumed torrent: $id');
     } catch (e, st) {
+      _optimisticOverrides.remove(id);
       AppLogger.e('[Notifier] Failed to resume torrent: $id',
           error: e, stack: st);
       rethrow;
@@ -385,12 +447,18 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   }
 
   Future<void> resumeMultiple(List<String> ids) async {
+    for (final id in ids) {
+      _optimisticOverrides[id] = (isPaused: false, isStopped: false);
+    }
     _updateOptimisticStatusMultiple(ids, isPaused: false, isStopped: false);
     try {
       final repo = ref.read(torrentRepositoryProvider);
       await repo.resumeMultiple(ids);
       AppLogger.i('[Notifier] Successfully resumed ${ids.length} torrents');
     } catch (e, st) {
+      for (final id in ids) {
+        _optimisticOverrides.remove(id);
+      }
       AppLogger.e('[Notifier] Failed to resume multiple torrents',
           error: e, stack: st);
       rethrow;
@@ -403,11 +471,23 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
 
     final updated = previousList.map((t) {
       if (t.id == id) {
+        TorrentState newState = t.state;
+        if (isStopped == true) {
+          newState = TorrentState.stopped;
+        } else if (isPaused == true && isStopped != true) {
+          // Soft pause — keep engine state but mark paused flag
+          newState = TorrentState.paused;
+        } else if (isPaused == false && isStopped == false) {
+          // Resuming — restore to downloading so the pause button shows immediately
+          if (t.state == TorrentState.stopped ||
+              t.state == TorrentState.paused) {
+            newState = TorrentState.downloading;
+          }
+        }
         return t.copyWith(
           isPaused: isPaused ?? t.isPaused,
           isStopped: isStopped ?? t.isStopped,
-          // If stopping, also reflect that in state label immediately
-          state: (isStopped == true) ? TorrentState.stopped : t.state,
+          state: newState,
         );
       }
       return t;
@@ -424,10 +504,21 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     final idSet = ids.toSet();
     final updated = previousList.map((t) {
       if (idSet.contains(t.id)) {
+        TorrentState newState = t.state;
+        if (isStopped == true) {
+          newState = TorrentState.stopped;
+        } else if (isPaused == true && isStopped != true) {
+          newState = TorrentState.paused;
+        } else if (isPaused == false && isStopped == false) {
+          if (t.state == TorrentState.stopped ||
+              t.state == TorrentState.paused) {
+            newState = TorrentState.downloading;
+          }
+        }
         return t.copyWith(
           isPaused: isPaused ?? t.isPaused,
           isStopped: isStopped ?? t.isStopped,
-          state: (isStopped == true) ? TorrentState.stopped : t.state,
+          state: newState,
         );
       }
       return t;
@@ -533,7 +624,10 @@ class SelectedTorrents extends _$SelectedTorrents {
 
   void enterSelectionMode() {
     _manualMode = true;
-    ref.notifyListeners();
+    // Force a real state change so Riverpod triggers a rebuild.
+    // notifyListeners() alone does NOT cause ConsumerWidgets to rebuild
+    // because Riverpod only rebuilds on state object identity change.
+    state = Set.from(state);
   }
 
   void selectAll(List<String> ids) {
