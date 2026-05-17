@@ -380,8 +380,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           ref.read(torrentNotifierProvider.notifier);
                       final ids = selectedIds.toList();
                       ref.read(selectedTorrentsProvider.notifier).clear();
-                      await Future.wait(
-                          ids.map((id) => notifier.resumeTorrent(id)));
+                      await notifier.resumeMultiple(ids);
                     },
                   ),
                   _SelectionAction(
@@ -392,8 +391,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           ref.read(torrentNotifierProvider.notifier);
                       final ids = selectedIds.toList();
                       ref.read(selectedTorrentsProvider.notifier).clear();
-                      await Future.wait(
-                          ids.map((id) => notifier.pauseTorrent(id)));
+                      await notifier.pauseMultiple(ids);
                     },
                   ),
                   _SelectionAction(
@@ -404,8 +402,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           ref.read(torrentNotifierProvider.notifier);
                       final ids = selectedIds.toList();
                       ref.read(selectedTorrentsProvider.notifier).clear();
-                      await Future.wait(
-                          ids.map((id) => notifier.stopTorrent(id)));
+                      await notifier.stopMultiple(ids);
                     },
                   ),
                   _SelectionAction(

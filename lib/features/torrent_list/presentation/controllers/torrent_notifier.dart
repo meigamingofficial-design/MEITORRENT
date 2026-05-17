@@ -331,6 +331,20 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     }
   }
 
+  Future<void> pauseMultiple(List<String> ids) async {
+    _updateOptimisticStatusMultiple(ids, isPaused: true);
+    try {
+      final repo = ref.read(torrentRepositoryProvider);
+      // Repository handles the loop/batching
+      await repo.pauseMultiple(ids);
+      AppLogger.i('[Notifier] Successfully paused ${ids.length} torrents');
+    } catch (e, st) {
+      AppLogger.e('[Notifier] Failed to pause multiple torrents',
+          error: e, stack: st);
+      rethrow;
+    }
+  }
+
   Future<void> stopTorrent(String id) async {
     _updateOptimisticStatus(id, isPaused: true, isStopped: true);
     try {
@@ -339,6 +353,19 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
       AppLogger.i('[Notifier] Successfully stopped torrent: $id');
     } catch (e, st) {
       AppLogger.e('[Notifier] Failed to stop torrent: $id',
+          error: e, stack: st);
+      rethrow;
+    }
+  }
+
+  Future<void> stopMultiple(List<String> ids) async {
+    _updateOptimisticStatusMultiple(ids, isPaused: true, isStopped: true);
+    try {
+      final repo = ref.read(torrentRepositoryProvider);
+      await repo.stopMultiple(ids);
+      AppLogger.i('[Notifier] Successfully stopped ${ids.length} torrents');
+    } catch (e, st) {
+      AppLogger.e('[Notifier] Failed to stop multiple torrents',
           error: e, stack: st);
       rethrow;
     }
@@ -357,6 +384,19 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     }
   }
 
+  Future<void> resumeMultiple(List<String> ids) async {
+    _updateOptimisticStatusMultiple(ids, isPaused: false, isStopped: false);
+    try {
+      final repo = ref.read(torrentRepositoryProvider);
+      await repo.resumeMultiple(ids);
+      AppLogger.i('[Notifier] Successfully resumed ${ids.length} torrents');
+    } catch (e, st) {
+      AppLogger.e('[Notifier] Failed to resume multiple torrents',
+          error: e, stack: st);
+      rethrow;
+    }
+  }
+
   void _updateOptimisticStatus(String id, {bool? isPaused, bool? isStopped}) {
     final previousList = state.asData?.value;
     if (previousList == null) return;
@@ -366,6 +406,28 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
         return t.copyWith(
           isPaused: isPaused ?? t.isPaused,
           isStopped: isStopped ?? t.isStopped,
+          // If stopping, also reflect that in state label immediately
+          state: (isStopped == true) ? TorrentState.stopped : t.state,
+        );
+      }
+      return t;
+    }).toList();
+
+    state = AsyncValue.data(updated);
+  }
+
+  void _updateOptimisticStatusMultiple(List<String> ids,
+      {bool? isPaused, bool? isStopped}) {
+    final previousList = state.asData?.value;
+    if (previousList == null) return;
+
+    final idSet = ids.toSet();
+    final updated = previousList.map((t) {
+      if (idSet.contains(t.id)) {
+        return t.copyWith(
+          isPaused: isPaused ?? t.isPaused,
+          isStopped: isStopped ?? t.isStopped,
+          state: (isStopped == true) ? TorrentState.stopped : t.state,
         );
       }
       return t;

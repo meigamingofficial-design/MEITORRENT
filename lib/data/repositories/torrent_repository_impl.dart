@@ -869,22 +869,43 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
   @override
   Future<void> pauseAll() async {
-    for (final s in _lastStatuses) {
-      if (!s.isPaused) await pauseTorrent(s.id);
+    final ids = _lastStatuses.where((s) => !s.isPaused).map((s) => s.id).toList();
+    await pauseMultiple(ids);
+  }
+
+  @override
+  Future<void> pauseMultiple(List<String> ids) async {
+    for (final id in ids) {
+      await pauseTorrent(id);
     }
   }
 
   @override
   Future<void> stopAll() async {
-    for (final s in _lastStatuses) {
-      if (!s.isStopped) await stopTorrent(s.id);
+    final ids = _lastStatuses.where((s) => !s.isStopped).map((s) => s.id).toList();
+    await stopMultiple(ids);
+  }
+
+  @override
+  Future<void> stopMultiple(List<String> ids) async {
+    for (final id in ids) {
+      await stopTorrent(id);
     }
   }
 
   @override
   Future<void> resumeAll() async {
-    for (final s in _lastStatuses) {
-      if (s.isPaused || s.isStopped) await resumeTorrent(s.id);
+    final ids = _lastStatuses
+        .where((s) => s.isPaused || s.isStopped)
+        .map((s) => s.id)
+        .toList();
+    await resumeMultiple(ids);
+  }
+
+  @override
+  Future<void> resumeMultiple(List<String> ids) async {
+    for (final id in ids) {
+      await resumeTorrent(id);
     }
   }
 

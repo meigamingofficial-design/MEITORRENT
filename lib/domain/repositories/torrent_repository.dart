@@ -33,11 +33,20 @@ abstract interface class TorrentRepository {
   /// Pauses all active torrents.
   Future<void> pauseAll();
 
+  /// Pauses specific torrents by ID.
+  Future<void> pauseMultiple(List<String> ids);
+
   /// Stops all active torrents.
   Future<void> stopAll();
 
+  /// Stops specific torrents by ID.
+  Future<void> stopMultiple(List<String> ids);
+
   /// Resumes all paused/stopped torrents.
   Future<void> resumeAll();
+
+  /// Resumes specific torrents by ID.
+  Future<void> resumeMultiple(List<String> ids);
 
   /// Deletes multiple torrents by ID.
   Future<void> deleteMultiple(List<String> ids, {bool deleteFiles = false});
