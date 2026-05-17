@@ -231,6 +231,13 @@ class TorrentRepositoryImpl implements TorrentRepository {
         }
         status = status.copyWith(completedAt: completedAt);
 
+        // 🛡️ Redundant Completion Guard: If progress is 1.0, force isCompleted=true
+        // immediately in the stream. This ensures the 'Hard Lock' logic triggers
+        // even if the engine hasn't officially flipped the bit yet.
+        if (status.progress >= 1.0) {
+          status = status.copyWith(isCompleted: true);
+        }
+
         // Capture/Update lastActivityAt (Throttled to prevent reshuffling and excessive DB writes)
         DateTime lastActivityAt = persisted?.lastActivityAt ?? status.addedAt;
         final progressDelta = persisted == null
@@ -283,7 +290,7 @@ class TorrentRepositoryImpl implements TorrentRepository {
       });
       if (hasNewCompletion) {
         AppLogger.i('[Repo] Torrent completed — flushing DB immediately');
-        _flushDbWrite();
+        await _flushDbWrite();
       }
 
       _lastStatuses = corrected;
@@ -1022,104 +1029,107 @@ class TorrentRepositoryImpl implements TorrentRepository {
   void _scheduleDbWrite(List<TorrentStatus> statuses) {
     _dbWriteTimer?.cancel();
     _dbWriteTimer = Timer(AppConstants.dbWriteInterval, () async {
-      try {
-        final dbTorrents = await getStoredTorrents();
-        final dbById = {for (final t in dbTorrents) t.id: t};
+      await _performDbWrite(statuses);
+    });
+  }
 
-        final enrichedStatuses = <TorrentStatus>[];
-        for (final s in statuses) {
-          var status = s;
-          var persisted = dbById[s.id];
+  Future<void> _performDbWrite(List<TorrentStatus> statuses) async {
+    try {
+      final dbTorrents = await getStoredTorrents();
+      final dbById = {for (final t in dbTorrents) t.id: t};
 
-          // 🔍 FALLBACK: If ID changed on restart, find by Magnet/File
-          if (persisted == null) {
-            if (s.magnetUri != null) {
-              persisted = dbTorrents
-                  .firstWhereOrNull((t) => t.magnetUri == s.magnetUri);
-            } else if (s.torrentFilePath != null) {
-              persisted = dbTorrents.firstWhereOrNull(
-                  (t) => t.torrentFilePath == s.torrentFilePath);
-            }
+      final enrichedStatuses = <TorrentStatus>[];
+      for (final s in statuses) {
+        var status = s;
+        var persisted = dbById[s.id];
+
+        // 🔍 FALLBACK: If ID changed on restart, find by Magnet/File
+        if (persisted == null) {
+          if (s.magnetUri != null) {
+            persisted =
+                dbTorrents.firstWhereOrNull((t) => t.magnetUri == s.magnetUri);
+          } else if (s.torrentFilePath != null) {
+            persisted = dbTorrents.firstWhereOrNull(
+                (t) => t.torrentFilePath == s.torrentFilePath);
           }
+        }
 
-          if (persisted != null) {
-            // 🧱 ANTI-REGRESSION: Never overwrite a completed state with an uncompleted one.
-            // Never overwrite high progress with low progress during engine transitions.
-            final isCompleted = persisted.isCompleted || status.isCompleted;
-            final progress = (persisted.isCompleted)
-                ? 1.0
-                : (status.progress > persisted.progress
-                    ? status.progress
-                    : persisted.progress);
+        if (persisted != null) {
+          // 🧱 ANTI-REGRESSION: Never overwrite a completed state with an uncompleted one.
+          // Never overwrite high progress with low progress during engine transitions.
+          final isCompleted = persisted.isCompleted || status.isCompleted;
+          final progress = (persisted.isCompleted)
+              ? 1.0
+              : (status.progress > persisted.progress
+                  ? status.progress
+                  : persisted.progress);
 
-            // Restore metadata if engine is warming up (totalSize == 0)
-            final totalSize = (status.totalSize == 0 && persisted.totalSize > 0)
-                ? persisted.totalSize
-                : status.totalSize;
-            final downloadedBytes = (isCompleted)
-                ? totalSize
-                : (status.downloadedBytes > persisted.downloadedBytes
-                    ? status.downloadedBytes
-                    : persisted.downloadedBytes);
+          // Restore metadata if engine is warming up (totalSize == 0)
+          final totalSize = (status.totalSize == 0 && persisted.totalSize > 0)
+              ? persisted.totalSize
+              : status.totalSize;
+          final downloadedBytes = (isCompleted)
+              ? totalSize
+              : (status.downloadedBytes > persisted.downloadedBytes
+                  ? status.downloadedBytes
+                  : persisted.downloadedBytes);
 
-            status = status.copyWith(
-              isCompleted: isCompleted,
-              progress: progress,
-              totalSize: totalSize,
-              downloadedBytes: downloadedBytes,
-              name: (status.name == 'Torrent #${status.id}' ||
-                      status.name.isEmpty)
-                  ? persisted.name
-                  : status.name,
-              addedAt: persisted.addedAt,
-            );
+          status = status.copyWith(
+            isCompleted: isCompleted,
+            progress: progress,
+            totalSize: totalSize,
+            downloadedBytes: downloadedBytes,
+            name: (status.name == 'Torrent #${status.id}' ||
+                    status.name.isEmpty)
+                ? persisted.name
+                : status.name,
+            addedAt: persisted.addedAt,
+          );
 
-            // If the ID changed, we need to remove the old record from DB to prevent ghosts
-            if (persisted.id != s.id) {
-              _db.deleteTorrentById(persisted.id).catchError((_) => 0);
-            }
+          // If the ID changed, we need to remove the old record from DB to prevent ghosts
+          if (persisted.id != s.id) {
+            _db.deleteTorrentById(persisted.id).catchError((_) => 0);
           }
+        }
 
-          final intId = int.tryParse(s.id);
-          if (intId != null) {
-            final lastSavedProgress = _lastSavedResumeProgress[s.id] ?? 0.0;
-            final isCompleted = status.isCompleted;
-            final progressDelta = status.progress - lastSavedProgress;
+        final intId = int.tryParse(s.id);
+        if (intId != null) {
+          final lastSavedProgress = _lastSavedResumeProgress[s.id] ?? 0.0;
+          final isCompleted = status.isCompleted;
+          final progressDelta = status.progress - lastSavedProgress;
 
-            // Save resume data if:
-            //   1. Torrent is 100% completed (final write)
-            //   2. Progress has increased by >= 1% since the last saved checkpoint
-            //   3. Torrent is idle/paused (progress > 2% and download speed is 0)
-            if (isCompleted ||
-                progressDelta >= 0.01 ||
-                (status.progress > 0.02 && status.downloadSpeed == 0)) {
-              final resume = _engine.getResumeDataSafe(intId);
-              if (resume != null) {
-                status = status.copyWith(resumeData: resume);
-                _lastSavedResumeProgress[s.id] = status.progress;
-                if (isCompleted) {
-                  AppLogger.d(
-                      '[Repo] Saved final 100% completed resume data for: ${status.name}');
-                } else {
-                  AppLogger.d(
-                    '[Repo] Saved intermediate fast-resume data at ${(status.progress * 100).toStringAsFixed(1)}% for: ${status.name}',
-                  );
-                }
+          // Save resume data if:
+          //   1. Torrent is 100% completed (final write)
+          //   2. Progress has increased by >= 1% since the last saved checkpoint
+          //   3. Torrent is idle/paused (progress > 2% and download speed is 0)
+          if (isCompleted ||
+              progressDelta >= 0.01 ||
+              (status.progress > 0.02 && status.downloadSpeed == 0)) {
+            final resume = _engine.getResumeDataSafe(intId);
+            if (resume != null) {
+              status = status.copyWith(resumeData: resume);
+              _lastSavedResumeProgress[s.id] = status.progress;
+              if (isCompleted) {
+                AppLogger.d(
+                    '[Repo] Saved final 100% completed resume data for: ${status.name}');
+              } else {
+                AppLogger.d(
+                  '[Repo] Saved intermediate fast-resume data at ${(status.progress * 100).toStringAsFixed(1)}% for: ${status.name}',
+                );
               }
             }
           }
-          enrichedStatuses.add(status);
         }
-
-        final companions =
-            enrichedStatuses.map(TorrentModel.toCompanion).toList();
-        await _db.batchUpdateTorrents(companions);
-        AppLogger.d(
-            '[Repo] DB snapshot written (${companions.length} entries)');
-      } catch (e, st) {
-        AppLogger.e('[Repo] DB write failed', error: e, stack: st);
+        enrichedStatuses.add(status);
       }
-    });
+
+      final companions =
+          enrichedStatuses.map(TorrentModel.toCompanion).toList();
+      await _db.batchUpdateTorrents(companions);
+      AppLogger.d('[Repo] DB snapshot written (${companions.length} entries)');
+    } catch (e, st) {
+      AppLogger.e('[Repo] DB write failed', error: e, stack: st);
+    }
   }
 
   /// Immediately flush pending DB writes without waiting for the timer.
@@ -1127,9 +1137,12 @@ class TorrentRepositoryImpl implements TorrentRepository {
   /// state is persisted before app termination.
   Future<void> _flushDbWrite() async {
     try {
-      _dbWriteTimer?.cancel();
-      _dbWriteTimer = null;
-      AppLogger.d('[Repo] DB flush completed for critical operation');
+      if (_dbWriteTimer != null) {
+        _dbWriteTimer!.cancel();
+        _dbWriteTimer = null;
+        await _performDbWrite(_lastStatuses);
+        AppLogger.d('[Repo] DB flush completed for critical operation');
+      }
     } catch (e, st) {
       AppLogger.e('[Repo] DB flush failed', error: e, stack: st);
     }
