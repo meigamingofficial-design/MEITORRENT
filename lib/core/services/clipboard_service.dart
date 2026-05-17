@@ -64,9 +64,4 @@ class ClipboardService {
       AppLogger.e('[Clipboard] Failed to persist handled magnet', error: e);
     }
   }
-
-  String? _extractInfoHash(String magnet) {
-    final match = RegExp(r'xt=urn:btih:([a-zA-Z0-9]+)').firstMatch(magnet);
-    return match?.group(1)?.toLowerCase();
-  }
 }
