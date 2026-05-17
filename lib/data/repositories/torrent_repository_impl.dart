@@ -1088,6 +1088,9 @@ class TorrentRepositoryImpl implements TorrentRepository {
 
           // If the ID changed, we need to remove the old record from DB to prevent ghosts
           if (persisted.id != s.id) {
+            // 🛡️ Notification Cleanup: If the ID changed on restart, the old
+            // notification (tied to the old ID) is now orphaned. Cancel it.
+            NotificationService.instance.cancelOrphanedNotification(persisted.id);
             _db.deleteTorrentById(persisted.id).catchError((_) => 0);
           }
         }

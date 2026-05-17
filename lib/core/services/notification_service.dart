@@ -299,6 +299,16 @@ class NotificationService {
     } catch (_) {}
   }
 
+  /// Cancels a notification by its raw ID, used for cleaning up orphaned
+  /// notifications when IDs change on restart.
+  Future<void> cancelOrphanedNotification(String oldId) async {
+    try {
+      if (!_initialized) return;
+      final notifId = _notificationId(oldId);
+      await _plugin.cancel(notifId);
+    } catch (_) {}
+  }
+
   Future<void> cancelAllActiveNotifications() async {
     try {
       if (!_initialized) return;
