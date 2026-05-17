@@ -51,16 +51,19 @@ Meitorrent supports three separate build flavors (configured with separate Appli
 
 ### 🛠️ Development & Build Commands
 
-#### 📦 Building APKs
-To build the APK files for distribution:
+#### 📦 Building APKs & AppBundles
+To build the distribution files for the Play Store or manual installation:
 ```bash
-# Production Release Build
+# Production Release APK
 flutter build apk --flavor prod --release
 
-# Staging Release Build
+# Production Release AppBundle (For Play Store)
+flutter build appbundle --flavor prod --release
+
+# Staging Release APK
 flutter build apk --flavor staging --release
 
-# Development Release Build
+# Development Release APK
 flutter build apk --flavor dev --release
 ```
 
