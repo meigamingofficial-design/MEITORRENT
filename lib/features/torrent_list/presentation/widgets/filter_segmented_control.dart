@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../controllers/torrent_notifier.dart';
 
@@ -88,7 +87,7 @@ class FilterSegmentedControl extends StatelessWidget {
                       child: Center(
                         child: AnimatedDefaultTextStyle(
                           duration: const Duration(milliseconds: 220),
-                          style: GoogleFonts.outfit(
+                          style: (Theme.of(context).textTheme.labelLarge ?? const TextStyle()).copyWith(
                             color: isActive
                                 ? Colors.white
                                 : AppColors.textSecondary(context),

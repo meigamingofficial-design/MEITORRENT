@@ -126,7 +126,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
               title: Text(
                 'Test Crash',
-                style: TextStyle(
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppColors.text(context),
@@ -134,7 +134,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
               subtitle: Text(
                 'Force a crash to test Firebase integration',
-                style: TextStyle(
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppColors.textSecondary(context),
                   fontSize: 12,
                 ),
@@ -184,7 +184,7 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
       child: Text(
         title.toUpperCase(),
-        style: const TextStyle(
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: AppColors.downloading,
           fontSize: 11,
           fontWeight: FontWeight.w700,
@@ -241,7 +241,7 @@ class _SpeedLimitTile extends StatelessWidget {
       ),
       title: Text(
         label,
-        style: TextStyle(
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: AppColors.text(context),
@@ -249,7 +249,10 @@ class _SpeedLimitTile extends StatelessWidget {
       ),
       subtitle: Text(
         displayLabel,
-        style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: AppColors.textSecondary(context),
+          fontSize: 12,
+        ),
       ),
       trailing: Icon(
         Icons.chevron_right,
@@ -279,7 +282,7 @@ class _SpeedLimitTile extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 child: Text(
                   label,
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: AppColors.text(context),
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -292,7 +295,7 @@ class _SpeedLimitTile extends StatelessWidget {
                 return ListTile(
                   title: Text(
                     _presetLabels[i],
-                    style: TextStyle(
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: selected
                           ? AppColors.downloading
                           : AppColors.textSecondary(context),
@@ -354,7 +357,7 @@ class _SwitchTile extends StatelessWidget {
       ),
       title: Text(
         label,
-        style: TextStyle(
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: AppColors.text(context),
@@ -362,7 +365,10 @@ class _SwitchTile extends StatelessWidget {
       ),
       subtitle: Text(
         subtitle,
-        style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: AppColors.textSecondary(context),
+          fontSize: 12,
+        ),
       ),
       trailing: Switch(
         value: value,
@@ -399,7 +405,7 @@ class _ConnectionsTile extends StatelessWidget {
       ),
       title: Text(
         'Max Connections',
-        style: TextStyle(
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: AppColors.text(context),
@@ -407,7 +413,10 @@ class _ConnectionsTile extends StatelessWidget {
       ),
       subtitle: Text(
         '$current peers',
-        style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: AppColors.textSecondary(context),
+          fontSize: 12,
+        ),
       ),
       trailing: Icon(
         Icons.chevron_right,
@@ -431,7 +440,7 @@ class _ConnectionsTile extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 child: Text(
                   'Max Global Connections',
-                  style: TextStyle(
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: AppColors.text(context),
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -443,7 +452,7 @@ class _ConnectionsTile extends StatelessWidget {
                 return ListTile(
                   title: Text(
                     '$n peers',
-                    style: TextStyle(
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: selected
                           ? AppColors.downloading
                           : AppColors.textSecondary(context),
@@ -509,7 +518,7 @@ class _AboutTile extends ConsumerWidget {
       ),
       title: Text(
         'Meitorrent',
-        style: TextStyle(
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
           fontSize: 14,
           fontWeight: FontWeight.w700,
           color: AppColors.text(context),
@@ -526,15 +535,15 @@ class _AboutTile extends ConsumerWidget {
               loading: () => 'Loading... · Fast. Private. Reliable.',
               error: (_, _) => 'v1.0.1+2 · Fast. Private. Reliable.',
             ),
-            style: TextStyle(
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondary(context),
               fontSize: 11,
             ),
           ),
           const SizedBox(height: 1),
-          const Text(
+          Text(
             'Designed & Developed by MeiGamingOfficial',
-            style: TextStyle(
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: AppColors.downloading,
               fontSize: 10,
               fontWeight: FontWeight.w600,
@@ -570,7 +579,7 @@ class _LegalTile extends StatelessWidget {
       ),
       title: Text(
         label,
-        style: TextStyle(
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: AppColors.text(context),
@@ -640,7 +649,7 @@ class _LegalDetailScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: SelectableText(
           content,
-          style: TextStyle(
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: AppColors.text(context),
             fontSize: 14,
             height: 1.8,
@@ -754,7 +763,7 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
           ),
           title: Text(
             'Ignore Battery Optimizations',
-            style: TextStyle(
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: AppColors.text(context),
@@ -764,7 +773,7 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
             _isIgnored
                 ? 'Battery optimizations are disabled'
                 : 'Helps keep torrent downloads active when the app is in the background or screen is off',
-            style: TextStyle(
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondary(context),
               fontSize: 12,
             ),
@@ -819,7 +828,7 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
                       const SizedBox(width: 8),
                       Text(
                         'Detected $_oemName Device',
-                        style: TextStyle(
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: AppColors.text(context),
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -830,7 +839,7 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
                   const SizedBox(height: 6),
                   Text(
                     'Your device enforces custom battery restrictions. For stable downloads, please set Meitorrent to "Unrestricted" and enable "Auto-start".',
-                    style: TextStyle(
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary(context),
                       fontSize: 11,
                       height: 1.3,
@@ -843,21 +852,21 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
                       force: true,
                     ),
                     borderRadius: BorderRadius.circular(6),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             'Configure OEM Settings',
-                            style: TextStyle(
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
                               color: AppColors.downloading,
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          SizedBox(width: 4),
-                          Icon(
+                          const SizedBox(width: 4),
+                          const Icon(
                             Icons.arrow_forward_rounded,
                             color: AppColors.downloading,
                             size: 12,

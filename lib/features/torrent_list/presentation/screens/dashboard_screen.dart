@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -377,10 +376,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   Expanded(
                     child: Text(
                       '${selectedIds.length} Selected',
-                      style: GoogleFonts.shipporiMincho(
+                      style: TextStyle(
+                        fontFamily: 'ShipporiMincho',
                         color: AppColors.text(context),
                         fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                         letterSpacing: -0.2,
                       ),
                       maxLines: 1,
@@ -482,11 +482,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     return AppBar(
       elevation: 0,
       backgroundColor: Colors.transparent,
-      title: Text(
+      title: const Text(
         'Meitorrent',
-        style: GoogleFonts.shipporiMincho(
+        style: TextStyle(
+          fontFamily: 'ShipporiMincho',
           fontSize: 22,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
           letterSpacing: -0.2,
         ),
       ),
@@ -1080,9 +1081,10 @@ class _GradientFABState extends State<_GradientFAB>
                 const SizedBox(width: 8),
                 Text(
                   'Add Torrent',
-                  style: GoogleFonts.shipporiMincho(
+                  style: TextStyle(
+                    fontFamily: 'ShipporiMincho',
                     color: textColor,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                     fontSize: 14,
                   ),
                 ),
@@ -1235,9 +1237,10 @@ class _ExitDialogState extends State<_ExitDialog> {
           children: [
             Text(
               'Exit Meitorrent?',
-              style: GoogleFonts.shipporiMincho(
+              style: TextStyle(
+                fontFamily: 'ShipporiMincho',
                 fontSize: 20,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: AppColors.text(context),
               ),
             ),

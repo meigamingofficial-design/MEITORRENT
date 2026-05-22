@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
@@ -39,8 +38,6 @@ void main() async {
     return true;
   };
 
-  // Allow Google Fonts to load dynamically
-  GoogleFonts.config.allowRuntimeFetching = true;
 
   // Required by flutter_foreground_task
   ForegroundServiceManager.initCommunicationPort();

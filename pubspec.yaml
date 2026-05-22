@@ -48,7 +48,6 @@ dependencies:
   device_info_plus: ^13.1.0
 
   # UI
-  google_fonts: ^8.1.0
 
   # Deep linking (magnet:// + .torrent files from browser)
   app_links: ^7.0.0
@@ -89,7 +88,14 @@ flutter:
     - PRIVACY_POLICY.md
     - TERMS.md
     - LICENSES.md
-    - google_fonts/
     - assets/images/
     - assets/images/app_logo.png
     - assets/images/icon_android.png
+
+  fonts:
+    - family: ShipporiMincho
+      fonts:
+        - asset: assets/fonts/ShipporiMincho-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/ShipporiMincho-Bold.ttf
+          weight: 700

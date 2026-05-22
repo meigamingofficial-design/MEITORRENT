@@ -281,7 +281,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       animation: _logoOpacity,
                       builder: (_, _) => Text(
                         'Fast. Private. Reliable.',
-                        style: TextStyle(
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontSize: 14,
                           color: AppColors.textSecondary(context).withValues(
                             alpha: _logoOpacity.value * 0.7,
@@ -328,7 +328,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         child: Text(
                           _statusText,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppColors.error,
                             fontSize: 13,
                           ),
@@ -357,7 +357,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       children: [
                         Text(
                           'from',
-                          style: TextStyle(
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
                             color: AppColors.textSecondary(context),
                             fontSize: 10,
                             letterSpacing: 2,
@@ -367,7 +367,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         const SizedBox(height: 4),
                         Text(
                           'MeiGamingOfficial',
-                          style: TextStyle(
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppColors.text(context),
                             fontSize: 13,
                             letterSpacing: 1.5,

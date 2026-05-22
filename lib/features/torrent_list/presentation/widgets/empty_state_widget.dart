@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../controllers/torrent_notifier.dart';
 
@@ -106,10 +105,11 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
             const SizedBox(height: 32),
             Text(
               _title,
-              style: GoogleFonts.shipporiMincho(
+              style: TextStyle(
+                fontFamily: 'ShipporiMincho',
                 color: AppColors.text(context),
                 fontSize: 22,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 letterSpacing: -0.3,
               ),
             ),
@@ -117,7 +117,7 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
             Text(
               _subtitle,
               textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.textSecondary(context),
                 fontSize: 14,
                 height: 1.65,

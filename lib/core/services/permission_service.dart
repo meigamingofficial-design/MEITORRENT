@@ -41,7 +41,7 @@ class PermissionService {
               Text(
                 'Storage Access Required',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
                   color: AppColors.text(ctx),
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -53,7 +53,7 @@ class PermissionService {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Meitorrent needs storage permission to:',
-                  style: TextStyle(
+                  style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
                     color: AppColors.text(ctx),
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -66,7 +66,7 @@ class PermissionService {
                 '• Resume downloads after restart\n'
                 '• Remove downloaded files',
                 textAlign: TextAlign.left,
-                style: TextStyle(
+                style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary(ctx),
                   fontSize: 13,
                   height: 1.8,
@@ -76,7 +76,7 @@ class PermissionService {
               Text(
                 'Storage permission is needed to save and manage files in your selected download folder.\n\n'
                 'On the next screen, allow storage access for Meitorrent.',
-                style: TextStyle(
+                style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary(ctx),
                   fontSize: 13,
                   height: 1.5,
@@ -96,18 +96,18 @@ class PermissionService {
                     color: AppColors.downloading.withValues(alpha: 0.2),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.lock_outline_rounded,
                       color: AppColors.downloading,
                       size: 16,
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         'Meitorrent only accesses files related to your downloads. Your personal data is never collected or shared.',
-                        style: TextStyle(
+                        style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
                           color: AppColors.downloading,
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
@@ -134,7 +134,7 @@ class PermissionService {
                       ),
                       child: Text(
                         'Skip for now',
-                        style: TextStyle(
+                        style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondary(ctx),
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
@@ -153,11 +153,12 @@ class PermissionService {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Grant Access',
-                        style: TextStyle(
+                        style: Theme.of(ctx).textTheme.labelLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                           fontSize: 13,
+                          color: Colors.white,
                         ),
                       ),
                     ),

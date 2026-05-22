@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 // ─────────────────────────────────────────────────────────────────
 // Meitorrent Design System — Japanese Sumi-e Parchment Theme
@@ -117,15 +116,15 @@ class AppTheme {
   static ThemeData get light {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'ShipporiMincho',
       colorScheme: _scheme,
       scaffoldBackgroundColor: Colors.transparent,
 
-      // Outfit for UI, Shippori Mincho for headers
-      textTheme: GoogleFonts.outfitTextTheme(
-        ThemeData.light().textTheme.apply(
-          bodyColor: _sumizome,
-          displayColor: _sumizome,
-        ),
+      // Shippori Mincho globally for all typography
+      textTheme: ThemeData.light().textTheme.apply(
+        fontFamily: 'ShipporiMincho',
+        bodyColor: _sumizome,
+        displayColor: _sumizome,
       ),
 
       // ── Card (Handmade Paper Style) ───────────────────────────
@@ -141,12 +140,12 @@ class AppTheme {
       ),
 
       // ── AppBar (Calligraphic Style) ───────────────────────────
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
-        systemOverlayStyle: const SystemUiOverlayStyle(
+        systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness:
               Brightness.dark, // Dark status bar icons (time, battery, etc.)
@@ -155,13 +154,14 @@ class AppTheme {
               _torinoko, // Match soft light parchment background
           systemNavigationBarIconBrightness: Brightness.dark,
         ),
-        titleTextStyle: GoogleFonts.shipporiMincho(
+        titleTextStyle: TextStyle(
+          fontFamily: 'ShipporiMincho',
           fontSize: 26,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
           color: _sumizome,
           letterSpacing: -0.2,
         ),
-        iconTheme: const IconThemeData(color: _sumizome),
+        iconTheme: IconThemeData(color: _sumizome),
       ),
 
       // ── FAB (Hanko Stamp Style) ───────────────────────────────
@@ -185,7 +185,10 @@ class AppTheme {
             borderRadius: BorderRadius.circular(12),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: GoogleFonts.shipporiMincho(fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(
+            fontFamily: 'ShipporiMincho',
+            fontWeight: FontWeight.w700,
+          ),
           elevation: 0,
         ),
       ),
@@ -234,7 +237,9 @@ class AppTheme {
       // ── SnackBar ──────────────────────────────────────────────
       snackBarTheme: SnackBarThemeData(
         backgroundColor: _inkBlack,
-        contentTextStyle: GoogleFonts.outfit(color: const Color(0xFFFAF6EE)),
+        contentTextStyle: const TextStyle(
+          color: Color(0xFFFAF6EE),
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         behavior: SnackBarBehavior.floating,
       ),
@@ -288,15 +293,15 @@ class AppTheme {
   static ThemeData get dark {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'ShipporiMincho',
       colorScheme: _darkScheme,
       scaffoldBackgroundColor: _darkInk,
 
-      // Outfit for UI, Shippori Mincho for headers
-      textTheme: GoogleFonts.outfitTextTheme(
-        ThemeData.dark().textTheme.apply(
-          bodyColor: _riceWhite,
-          displayColor: _riceWhite,
-        ),
+      // Shippori Mincho globally for all typography
+      textTheme: ThemeData.dark().textTheme.apply(
+        fontFamily: 'ShipporiMincho',
+        bodyColor: _riceWhite,
+        displayColor: _riceWhite,
       ),
 
       // ── Card (Dark Paper Style) ───────────────────────────────
@@ -311,12 +316,12 @@ class AppTheme {
       ),
 
       // ── AppBar (Dark Calligraphic) ────────────────────────────
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
-        systemOverlayStyle: const SystemUiOverlayStyle(
+        systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness:
               Brightness.light, // Light status bar icons (time, battery, etc.)
@@ -324,13 +329,14 @@ class AppTheme {
           systemNavigationBarColor: _darkInk, // Match midnight ink background
           systemNavigationBarIconBrightness: Brightness.light,
         ),
-        titleTextStyle: GoogleFonts.shipporiMincho(
+        titleTextStyle: TextStyle(
+          fontFamily: 'ShipporiMincho',
           fontSize: 26,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
           color: _riceWhite,
           letterSpacing: -0.2,
         ),
-        iconTheme: const IconThemeData(color: _riceWhite),
+        iconTheme: IconThemeData(color: _riceWhite),
       ),
 
       // ── FAB (Dark Hanko Stamp) ────────────────────────────────
@@ -352,7 +358,10 @@ class AppTheme {
             borderRadius: BorderRadius.circular(12),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          textStyle: GoogleFonts.shipporiMincho(fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(
+            fontFamily: 'ShipporiMincho',
+            fontWeight: FontWeight.w700,
+          ),
           elevation: 0,
         ),
       ),
@@ -401,7 +410,9 @@ class AppTheme {
       // ── SnackBar ──────────────────────────────────────────────
       snackBarTheme: SnackBarThemeData(
         backgroundColor: _darkSurface,
-        contentTextStyle: GoogleFonts.outfit(color: _riceWhite),
+        contentTextStyle: const TextStyle(
+          color: _riceWhite,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         behavior: SnackBarBehavior.floating,
       ),

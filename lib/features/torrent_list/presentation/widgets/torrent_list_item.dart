@@ -1,9 +1,8 @@
 import 'dart:ui';
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/folder_service.dart';
@@ -223,9 +222,9 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                 status.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.outfit(
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   color: AppColors.text(context),
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w700,
                                   fontSize: 14.5,
                                   letterSpacing: -0.1,
                                 ),

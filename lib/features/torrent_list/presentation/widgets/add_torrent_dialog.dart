@@ -2,8 +2,6 @@ import 'dart:async';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
-
 import '../../../../core/services/clipboard_service.dart';
 import '../../../../core/theme/app_theme.dart';
 
@@ -208,11 +206,12 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Text(
+                        const Text(
                           'Add Torrent',
-                          style: GoogleFonts.shipporiMincho(
+                          style: TextStyle(
+                            fontFamily: 'ShipporiMincho',
                             fontSize: 19,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                             letterSpacing: -0.3,
                           ),
                         ),
@@ -250,12 +249,14 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                         unselectedLabelColor: AppColors.text(
                           context,
                         ).withValues(alpha: 0.5),
-                        labelStyle: GoogleFonts.shipporiMincho(
+                        labelStyle: const TextStyle(
+                          fontFamily: 'ShipporiMincho',
                           fontWeight: FontWeight.w700,
                           fontSize: 13,
                         ),
-                        unselectedLabelStyle: GoogleFonts.shipporiMincho(
-                          fontWeight: FontWeight.w600,
+                        unselectedLabelStyle: const TextStyle(
+                          fontFamily: 'ShipporiMincho',
+                          fontWeight: FontWeight.w400,
                           fontSize: 13,
                         ),
                         tabs: const [
@@ -831,7 +832,8 @@ class _GradientButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(13),
           ),
-          textStyle: GoogleFonts.shipporiMincho(
+          textStyle: const TextStyle(
+            fontFamily: 'ShipporiMincho',
             fontWeight: FontWeight.w700,
             fontSize: 14,
           ),
@@ -865,8 +867,9 @@ class _SecondaryButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(13),
           ),
-          textStyle: GoogleFonts.shipporiMincho(
-            fontWeight: FontWeight.w600,
+          textStyle: const TextStyle(
+            fontFamily: 'ShipporiMincho',
+            fontWeight: FontWeight.w400,
             fontSize: 14,
           ),
         ),
