@@ -167,6 +167,11 @@ class SettingsScreen extends ConsumerWidget {
               label: 'Open Source Licenses',
               assetPath: 'LICENSES.md',
             ),
+            const _LegalTile(
+              icon: Icons.copyright_outlined,
+              label: 'GNU GPL v3.0 License',
+              assetPath: 'LICENSE',
+            ),
             const SizedBox(height: 60),
           ],
         ),
