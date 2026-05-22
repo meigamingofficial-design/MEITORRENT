@@ -140,6 +140,7 @@ class SettingsScreen extends ConsumerWidget {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.textSecondary(context),
                     fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 onTap: () {
@@ -168,10 +169,34 @@ class SettingsScreen extends ConsumerWidget {
               label: 'Open Source Licenses',
               assetPath: 'LICENSES.md',
             ),
-            const _LegalTile(
-              icon: Icons.copyright_outlined,
-              label: 'GNU GPL v3.0 License',
-              assetPath: 'LICENSE',
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.border(context).withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.copyright_outlined,
+                  color: AppColors.textSecondary(context),
+                  size: 20,
+                ),
+              ),
+              title: Text(
+                'GNU GPL v3.0 License',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.text(context),
+                ),
+              ),
+              trailing: Icon(
+                Icons.open_in_new_rounded,
+                color: AppColors.textSecondary(context),
+                size: 16,
+              ),
+              onTap: () => _launchUrl('https://www.gnu.org/licenses/gpl-3.0.en.html'),
             ),
             const SizedBox(height: 60),
           ],
@@ -261,6 +286,7 @@ class _SpeedLimitTile extends StatelessWidget {
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: AppColors.textSecondary(context),
           fontSize: 12,
+          fontWeight: FontWeight.w500,
         ),
       ),
       trailing: Icon(
@@ -377,6 +403,7 @@ class _SwitchTile extends StatelessWidget {
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: AppColors.textSecondary(context),
           fontSize: 12,
+          fontWeight: FontWeight.w500,
         ),
       ),
       trailing: Switch(
@@ -425,6 +452,7 @@ class _ConnectionsTile extends StatelessWidget {
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: AppColors.textSecondary(context),
           fontSize: 12,
+          fontWeight: FontWeight.w500,
         ),
       ),
       trailing: Icon(
@@ -547,6 +575,7 @@ class _AboutTile extends ConsumerWidget {
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondary(context),
               fontSize: 11,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 2),
@@ -579,13 +608,14 @@ class _AboutTile extends ConsumerWidget {
     );
   }
 
-  Future<void> _launchUrl(String urlString) async {
-    try {
-      final uri = Uri.parse(urlString);
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (e) {
-      debugPrint('Could not launch $urlString: $e');
-    }
+}
+
+Future<void> _launchUrl(String urlString) async {
+  try {
+    final uri = Uri.parse(urlString);
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } catch (e) {
+    debugPrint('Could not launch $urlString: $e');
   }
 }
 
@@ -860,6 +890,7 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondary(context),
               fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
           ),
           trailing: _isLoading
@@ -927,6 +958,7 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
                       color: AppColors.textSecondary(context),
                       fontSize: 11,
                       height: 1.3,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 10),

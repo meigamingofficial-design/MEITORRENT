@@ -337,6 +337,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         .isSelectionMode;
 
     if (isSelectionMode) {
+      final filtered = ref.watch(filteredTorrentsProvider);
+      final allIds = filtered.map((t) => t.id).toList();
+      final isAllSelected = allIds.isNotEmpty &&
+          allIds.every((id) => selectedIds.contains(id));
+
+      void toggleSelectAll() {
+        if (isAllSelected) {
+          ref.read(selectedTorrentsProvider.notifier).clear();
+        } else {
+          ref.read(selectedTorrentsProvider.notifier).selectAll(allIds);
+        }
+        unawaited(HapticFeedback.lightImpact());
+      }
+
       return PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight + 50),
         child: SafeArea(
@@ -372,7 +386,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     onPressed: () =>
                         ref.read(selectedTorrentsProvider.notifier).clear(),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       '${selectedIds.length} Selected',
@@ -386,6 +400,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                  ),
+                  _SelectionAction(
+                    icon: isAllSelected
+                        ? Icons.select_all_rounded
+                        : Icons.select_all_outlined,
+                    color: isAllSelected
+                        ? AppColors.downloading
+                        : AppColors.textSecondary(context),
+                    tooltip: isAllSelected ? 'Deselect All' : 'Select All',
+                    onPressed: toggleSelectAll,
                   ),
                   Builder(
                     builder: (ctx) {

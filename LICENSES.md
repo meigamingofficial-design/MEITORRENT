@@ -19,4 +19,4 @@ The following packages are also used in this project:
 - permission_handler (MIT)
 - connectivity_plus (BSD 3-clause)
 
-Full license text for each component can be found in the respective package repositories. The full text of the **GNU General Public License v3.0** for this application is available in the "GNU GPL v3.0 License" section of the settings menu.
+Full license text for each component can be found in the respective package repositories. The full text of the **GNU General Public License v3.0** for this application is available online at [GNU GPL v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html) or in the "GNU GPL v3.0 License" section of the settings menu.
