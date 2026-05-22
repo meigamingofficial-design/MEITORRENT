@@ -758,39 +758,118 @@ class _CircleIconButton extends StatelessWidget {
 
 enum _DeleteChoice { removeOnly, removeWithFiles }
 
-class _DeleteDialog extends StatelessWidget {
+class _DeleteDialog extends StatefulWidget {
   const _DeleteDialog({required this.torrentName});
   final String torrentName;
 
   @override
+  State<_DeleteDialog> createState() => _DeleteDialogState();
+}
+
+class _DeleteDialogState extends State<_DeleteDialog> {
+  bool _deleteFiles = false;
+
+  @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Row(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      backgroundColor: AppColors.surface(context),
+      title: Row(
         children: [
-          Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 22),
-          SizedBox(width: 10),
+          const Icon(
+            Icons.delete_outline_rounded,
+            color: AppColors.error,
+            size: 22,
+          ),
+          const SizedBox(width: 10),
           Text(
             'Remove Torrent',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: AppColors.text(context),
+            ),
           ),
         ],
       ),
-      content: Text(
-        '"$torrentName"',
-        style: TextStyle(color: AppColors.textSecondary(context), fontSize: 13),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '"${widget.torrentName}"',
+            style: TextStyle(
+              color: AppColors.textSecondary(context),
+              fontSize: 13,
+              height: 1.4,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 20),
+          InkWell(
+            onTap: () => setState(() => _deleteFiles = !_deleteFiles),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: Checkbox(
+                      value: _deleteFiles,
+                      onChanged: (v) => setState(() => _deleteFiles = v ?? false),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      activeColor: AppColors.error,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Also delete downloaded files',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.text(context),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Permanently erase files from storage',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary(context),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
       actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, _DeleteChoice.removeOnly),
-          child: const Text('Remove'),
+          child: Text(
+            'Cancel',
+            style: TextStyle(
+              color: AppColors.textSecondary(context),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
         FilledButton(
           style: FilledButton.styleFrom(
@@ -798,10 +877,19 @@ class _DeleteDialog extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           ),
-          onPressed: () =>
-              Navigator.pop(context, _DeleteChoice.removeWithFiles),
-          child: const Text('Remove + Files'),
+          onPressed: () => Navigator.pop(
+            context,
+            _deleteFiles ? _DeleteChoice.removeWithFiles : _DeleteChoice.removeOnly,
+          ),
+          child: const Text(
+            'Remove',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
         ),
       ],
     );
