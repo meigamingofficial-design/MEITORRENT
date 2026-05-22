@@ -30,8 +30,11 @@ class PermissionService {
                   color: AppColors.downloading.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.folder_open_rounded,
-                    color: AppColors.downloading, size: 36),
+                child: const Icon(
+                  Icons.folder_open_rounded,
+                  color: AppColors.downloading,
+                  size: 36,
+                ),
               ),
               const SizedBox(height: 20),
               // Title
@@ -82,18 +85,24 @@ class PermissionService {
               const SizedBox(height: 20),
               // Privacy reassurance
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.downloading.withValues(alpha: 0.07),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                      color: AppColors.downloading.withValues(alpha: 0.2)),
+                    color: AppColors.downloading.withValues(alpha: 0.2),
+                  ),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.lock_outline_rounded,
-                        color: AppColors.downloading, size: 16),
+                    Icon(
+                      Icons.lock_outline_rounded,
+                      color: AppColors.downloading,
+                      size: 16,
+                    ),
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -119,14 +128,18 @@ class PermissionService {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         side: BorderSide(color: AppColors.border(ctx)),
                       ),
-                      child: Text('Skip for now',
-                          style: TextStyle(
-                              color: AppColors.textSecondary(ctx),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13)),
+                      child: Text(
+                        'Skip for now',
+                        style: TextStyle(
+                          color: AppColors.textSecondary(ctx),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -137,11 +150,16 @@ class PermissionService {
                         backgroundColor: AppColors.downloading,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      child: const Text('Grant Access',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 13)),
+                      child: const Text(
+                        'Grant Access',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
                   ),
                 ],

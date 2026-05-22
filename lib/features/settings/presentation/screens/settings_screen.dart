@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -18,8 +20,8 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final config = ref.watch(settingsNotifierProvider);
-    final notifier = ref.read(settingsNotifierProvider.notifier);
+    final config = ref.watch(settingsProvider);
+    final notifier = ref.read(settingsProvider.notifier);
     final isDark = ref.isDarkMode;
 
     return Scaffold(
@@ -116,17 +118,27 @@ class SettingsScreen extends ConsumerWidget {
                   color: AppColors.paused.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.flash_on_rounded,
-                    color: AppColors.paused, size: 20),
+                child: const Icon(
+                  Icons.flash_on_rounded,
+                  color: AppColors.paused,
+                  size: 20,
+                ),
               ),
-              title: Text('Test Crash',
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.text(context))),
-              subtitle: Text('Force a crash to test Firebase integration',
-                  style: TextStyle(
-                      color: AppColors.textSecondary(context), fontSize: 12)),
+              title: Text(
+                'Test Crash',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.text(context),
+                ),
+              ),
+              subtitle: Text(
+                'Force a crash to test Firebase integration',
+                style: TextStyle(
+                  color: AppColors.textSecondary(context),
+                  fontSize: 12,
+                ),
+              ),
               onTap: () {
                 AppLogger.wtf('User triggered a manual test crash');
                 // This will crash the app immediately
@@ -208,13 +220,14 @@ class _SpeedLimitTile extends StatelessWidget {
     '1 MB/s',
     '2 MB/s',
     '5 MB/s',
-    '10 MB/s'
+    '10 MB/s',
   ];
 
   @override
   Widget build(BuildContext context) {
-    final displayLabel =
-        currentBps == 0 ? 'Unlimited' : SpeedFormatter.format(currentBps);
+    final displayLabel = currentBps == 0
+        ? 'Unlimited'
+        : SpeedFormatter.format(currentBps);
 
     return ListTile(
       leading: Container(
@@ -226,65 +239,84 @@ class _SpeedLimitTile extends StatelessWidget {
         ),
         child: Icon(icon, color: iconColor, size: 20),
       ),
-      title: Text(label,
-          style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.text(context))),
-      subtitle: Text(displayLabel,
-          style:
-              TextStyle(color: AppColors.textSecondary(context), fontSize: 12)),
-      trailing: Icon(Icons.chevron_right,
-          color: AppColors.textSecondary(context), size: 18),
+      title: Text(
+        label,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: AppColors.text(context),
+        ),
+      ),
+      subtitle: Text(
+        displayLabel,
+        style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12),
+      ),
+      trailing: Icon(
+        Icons.chevron_right,
+        color: AppColors.textSecondary(context),
+        size: 18,
+      ),
       onTap: () => _showPicker(context),
     );
   }
 
   void _showPicker(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        margin: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.surface(context),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.border(context)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text(label,
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (_) => Container(
+          margin: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.surface(context),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppColors.border(context)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(
+                  label,
                   style: TextStyle(
-                      color: AppColors.text(context),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700)),
-            ),
-            ...List.generate(_presets.length, (i) {
-              final bps = _presets[i] * 1024;
-              final selected = currentBps == bps;
-              return ListTile(
-                title: Text(_presetLabels[i],
+                    color: AppColors.text(context),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              ...List.generate(_presets.length, (i) {
+                final bps = _presets[i] * 1024;
+                final selected = currentBps == bps;
+                return ListTile(
+                  title: Text(
+                    _presetLabels[i],
                     style: TextStyle(
-                        color: selected
-                            ? AppColors.downloading
-                            : AppColors.textSecondary(context),
-                        fontWeight:
-                            selected ? FontWeight.w600 : FontWeight.normal)),
-                trailing: selected
-                    ? const Icon(Icons.check,
-                        color: AppColors.downloading, size: 18)
-                    : null,
-                onTap: () {
-                  onChanged(bps);
-                  Navigator.pop(context);
-                },
-              );
-            }),
-            const SizedBox(height: 12),
-          ],
+                      color: selected
+                          ? AppColors.downloading
+                          : AppColors.textSecondary(context),
+                      fontWeight: selected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                    ),
+                  ),
+                  trailing: selected
+                      ? const Icon(
+                          Icons.check,
+                          color: AppColors.downloading,
+                          size: 18,
+                        )
+                      : null,
+                  onTap: () {
+                    unawaited(onChanged(bps));
+                    Navigator.pop(context);
+                  },
+                );
+              }),
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
     );
@@ -320,14 +352,18 @@ class _SwitchTile extends StatelessWidget {
         ),
         child: Icon(icon, color: AppColors.textSecondary(context), size: 20),
       ),
-      title: Text(label,
-          style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.text(context))),
-      subtitle: Text(subtitle,
-          style:
-              TextStyle(color: AppColors.textSecondary(context), fontSize: 12)),
+      title: Text(
+        label,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: AppColors.text(context),
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12),
+      ),
       trailing: Switch(
         value: value,
         onChanged: onChanged,
@@ -355,19 +391,29 @@ class _ConnectionsTile extends StatelessWidget {
           color: AppColors.border(context).withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(Icons.people_outline,
-            color: AppColors.textSecondary(context), size: 20),
+        child: Icon(
+          Icons.people_outline,
+          color: AppColors.textSecondary(context),
+          size: 20,
+        ),
       ),
-      title: Text('Max Connections',
-          style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.text(context))),
-      subtitle: Text('$current peers',
-          style:
-              TextStyle(color: AppColors.textSecondary(context), fontSize: 12)),
-      trailing: Icon(Icons.chevron_right,
-          color: AppColors.textSecondary(context), size: 18),
+      title: Text(
+        'Max Connections',
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: AppColors.text(context),
+        ),
+      ),
+      subtitle: Text(
+        '$current peers',
+        style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12),
+      ),
+      trailing: Icon(
+        Icons.chevron_right,
+        color: AppColors.textSecondary(context),
+        size: 18,
+      ),
       onTap: () => showModalBottomSheet<void>(
         context: context,
         backgroundColor: Colors.transparent,
@@ -383,28 +429,38 @@ class _ConnectionsTile extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.all(20),
-                child: Text('Max Global Connections',
-                    style: TextStyle(
-                        color: AppColors.text(context),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700)),
+                child: Text(
+                  'Max Global Connections',
+                  style: TextStyle(
+                    color: AppColors.text(context),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
               ..._options.map((n) {
                 final selected = current == n;
                 return ListTile(
-                  title: Text('$n peers',
-                      style: TextStyle(
-                          color: selected
-                              ? AppColors.downloading
-                              : AppColors.textSecondary(context),
-                          fontWeight:
-                              selected ? FontWeight.w600 : FontWeight.normal)),
+                  title: Text(
+                    '$n peers',
+                    style: TextStyle(
+                      color: selected
+                          ? AppColors.downloading
+                          : AppColors.textSecondary(context),
+                      fontWeight: selected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                    ),
+                  ),
                   trailing: selected
-                      ? const Icon(Icons.check,
-                          color: AppColors.downloading, size: 18)
+                      ? const Icon(
+                          Icons.check,
+                          color: AppColors.downloading,
+                          size: 18,
+                        )
                       : null,
                   onTap: () {
-                    onChanged(n);
+                    unawaited(onChanged(n));
                     Navigator.pop(context);
                   },
                 );
@@ -426,7 +482,7 @@ class _AboutTile extends ConsumerWidget {
     final versionAsync = ref.watch(appVersionProvider);
 
     return ListTile(
-      leading: Container(
+      leading: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
@@ -468,10 +524,12 @@ class _AboutTile extends ConsumerWidget {
             versionAsync.when(
               data: (v) => 'v$v · Fast. Private. Reliable.',
               loading: () => 'Loading... · Fast. Private. Reliable.',
-              error: (_, __) => 'v1.0.1+2 · Fast. Private. Reliable.',
+              error: (_, _) => 'v1.0.1+2 · Fast. Private. Reliable.',
             ),
             style: TextStyle(
-                color: AppColors.textSecondary(context), fontSize: 11),
+              color: AppColors.textSecondary(context),
+              fontSize: 11,
+            ),
           ),
           const SizedBox(height: 1),
           const Text(
@@ -510,30 +568,40 @@ class _LegalTile extends StatelessWidget {
         ),
         child: Icon(icon, color: AppColors.textSecondary(context), size: 20),
       ),
-      title: Text(label,
-          style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.text(context))),
-      trailing: Icon(Icons.chevron_right,
-          color: AppColors.textSecondary(context), size: 18),
+      title: Text(
+        label,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: AppColors.text(context),
+        ),
+      ),
+      trailing: Icon(
+        Icons.chevron_right,
+        color: AppColors.textSecondary(context),
+        size: 18,
+      ),
       onTap: () async {
         try {
-          final content =
-              await DefaultAssetBundle.of(context).loadString(assetPath);
+          final content = await DefaultAssetBundle.of(
+            context,
+          ).loadString(assetPath);
           if (context.mounted) {
-            Navigator.of(context).push(
-              PageRouteBuilder<void>(
-                pageBuilder: (_, __, ___) =>
-                    _LegalDetailScreen(title: label, content: content),
-                transitionsBuilder: (_, animation, __, child) => FadeTransition(
-                  opacity: CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeOut,
-                  ),
-                  child: child,
+            unawaited(
+              Navigator.of(context).push(
+                PageRouteBuilder<void>(
+                  pageBuilder: (_, _, _) =>
+                      _LegalDetailScreen(title: label, content: content),
+                  transitionsBuilder: (_, animation, _, child) =>
+                      FadeTransition(
+                        opacity: CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOut,
+                        ),
+                        child: child,
+                      ),
+                  transitionDuration: const Duration(milliseconds: 220),
                 ),
-                transitionDuration: const Duration(milliseconds: 220),
               ),
             );
           }
@@ -559,11 +627,13 @@ class _LegalDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background(context),
       appBar: AppBar(
-        title: Text(title,
-            style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                )),
+        title: Text(
+          title,
+          style: Theme.of(context).textTheme.displayMedium?.copyWith(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -606,8 +676,8 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
     // Defer heavy async platform-channel calls to after the first frame
     // so they never block the navigation transition animation.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkStatus();
-      _checkOem();
+      unawaited(_checkStatus());
+      unawaited(_checkOem());
     });
   }
 
@@ -620,7 +690,7 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _checkStatus();
+      unawaited(_checkStatus());
     }
   }
 
@@ -636,7 +706,8 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
   Future<void> _checkOem() async {
     try {
       final androidInfo = await DeviceInfoPlugin().androidInfo;
-      final manufacturer = androidInfo.manufacturer.toLowerCase();
+      final manufacturer = (androidInfo.manufacturer).toLowerCase();
+      debugPrint('Detected manufacturer: $manufacturer');
 
       const oems = {
         'xiaomi': 'Xiaomi',
@@ -648,7 +719,7 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
         'vivo': 'Vivo',
         'huawei': 'Huawei',
         'honor': 'Honor',
-        'samsung': 'Samsung'
+        'samsung': 'Samsung',
       };
 
       if (oems.containsKey(manufacturer) && mounted) {
@@ -681,35 +752,40 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
               size: 20,
             ),
           ),
-          title: Text('Ignore Battery Optimizations',
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text(context))),
+          title: Text(
+            'Ignore Battery Optimizations',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.text(context),
+            ),
+          ),
           subtitle: Text(
             _isIgnored
                 ? 'Battery optimizations are disabled'
                 : 'Helps keep torrent downloads active when the app is in the background or screen is off',
             style: TextStyle(
-                color: AppColors.textSecondary(context), fontSize: 12),
+              color: AppColors.textSecondary(context),
+              fontSize: 12,
+            ),
           ),
           trailing: _isLoading
               ? const SizedBox(
                   width: 24,
                   height: 24,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: AppColors.downloading),
+                    strokeWidth: 2,
+                    color: AppColors.downloading,
+                  ),
                 )
               : Switch(
                   value: _isIgnored,
                   onChanged: (value) async {
                     setState(() => _isLoading = true);
                     if (value) {
-                      await FlutterForegroundTask
-                          .requestIgnoreBatteryOptimization();
+                      await FlutterForegroundTask.requestIgnoreBatteryOptimization();
                     } else {
-                      await FlutterForegroundTask
-                          .openIgnoreBatteryOptimizationSettings();
+                      await FlutterForegroundTask.openIgnoreBatteryOptimizationSettings();
                     }
                     await _checkStatus();
                     if (mounted) {
@@ -726,16 +802,20 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
               decoration: BoxDecoration(
                 color: AppColors.paused.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
-                border:
-                    Border.all(color: AppColors.paused.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: AppColors.paused.withValues(alpha: 0.2),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.info_outline,
-                          color: AppColors.paused, size: 16),
+                      const Icon(
+                        Icons.info_outline,
+                        color: AppColors.paused,
+                        size: 16,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'Detected $_oemName Device',
@@ -751,14 +831,17 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
                   Text(
                     'Your device enforces custom battery restrictions. For stable downloads, please set Meitorrent to "Unrestricted" and enable "Auto-start".',
                     style: TextStyle(
-                        color: AppColors.textSecondary(context),
-                        fontSize: 11,
-                        height: 1.3),
+                      color: AppColors.textSecondary(context),
+                      fontSize: 11,
+                      height: 1.3,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   InkWell(
-                    onTap: () => OemBatteryGuard.instance
-                        .promptIfNeeded(context, force: true),
+                    onTap: () => OemBatteryGuard.instance.promptIfNeeded(
+                      context,
+                      force: true,
+                    ),
                     borderRadius: BorderRadius.circular(6),
                     child: const Padding(
                       padding: EdgeInsets.symmetric(vertical: 4, horizontal: 2),
@@ -774,8 +857,11 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
                             ),
                           ),
                           SizedBox(width: 4),
-                          Icon(Icons.arrow_forward_rounded,
-                              color: AppColors.downloading, size: 12),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            color: AppColors.downloading,
+                            size: 12,
+                          ),
                         ],
                       ),
                     ),

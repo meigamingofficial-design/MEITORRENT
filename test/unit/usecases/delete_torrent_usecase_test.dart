@@ -14,22 +14,37 @@ void main() {
     usecase = DeleteTorrentUsecase(mockRepo);
   });
 
-  test('calls repository deleteTorrent with deleteFiles=false by default',
-      () async {
-    when(() => mockRepo.deleteTorrent(any(),
-        deleteFiles: any(named: 'deleteFiles'))).thenAnswer((_) async {});
+  test(
+    'calls repository deleteTorrent with deleteFiles=false by default',
+    () async {
+      when(
+        () => mockRepo.deleteTorrent(
+          any(),
+          deleteFiles: any(named: 'deleteFiles'),
+        ),
+      ).thenAnswer((_) async {});
 
-    await usecase('abc123');
-    verify(() => mockRepo.deleteTorrent('abc123', deleteFiles: false))
-        .called(1);
-  });
+      await usecase('abc123');
+      verify(
+        () => mockRepo.deleteTorrent('abc123', deleteFiles: false),
+      ).called(1);
+    },
+  );
 
-  test('calls repository deleteTorrent with deleteFiles=true when specified',
-      () async {
-    when(() => mockRepo.deleteTorrent(any(),
-        deleteFiles: any(named: 'deleteFiles'))).thenAnswer((_) async {});
+  test(
+    'calls repository deleteTorrent with deleteFiles=true when specified',
+    () async {
+      when(
+        () => mockRepo.deleteTorrent(
+          any(),
+          deleteFiles: any(named: 'deleteFiles'),
+        ),
+      ).thenAnswer((_) async {});
 
-    await usecase('abc123', deleteFiles: true);
-    verify(() => mockRepo.deleteTorrent('abc123', deleteFiles: true)).called(1);
-  });
+      await usecase('abc123', deleteFiles: true);
+      verify(
+        () => mockRepo.deleteTorrent('abc123', deleteFiles: true),
+      ).called(1);
+    },
+  );
 }

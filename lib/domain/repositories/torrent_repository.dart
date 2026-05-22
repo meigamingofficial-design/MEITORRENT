@@ -132,14 +132,14 @@ class EngineConfig {
 
   @override
   int get hashCode => Object.hash(
-        downloadLimit,
-        uploadLimit,
-        maxConnectionsPerTorrent,
-        maxGlobalConnections,
-        dhtEnabled,
-        pexEnabled,
-        lsdEnabled,
-        wifiOnlyMode,
-        stopSeedingWhenFinished,
-      );
+    downloadLimit,
+    uploadLimit,
+    maxConnectionsPerTorrent,
+    maxGlobalConnections,
+    dhtEnabled,
+    pexEnabled,
+    lsdEnabled,
+    wifiOnlyMode,
+    stopSeedingWhenFinished,
+  );
 }

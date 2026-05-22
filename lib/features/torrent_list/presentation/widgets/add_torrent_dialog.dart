@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -48,7 +49,7 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
     if (widget.initialMagnetUri != null) {
       _magnetController.text = widget.initialMagnetUri!;
     } else {
-      _autoDetectClipboard();
+      unawaited(_autoDetectClipboard());
     }
 
     // Rebuild whenever magnet text changes (clears filled/empty state instantly)
@@ -97,8 +98,9 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
 
   Future<void> _pasteFromClipboard() async {
     // Force paste even if it was the last handled magnet
-    final magnet =
-        await ClipboardService.instance.getMagnetFromClipboard(force: true);
+    final magnet = await ClipboardService.instance.getMagnetFromClipboard(
+      force: true,
+    );
     if (magnet != null) {
       setState(() {
         _magnetController.text = magnet;
@@ -234,8 +236,9 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                           borderRadius: BorderRadius.circular(11),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.downloading
-                                  .withValues(alpha: 0.3),
+                              color: AppColors.downloading.withValues(
+                                alpha: 0.3,
+                              ),
                               blurRadius: 10,
                               offset: const Offset(0, 2),
                             ),
@@ -244,8 +247,9 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                         indicatorSize: TabBarIndicatorSize.tab,
                         dividerColor: Colors.transparent,
                         labelColor: Colors.white,
-                        unselectedLabelColor:
-                            AppColors.text(context).withValues(alpha: 0.5),
+                        unselectedLabelColor: AppColors.text(
+                          context,
+                        ).withValues(alpha: 0.5),
                         labelStyle: GoogleFonts.shipporiMincho(
                           fontWeight: FontWeight.w700,
                           fontSize: 13,
@@ -297,10 +301,11 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                     // ── Action buttons ────────────────────────────────────────
                     AnimatedBuilder(
                       animation: _tabController,
-                      builder: (ctx, __) {
+                      builder: (ctx, _) {
                         final isMagnet = _tabController.index == 0;
-                        final canSubmit =
-                            isMagnet ? true : (_selectedFilePath != null);
+                        final canSubmit = isMagnet
+                            ? true
+                            : (_selectedFilePath != null);
 
                         return Row(
                           children: [
@@ -318,10 +323,10 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                                 onPressed: _isLoading
                                     ? null
                                     : (canSubmit
-                                        ? (isMagnet
-                                            ? _submitMagnet
-                                            : _submitFile)
-                                        : null),
+                                          ? (isMagnet
+                                                ? _submitMagnet
+                                                : _submitFile)
+                                          : null),
                                 child: _isLoading
                                     ? const SizedBox(
                                         width: 16,
@@ -411,8 +416,8 @@ class _MagnetTab extends StatelessWidget {
                 color: isError
                     ? Colors.red.shade400
                     : hasContent
-                        ? AppColors.downloading
-                        : AppColors.border(context),
+                    ? AppColors.downloading
+                    : AppColors.border(context),
                 width: (isError || hasContent) ? 1.5 : 1,
               ),
             ),
@@ -424,8 +429,11 @@ class _MagnetTab extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       child: Row(
                         children: [
-                          const Icon(Icons.link_rounded,
-                              color: AppColors.downloading, size: 18),
+                          const Icon(
+                            Icons.link_rounded,
+                            color: AppColors.downloading,
+                            size: 18,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
@@ -453,8 +461,11 @@ class _MagnetTab extends StatelessWidget {
                               ],
                             ),
                           ),
-                          Icon(Icons.close_rounded,
-                              color: AppColors.textSecondary(context), size: 16),
+                          Icon(
+                            Icons.close_rounded,
+                            color: AppColors.textSecondary(context),
+                            size: 16,
+                          ),
                         ],
                       ),
                     ),
@@ -464,24 +475,32 @@ class _MagnetTab extends StatelessWidget {
                     maxLines: 1,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        color: AppColors.text(context), fontSize: 13),
+                      color: AppColors.text(context),
+                      fontSize: 13,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Paste magnet link here',
                       hintStyle: TextStyle(
-                        color: AppColors.textSecondary(context)
-                            .withValues(alpha: 0.5),
+                        color: AppColors.textSecondary(
+                          context,
+                        ).withValues(alpha: 0.5),
                         fontSize: 13,
                       ),
-                      prefixIcon: Icon(Icons.link_rounded,
-                          color: AppColors.textSecondary(context), size: 18),
+                      prefixIcon: Icon(
+                        Icons.link_rounded,
+                        color: AppColors.textSecondary(context),
+                        size: 18,
+                      ),
                       suffixIcon: IconButton(
-                        icon: const Icon(Icons.content_paste_rounded,
-                            color: AppColors.downloading, size: 18),
+                        icon: const Icon(
+                          Icons.content_paste_rounded,
+                          color: AppColors.downloading,
+                          size: 18,
+                        ),
                         onPressed: onPasteFromClipboard,
                       ),
                       border: InputBorder.none,
-                      contentPadding:
-                          const EdgeInsets.symmetric(vertical: 18),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 18),
                     ),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) return '';
@@ -605,90 +624,92 @@ class _FileTabState extends State<_FileTab> {
                     ),
                   )
                 : _selectedPath != null
-                    ? Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(7),
-                              decoration: BoxDecoration(
-                                color: AppColors.downloading
-                                    .withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(
-                                Icons.insert_drive_file_rounded,
-                                color: AppColors.downloading,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    _getFileName(_selectedPath!),
-                                    style: TextStyle(
-                                      color: AppColors.text(context),
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Text(
-                                    'Tap to change file',
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary(context),
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.close_rounded,
-                                  color: AppColors.textSecondary(context),
-                                  size: 18),
-                              onPressed: () {
-                                setState(() => _selectedPath = null);
-                                widget.onFilePicked(null);
-                              },
-                            ),
-                          ],
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: AppColors.downloading.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.insert_drive_file_rounded,
+                            color: AppColors.downloading,
+                            size: 20,
+                          ),
                         ),
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.cloud_upload_outlined,
-                            color: AppColors.downloading.withValues(alpha: 0.5),
-                            size: 22,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _getFileName(_selectedPath!),
+                                style: TextStyle(
+                                  color: AppColors.text(context),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                'Tap to change file',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary(context),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Choose .torrent file',
-                            style: TextStyle(
-                              color: AppColors.text(context),
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -0.2,
-                            ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.close_rounded,
+                            color: AppColors.textSecondary(context),
+                            size: 18,
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Browse internal storage',
-                            style: TextStyle(
-                              color: AppColors.textSecondary(context)
-                                  .withValues(alpha: 0.6),
-                              fontSize: 11.5,
-                            ),
-                          ),
-                        ],
+                          onPressed: () {
+                            setState(() => _selectedPath = null);
+                            widget.onFilePicked(null);
+                          },
+                        ),
+                      ],
+                    ),
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.cloud_upload_outlined,
+                        color: AppColors.downloading.withValues(alpha: 0.5),
+                        size: 22,
                       ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Choose .torrent file',
+                        style: TextStyle(
+                          color: AppColors.text(context),
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Browse internal storage',
+                        style: TextStyle(
+                          color: AppColors.textSecondary(
+                            context,
+                          ).withValues(alpha: 0.6),
+                          fontSize: 11.5,
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         ),
 
@@ -706,7 +727,7 @@ class _FileTabState extends State<_FileTab> {
   Future<void> _pickFile() async {
     setState(() => _picking = true);
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['torrent'],
       );
@@ -808,9 +829,12 @@ class _GradientButton extends StatelessWidget {
           padding: EdgeInsets.zero,
           minimumSize: const Size.fromHeight(44),
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(13)),
+            borderRadius: BorderRadius.circular(13),
+          ),
           textStyle: GoogleFonts.shipporiMincho(
-              fontWeight: FontWeight.w700, fontSize: 14),
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+          ),
         ),
         child: child,
       ),
@@ -839,9 +863,12 @@ class _SecondaryButton extends StatelessWidget {
           padding: EdgeInsets.zero,
           minimumSize: const Size.fromHeight(44),
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(13)),
+            borderRadius: BorderRadius.circular(13),
+          ),
           textStyle: GoogleFonts.shipporiMincho(
-              fontWeight: FontWeight.w600, fontSize: 14),
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
         ),
         child: child,
       ),
@@ -871,7 +898,8 @@ class _DragHandleState extends State<_DragHandle>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
+    );
+    unawaited(_controller.repeat(reverse: true));
     _animation = Tween<double>(begin: 0.5, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
@@ -894,7 +922,9 @@ class _DragHandleState extends State<_DragHandle>
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.border(context).withValues(alpha: _animation.value),
+              color: AppColors.border(
+                context,
+              ).withValues(alpha: _animation.value),
               borderRadius: BorderRadius.circular(2),
             ),
           ),

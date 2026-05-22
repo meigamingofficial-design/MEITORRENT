@@ -19,8 +19,9 @@ void main() {
         'magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=ubuntu';
 
     test('valid magnet — delegates to repository', () async {
-      when(() => mockRepo.addMagnet(any(), savePath: any(named: 'savePath')))
-          .thenAnswer((_) async => 'abc123');
+      when(
+        () => mockRepo.addMagnet(any(), savePath: any(named: 'savePath')),
+      ).thenAnswer((_) async => 'abc123');
 
       final id = await usecase(validMagnet);
       expect(id, 'abc123');
@@ -28,8 +29,9 @@ void main() {
     });
 
     test('strips leading/trailing whitespace before validation', () async {
-      when(() => mockRepo.addMagnet(any(), savePath: any(named: 'savePath')))
-          .thenAnswer((_) async => 'def456');
+      when(
+        () => mockRepo.addMagnet(any(), savePath: any(named: 'savePath')),
+      ).thenAnswer((_) async => 'def456');
 
       final id = await usecase('  $validMagnet  ');
       expect(id, 'def456');
@@ -40,8 +42,10 @@ void main() {
     });
 
     test('http URL throws ArgumentError', () {
-      expect(() => usecase('https://example.com/file.torrent'),
-          throwsArgumentError);
+      expect(
+        () => usecase('https://example.com/file.torrent'),
+        throwsArgumentError,
+      );
     });
 
     test('truncated hash throws ArgumentError', () {
@@ -49,8 +53,10 @@ void main() {
     });
 
     test('missing xt= parameter throws ArgumentError', () {
-      expect(() => usecase('magnet:?dn=ubuntu&tr=http://tracker.example.com'),
-          throwsArgumentError);
+      expect(
+        () => usecase('magnet:?dn=ubuntu&tr=http://tracker.example.com'),
+        throwsArgumentError,
+      );
     });
   });
 }

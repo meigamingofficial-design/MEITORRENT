@@ -13,15 +13,17 @@ class TorrentModel {
   /// finished/seeding torrent so the UI never shows 0% after a cold restart.
   static TorrentStatus fromRow(TorrentsTableData row) {
     final state = _parseState(row.state);
-    final isComplete = state == TorrentState.finished ||
+    final isComplete =
+        state == TorrentState.finished ||
         state == TorrentState.seeding ||
         row.isCompleted;
 
     // If the torrent is logically complete, clamp values so the UI is correct
     // even if the DB wrote stale 0-bytes before the engine updated them.
     final progress = isComplete ? 1.0 : row.progress;
-    final downloadedBytes =
-        isComplete && row.totalSize > 0 ? row.totalSize : row.downloadedBytes;
+    final downloadedBytes = isComplete && row.totalSize > 0
+        ? row.totalSize
+        : row.downloadedBytes;
 
     return TorrentStatus(
       id: row.id,

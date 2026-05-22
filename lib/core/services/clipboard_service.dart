@@ -24,7 +24,8 @@ class ClipboardService {
       _lastHandledMagnet = prefs.getString(_keyLastMagnet);
       _initialized = true;
       AppLogger.d(
-          '[Clipboard] Initialized with last handled: ${_lastHandledMagnet?.substring(0, 20)}...');
+        '[Clipboard] Initialized with last handled: ${_lastHandledMagnet?.substring(0, 20)}...',
+      );
     } catch (e) {
       AppLogger.e('[Clipboard] Init failed', error: e);
     }

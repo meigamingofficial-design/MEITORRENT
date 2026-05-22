@@ -67,8 +67,11 @@ class TorrentEngineService {
         AppLogger.i('[Engine] Initialized at $defaultPath (attempt $attempt)');
         return;
       } catch (e, st) {
-        AppLogger.w('[Engine] Init attempt $attempt failed',
-            error: e, stack: st);
+        AppLogger.w(
+          '[Engine] Init attempt $attempt failed',
+          error: e,
+          stack: st,
+        );
         if (attempt == maxRetries) {
           AppLogger.e('[Engine] All $maxRetries attempts failed — giving up');
           rethrow;
@@ -127,7 +130,10 @@ class TorrentEngineService {
 
   /// Adds a .torrent file with fast-resume data.
   int addTorrentFileWithResume(
-      String filePath, String savePath, Uint8List resumeData) {
+    String filePath,
+    String savePath,
+    Uint8List resumeData,
+  ) {
     final id = _engine.addTorrentFileWithResume(filePath, savePath, resumeData);
     _idToFile[id] = filePath;
     return id;
@@ -236,8 +242,9 @@ class TorrentEngineService {
       totalSize: info.totalWanted,
       downloadedBytes: info.totalDone,
       uploadedBytes: info.totalUploaded,
-      savePath:
-          info.savePath.isEmpty ? (_defaultDownloadPath ?? '') : info.savePath,
+      savePath: info.savePath.isEmpty
+          ? (_defaultDownloadPath ?? '')
+          : info.savePath,
       addedAt: _lastEmitted[idInt]?.addedAt ?? DateTime.now(),
       lastActivityAt: _lastEmitted[idInt]?.lastActivityAt ?? DateTime.now(),
       completedAt: _lastEmitted[idInt]?.completedAt,

@@ -26,8 +26,9 @@ class StorageService {
     }
 
     try {
-      final String? base =
-          await _channel.invokeMethod<String>('getDownloadDirectory');
+      final String? base = await _channel.invokeMethod<String>(
+        'getDownloadDirectory',
+      );
       if (base == null) {
         throw StateError('Could not locate external storage directory');
       }

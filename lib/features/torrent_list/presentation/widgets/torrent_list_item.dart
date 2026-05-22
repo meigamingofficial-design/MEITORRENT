@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,28 +17,31 @@ import '../controllers/torrent_notifier.dart';
 /// Shared placeholder used by both the list item and action buttons
 /// while the real torrent data is still loading.
 TorrentStatus _placeholder(String id) => TorrentStatus(
-      id: id,
-      name: '…',
-      progress: 0,
-      downloadSpeed: 0,
-      uploadSpeed: 0,
-      peers: 0,
-      seeds: 0,
-      state: TorrentState.unknown,
-      totalSize: 0,
-      downloadedBytes: 0,
-      uploadedBytes: 0,
-      savePath: '',
-      addedAt: DateTime.now(),
-      lastActivityAt: DateTime.now(),
-      ratio: 0,
-    );
+  id: id,
+  name: '…',
+  progress: 0,
+  downloadSpeed: 0,
+  uploadSpeed: 0,
+  peers: 0,
+  seeds: 0,
+  state: TorrentState.unknown,
+  totalSize: 0,
+  downloadedBytes: 0,
+  uploadedBytes: 0,
+  savePath: '',
+  addedAt: DateTime.now(),
+  lastActivityAt: DateTime.now(),
+  ratio: 0,
+);
 
 /// Premium glassmorphism torrent card.
 /// Uses `.select()` — only rebuilds when THIS torrent's data changes.
 class TorrentListItem extends ConsumerStatefulWidget {
-  const TorrentListItem(
-      {super.key, required this.torrentId, this.isNew = false});
+  const TorrentListItem({
+    super.key,
+    required this.torrentId,
+    this.isNew = false,
+  });
 
   final String torrentId;
 
@@ -61,18 +65,24 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
       vsync: this,
       duration: const Duration(milliseconds: 380),
     );
-    _fadeAnim =
-        CurvedAnimation(parent: _entryController, curve: Curves.easeOut);
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.12),
-      end: Offset.zero,
-    ).animate(
-        CurvedAnimation(parent: _entryController, curve: Curves.easeOutCubic));
+    _fadeAnim = CurvedAnimation(
+      parent: _entryController,
+      curve: Curves.easeOut,
+    );
+    _slideAnim =
+        Tween<Offset>(
+          begin: const Offset(0, 0.12),
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(parent: _entryController, curve: Curves.easeOutCubic),
+        );
 
     // Stagger slightly so multiple cards don't all animate at once
-    Future<void>.delayed(const Duration(milliseconds: 60), () {
-      if (mounted) _entryController.forward();
-    });
+    unawaited(
+      Future<void>.delayed(const Duration(milliseconds: 60), () {
+        if (mounted) unawaited(_entryController.forward());
+      }),
+    );
   }
 
   @override
@@ -84,8 +94,8 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
   @override
   Widget build(BuildContext context) {
     final status = ref.watch(
-      torrentNotifierProvider.select(
-        (s) => s.valueOrNull?.firstWhere(
+      torrentProvider.select(
+        (s) => s.value?.firstWhere(
           (t) => t.id == widget.torrentId,
           orElse: () => _placeholder(widget.torrentId),
         ),
@@ -95,7 +105,8 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
     if (status == null) return const SizedBox.shrink();
 
     final isEffectivelyComplete = status.isEffectivelyComplete;
-    final isActive = status.state == TorrentState.downloading ||
+    final isActive =
+        status.state == TorrentState.downloading ||
         status.state == TorrentState.seeding ||
         isEffectivelyComplete ||
         status.state == TorrentState.checkingFiles ||
@@ -109,19 +120,21 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
     final Color accentColor = isFinished
         ? AppColors.finished
         : hasError
-            ? AppColors.error
-            : isDownloading
-                ? AppColors.downloading
-                : status.state == TorrentState.seeding
-                    ? AppColors.seeding
-                    : status.state == TorrentState.paused
-                        ? AppColors.paused
-                        : Colors.transparent;
+        ? AppColors.error
+        : isDownloading
+        ? AppColors.downloading
+        : status.state == TorrentState.seeding
+        ? AppColors.seeding
+        : status.state == TorrentState.paused
+        ? AppColors.paused
+        : Colors.transparent;
 
-    final isSelected =
-        ref.watch(selectedTorrentsProvider).contains(widget.torrentId);
-    final isSelectionMode =
-        ref.watch(selectedTorrentsProvider.notifier).isSelectionMode;
+    final isSelected = ref
+        .watch(selectedTorrentsProvider)
+        .contains(widget.torrentId);
+    final isSelectionMode = ref
+        .watch(selectedTorrentsProvider.notifier)
+        .isSelectionMode;
 
     return FadeTransition(
       opacity: _fadeAnim,
@@ -140,13 +153,13 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                   ref
                       .read(selectedTorrentsProvider.notifier)
                       .toggle(widget.torrentId);
-                  HapticFeedback.lightImpact();
+                  unawaited(HapticFeedback.lightImpact());
                 }
                 // When not in selection mode, tap does nothing
                 // (actions are in the row buttons below)
               },
               onLongPress: () {
-                HapticFeedback.mediumImpact();
+                unawaited(HapticFeedback.mediumImpact());
                 // Long-press always enters selection mode and selects this item
                 ref
                     .read(selectedTorrentsProvider.notifier)
@@ -167,7 +180,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                             tween: Tween(begin: 0.45, end: 1.0),
                             duration: const Duration(milliseconds: 1100),
                             curve: Curves.easeInOut,
-                            builder: (_, v, __) => Container(
+                            builder: (_, v, _) => Container(
                               width: 4,
                               decoration: BoxDecoration(
                                 color: accentColor.withValues(alpha: v),
@@ -193,7 +206,11 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                     duration: const Duration(milliseconds: 250),
                     curve: Curves.easeOutCubic,
                     padding: EdgeInsets.fromLTRB(
-                        isSelectionMode ? 52 : 20, 8, 12, 8),
+                      isSelectionMode ? 52 : 20,
+                      8,
+                      12,
+                      8,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -226,14 +243,17 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                   Container(
                                     height: progressHeight,
                                     decoration: BoxDecoration(
-                                      color: AppColors.border(context)
-                                          .withValues(alpha: 0.5),
+                                      color: AppColors.border(
+                                        context,
+                                      ).withValues(alpha: 0.5),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                   ),
                                   FractionallySizedBox(
-                                    widthFactor:
-                                        status.progress.clamp(0.0, 1.0),
+                                    widthFactor: status.progress.clamp(
+                                      0.0,
+                                      1.0,
+                                    ),
                                     child: isFinished
                                         ? Container(
                                             height: progressHeight,
@@ -252,10 +272,12 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                           )
                                         : AnimatedContainer(
                                             duration: const Duration(
-                                                milliseconds: 600),
+                                              milliseconds: 600,
+                                            ),
                                             height: progressHeight,
                                             decoration: BoxDecoration(
-                                              gradient: status.state ==
+                                              gradient:
+                                                  status.state ==
                                                       TorrentState.paused
                                                   ? AppGradients.paused
                                                   : AppGradients.primary,
@@ -264,15 +286,17 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                               boxShadow: isActive
                                                   ? [
                                                       BoxShadow(
-                                                        color: (status.state ==
-                                                                    TorrentState
-                                                                        .paused
-                                                                ? AppColors
-                                                                    .paused
-                                                                : AppColors
-                                                                    .downloading)
-                                                            .withValues(
-                                                                alpha: 0.35),
+                                                        color:
+                                                            (status.state ==
+                                                                        TorrentState
+                                                                            .paused
+                                                                    ? AppColors
+                                                                          .paused
+                                                                    : AppColors
+                                                                          .downloading)
+                                                                .withValues(
+                                                                  alpha: 0.35,
+                                                                ),
                                                         blurRadius: 8,
                                                         spreadRadius: 1,
                                                       ),
@@ -288,7 +312,9 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                             Text(
                               '${(status.progress * 100).toStringAsFixed(1)}%',
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.8),
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -299,52 +325,66 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                         // ── Row 3: ↓speed ↑speed seeds peers · size ─────
                         Row(
                           children: [
-                            const Icon(Icons.arrow_downward_rounded,
-                                color: AppColors.downloading, size: 13),
+                            const Icon(
+                              Icons.arrow_downward_rounded,
+                              color: AppColors.downloading,
+                              size: 13,
+                            ),
                             const SizedBox(width: 3),
                             Text(
                               SpeedFormatter.format(
-                                  status.downloadSpeed.toInt()),
+                                status.downloadSpeed.toInt(),
+                              ),
                               style: const TextStyle(
-                                  color: AppColors.downloading,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700),
+                                color: AppColors.downloading,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                             const SizedBox(width: 9),
-                            const Icon(Icons.arrow_upward_rounded,
-                                color: AppColors.seeding, size: 13),
+                            const Icon(
+                              Icons.arrow_upward_rounded,
+                              color: AppColors.seeding,
+                              size: 13,
+                            ),
                             const SizedBox(width: 3),
                             Text(
-                              SpeedFormatter.format(
-                                  status.uploadSpeed.toInt()),
+                              SpeedFormatter.format(status.uploadSpeed.toInt()),
                               style: const TextStyle(
-                                  color: AppColors.seeding,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700),
+                                color: AppColors.seeding,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                             const SizedBox(width: 9),
-                            Icon(Icons.keyboard_double_arrow_up_rounded,
-                                color: AppColors.textSecondary(context),
-                                size: 13),
+                            Icon(
+                              Icons.keyboard_double_arrow_up_rounded,
+                              color: AppColors.textSecondary(context),
+                              size: 13,
+                            ),
                             const SizedBox(width: 2),
                             Text(
                               status.seeds.toString(),
                               style: TextStyle(
-                                  color: AppColors.textSecondary(context),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600),
+                                color: AppColors.textSecondary(context),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             const SizedBox(width: 6),
-                            Icon(Icons.people_outline_rounded,
-                                color: AppColors.textSecondary(context),
-                                size: 13),
+                            Icon(
+                              Icons.people_outline_rounded,
+                              color: AppColors.textSecondary(context),
+                              size: 13,
+                            ),
                             const SizedBox(width: 2),
                             Text(
                               status.peers.toString(),
                               style: TextStyle(
-                                  color: AppColors.textSecondary(context),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600),
+                                color: AppColors.textSecondary(context),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             const Spacer(),
                             Icon(
@@ -352,15 +392,17 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                   ? Icons.link_rounded
                                   : Icons.insert_drive_file_outlined,
                               size: 12,
-                              color: AppColors.textSecondary(context)
-                                  .withValues(alpha: 0.5),
+                              color: AppColors.textSecondary(
+                                context,
+                              ).withValues(alpha: 0.5),
                             ),
                             const SizedBox(width: 4),
                             Text(
                               SizeFormatter.format(status.totalSize),
                               style: TextStyle(
-                                color: AppColors.textSecondary(context)
-                                    .withValues(alpha: 0.7),
+                                color: AppColors.textSecondary(
+                                  context,
+                                ).withValues(alpha: 0.7),
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -388,8 +430,9 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                         decoration: BoxDecoration(
                           color: isSelected
                               ? AppColors.downloading
-                              : AppColors.border(context)
-                                  .withValues(alpha: 0.4),
+                              : AppColors.border(
+                                  context,
+                                ).withValues(alpha: 0.4),
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: isSelected
@@ -400,10 +443,11 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: AppColors.downloading
-                                        .withValues(alpha: 0.3),
+                                    color: AppColors.downloading.withValues(
+                                      alpha: 0.3,
+                                    ),
                                     blurRadius: 8,
-                                  )
+                                  ),
                                 ]
                               : null,
                         ),
@@ -422,8 +466,6 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
       ),
     );
   }
-
-
 }
 
 class _GlassCard extends StatelessWidget {
@@ -447,10 +489,10 @@ class _GlassCard extends StatelessWidget {
     final borderColor = isSelected
         ? primaryColor
         : hasError
-            ? AppColors.error.withValues(alpha: 0.5)
-            : isActive
-                ? primaryColor.withValues(alpha: 0.45)
-                : AppColors.inkFaded;
+        ? AppColors.error.withValues(alpha: 0.5)
+        : isActive
+        ? primaryColor.withValues(alpha: 0.45)
+        : AppColors.inkFaded;
 
     final borderWidth = isSelected || isActive ? 1.5 : 1.0;
 
@@ -465,7 +507,7 @@ class _GlassCard extends StatelessWidget {
                 colors: hasError
                     ? [
                         AppColors.error.withValues(alpha: 0.08),
-                        AppColors.error.withValues(alpha: 0.04)
+                        AppColors.error.withValues(alpha: 0.04),
                       ]
                     : [
                         AppColors.surface(context),
@@ -504,7 +546,6 @@ class _GlassCard extends StatelessWidget {
   }
 }
 
-
 class _ActionButtons extends ConsumerWidget {
   const _ActionButtons({required this.torrentId});
   final String torrentId;
@@ -513,8 +554,8 @@ class _ActionButtons extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch the provider directly so we always get the latest optimistic state.
     final status = ref.watch(
-      torrentNotifierProvider.select(
-        (s) => s.valueOrNull?.firstWhere(
+      torrentProvider.select(
+        (s) => s.value?.firstWhere(
           (t) => t.id == torrentId,
           orElse: () => _placeholder(torrentId),
         ),
@@ -522,7 +563,7 @@ class _ActionButtons extends ConsumerWidget {
     );
     if (status == null) return const SizedBox.shrink();
 
-    final notifier = ref.read(torrentNotifierProvider.notifier);
+    final notifier = ref.read(torrentProvider.notifier);
     final messenger = ScaffoldMessenger.of(context);
 
     final isDone = status.progress >= 1.0;
@@ -570,8 +611,9 @@ class _ActionButtons extends ConsumerWidget {
                 final granted = await PermissionService.isStorageGranted();
                 if (!granted) {
                   if (context.mounted) {
-                    final retry =
-                        await PermissionService.showStorageRationale(context);
+                    final retry = await PermissionService.showStorageRationale(
+                      context,
+                    );
                     if (retry) {
                       await Permission.manageExternalStorage.request();
                     }
@@ -622,8 +664,9 @@ class _ActionButtons extends ConsumerWidget {
             final granted = await PermissionService.isStorageGranted();
             if (!granted) {
               if (context.mounted) {
-                final retry =
-                    await PermissionService.showStorageRationale(context);
+                final retry = await PermissionService.showStorageRationale(
+                  context,
+                );
                 if (retry) {
                   await Permission.manageExternalStorage.request();
                 }
@@ -663,16 +706,19 @@ class _ActionButtons extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(
-      BuildContext context, WidgetRef ref, TorrentStatus status) async {
-    final notifier = ref.read(torrentNotifierProvider.notifier);
+    BuildContext context,
+    WidgetRef ref,
+    TorrentStatus status,
+  ) async {
+    final notifier = ref.read(torrentProvider.notifier);
     final result = await showDialog<_DeleteChoice>(
       context: context,
       builder: (_) => _DeleteDialog(torrentName: status.name),
     );
     if (result == _DeleteChoice.removeOnly) {
-      notifier.deleteTorrent(status.id);
+      await notifier.deleteTorrent(status.id);
     } else if (result == _DeleteChoice.removeWithFiles) {
-      notifier.deleteTorrent(status.id, deleteFiles: true);
+      await notifier.deleteTorrent(status.id, deleteFiles: true);
     }
   }
 }
@@ -725,8 +771,10 @@ class _DeleteDialog extends StatelessWidget {
         children: [
           Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 22),
           SizedBox(width: 10),
-          Text('Remove Torrent',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+          Text(
+            'Remove Torrent',
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+          ),
         ],
       ),
       content: Text(
@@ -748,8 +796,9 @@ class _DeleteDialog extends StatelessWidget {
         FilledButton(
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.error,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
           onPressed: () =>
               Navigator.pop(context, _DeleteChoice.removeWithFiles),
@@ -759,5 +808,3 @@ class _DeleteDialog extends StatelessWidget {
     );
   }
 }
-
-

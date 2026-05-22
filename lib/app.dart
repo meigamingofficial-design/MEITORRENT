@@ -31,13 +31,14 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
     super.initState();
 
     // ── Warm-start deep links ─────────────────────────────────────────
-    _deepLinkSub =
-        DeepLinkService.instance.torrentStream.listen(_handleIncomingLink);
+    _deepLinkSub = DeepLinkService.instance.torrentStream.listen(
+      _handleIncomingLink,
+    );
   }
 
   @override
   void dispose() {
-    _deepLinkSub?.cancel();
+    unawaited(_deepLinkSub?.cancel());
     super.dispose();
   }
 
@@ -47,17 +48,13 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
       final isMagnet = linkOrPath.startsWith('magnet:');
       try {
         if (isMagnet) {
-          await ref
-              .read(torrentNotifierProvider.notifier)
-              .addMagnet(linkOrPath);
+          await ref.read(torrentProvider.notifier).addMagnet(linkOrPath);
           final ctx = navigatorKey.currentContext;
           if (ctx != null && ctx.mounted) {
             _showToast(ctx, 'Magnet link added successfully');
           }
         } else {
-          await ref
-              .read(torrentNotifierProvider.notifier)
-              .addTorrentFile(linkOrPath);
+          await ref.read(torrentProvider.notifier).addTorrentFile(linkOrPath);
           final ctx = navigatorKey.currentContext;
           if (ctx != null && ctx.mounted) {
             _showToast(ctx, 'Torrent file added successfully');
@@ -77,8 +74,11 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded,
-                color: Color(0xFF2ECC71), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFF2ECC71),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(message, style: TextStyle(color: AppColors.text(ctx))),
           ],
@@ -94,8 +94,7 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
   @override
   Widget build(BuildContext context) {
     // Watch the theme service. If it's still loading, default to light.
-    final themeMode =
-        ref.watch(themeServiceProvider).valueOrNull ?? ThemeMode.light;
+    final themeMode = ref.watch(themeServiceProvider).value ?? ThemeMode.light;
     final isLight = themeMode != ThemeMode.dark;
 
     return MaterialApp(
@@ -137,8 +136,9 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
             // 3. Subtle pink blush overlay for a gorgeous unified Sakura theme
             IgnorePointer(
               child: Container(
-                color: const Color(0xFFFFC0CB)
-                    .withValues(alpha: 0.04), // 4% opacity soft pink tint
+                color: const Color(
+                  0xFFFFC0CB,
+                ).withValues(alpha: 0.04), // 4% opacity soft pink tint
               ),
             ),
             // 4. All routes on top (transparent scaffolds allow the background to show through, but solid cards mask it!)

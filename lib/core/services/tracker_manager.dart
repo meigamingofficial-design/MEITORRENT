@@ -11,8 +11,11 @@ class TrackerManager {
     try {
       final client = HttpClient();
       client.connectionTimeout = const Duration(seconds: 5);
-      final req = await client.getUrl(Uri.parse(
-          'https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_best.txt'));
+      final req = await client.getUrl(
+        Uri.parse(
+          'https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_best.txt',
+        ),
+      );
       final res = await req.close();
 
       if (res.statusCode == 200) {
@@ -26,7 +29,8 @@ class TrackerManager {
         _extraTrackers.clear();
         _extraTrackers.addAll(list);
         AppLogger.i(
-            '[TrackerManager] Fetched ${_extraTrackers.length} trackers');
+          '[TrackerManager] Fetched ${_extraTrackers.length} trackers',
+        );
       }
       client.close(force: true);
     } catch (e) {

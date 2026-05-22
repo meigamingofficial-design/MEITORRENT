@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -25,7 +26,8 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2600),
-    )..repeat(reverse: true);
+    );
+    unawaited(_controller.repeat(reverse: true));
     _floatAnim = Tween<double>(begin: 0, end: -10).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
@@ -73,19 +75,21 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
             // Floating animated magnet icon
             AnimatedBuilder(
               animation: _controller,
-              builder: (_, __) => Transform.translate(
+              builder: (_, _) => Transform.translate(
                 offset: Offset(0, _floatAnim.value),
                 child: Container(
                   width: 96,
                   height: 96,
                   decoration: BoxDecoration(
-                    color: AppColors.downloading
-                        .withValues(alpha: _pulseAnim.value),
+                    color: AppColors.downloading.withValues(
+                      alpha: _pulseAnim.value,
+                    ),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.downloading
-                            .withValues(alpha: _pulseAnim.value * 0.7),
+                        color: AppColors.downloading.withValues(
+                          alpha: _pulseAnim.value * 0.7,
+                        ),
                         blurRadius: 32,
                         spreadRadius: 4,
                       ),
@@ -124,7 +128,7 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
             if (widget.filter == TorrentFilter.all)
               AnimatedBuilder(
                 animation: _controller,
-                builder: (_, __) => Opacity(
+                builder: (_, _) => Opacity(
                   opacity: 0.35 + 0.45 * _controller.value,
                   child: const Icon(
                     Icons.keyboard_arrow_down_rounded,

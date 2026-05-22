@@ -155,29 +155,29 @@ class TorrentInfo {
     bool? isFinished,
     bool? hasMetadata,
     int? queuePosition,
-  }) =>
-      TorrentInfo(
-        id: id,
-        name: name ?? this.name,
-        savePath: savePath ?? this.savePath,
-        errorMsg: errorMsg ?? this.errorMsg,
-        state: state ?? this.state,
-        progress: progress ?? this.progress,
-        downloadRate: downloadRate ?? this.downloadRate,
-        uploadRate: uploadRate ?? this.uploadRate,
-        totalDone: totalDone ?? this.totalDone,
-        totalWanted: totalWanted ?? this.totalWanted,
-        totalUploaded: totalUploaded ?? this.totalUploaded,
-        numPeers: numPeers ?? this.numPeers,
-        numSeeds: numSeeds ?? this.numSeeds,
-        isPaused: isPaused ?? this.isPaused,
-        isFinished: isFinished ?? this.isFinished,
-        hasMetadata: hasMetadata ?? this.hasMetadata,
-        queuePosition: queuePosition ?? this.queuePosition,
-      );
+  }) => TorrentInfo(
+    id: id,
+    name: name ?? this.name,
+    savePath: savePath ?? this.savePath,
+    errorMsg: errorMsg ?? this.errorMsg,
+    state: state ?? this.state,
+    progress: progress ?? this.progress,
+    downloadRate: downloadRate ?? this.downloadRate,
+    uploadRate: uploadRate ?? this.uploadRate,
+    totalDone: totalDone ?? this.totalDone,
+    totalWanted: totalWanted ?? this.totalWanted,
+    totalUploaded: totalUploaded ?? this.totalUploaded,
+    numPeers: numPeers ?? this.numPeers,
+    numSeeds: numSeeds ?? this.numSeeds,
+    isPaused: isPaused ?? this.isPaused,
+    isFinished: isFinished ?? this.isFinished,
+    hasMetadata: hasMetadata ?? this.hasMetadata,
+    queuePosition: queuePosition ?? this.queuePosition,
+  );
 
   @override
-  String toString() => 'TorrentInfo(id=$id, name=$name, state=$state, '
+  String toString() =>
+      'TorrentInfo(id=$id, name=$name, state=$state, '
       'progress=${(progress * 100).toStringAsFixed(1)}%)';
 }
 
@@ -198,7 +198,8 @@ class FileInfo {
   });
 
   @override
-  String toString() => 'FileInfo(index=$index, name=$name, '
+  String toString() =>
+      'FileInfo(index=$index, name=$name, '
       'size=$size, streamable=$isStreamable)';
 }
 
@@ -245,7 +246,8 @@ class StreamInfo {
       : 0.0;
 
   @override
-  String toString() => 'StreamInfo(id=$id, url=$url, state=$streamState, '
+  String toString() =>
+      'StreamInfo(id=$id, url=$url, state=$streamState, '
       'buffer=${bufferSeconds.toStringAsFixed(1)}s, peers=$activePeers)';
 }
 
@@ -369,29 +371,29 @@ class BtConfig {
     int? uploadRateLimit,
     int? peersListenPort,
     bool? responsiveMode,
-  }) =>
-      BtConfig(
-        cacheSize: cacheSize ?? this.cacheSize,
-        readerReadAhead: readerReadAhead ?? this.readerReadAhead,
-        preloadCache: preloadCache ?? this.preloadCache,
-        connectionsLimit: connectionsLimit ?? this.connectionsLimit,
-        torrentDisconnectTimeout:
-            torrentDisconnectTimeout ?? this.torrentDisconnectTimeout,
-        forceEncrypt: forceEncrypt ?? this.forceEncrypt,
-        disableTcp: disableTcp ?? this.disableTcp,
-        disableUtp: disableUtp ?? this.disableUtp,
-        disableUpload: disableUpload ?? this.disableUpload,
-        disableDht: disableDht ?? this.disableDht,
-        disableUpnp: disableUpnp ?? this.disableUpnp,
-        enableIpv6: enableIpv6 ?? this.enableIpv6,
-        downloadRateLimit: downloadRateLimit ?? this.downloadRateLimit,
-        uploadRateLimit: uploadRateLimit ?? this.uploadRateLimit,
-        peersListenPort: peersListenPort ?? this.peersListenPort,
-        responsiveMode: responsiveMode ?? this.responsiveMode,
-      );
+  }) => BtConfig(
+    cacheSize: cacheSize ?? this.cacheSize,
+    readerReadAhead: readerReadAhead ?? this.readerReadAhead,
+    preloadCache: preloadCache ?? this.preloadCache,
+    connectionsLimit: connectionsLimit ?? this.connectionsLimit,
+    torrentDisconnectTimeout:
+        torrentDisconnectTimeout ?? this.torrentDisconnectTimeout,
+    forceEncrypt: forceEncrypt ?? this.forceEncrypt,
+    disableTcp: disableTcp ?? this.disableTcp,
+    disableUtp: disableUtp ?? this.disableUtp,
+    disableUpload: disableUpload ?? this.disableUpload,
+    disableDht: disableDht ?? this.disableDht,
+    disableUpnp: disableUpnp ?? this.disableUpnp,
+    enableIpv6: enableIpv6 ?? this.enableIpv6,
+    downloadRateLimit: downloadRateLimit ?? this.downloadRateLimit,
+    uploadRateLimit: uploadRateLimit ?? this.uploadRateLimit,
+    peersListenPort: peersListenPort ?? this.peersListenPort,
+    responsiveMode: responsiveMode ?? this.responsiveMode,
+  );
 
   @override
-  String toString() => 'BtConfig(cache=${cacheSize ~/ (1024 * 1024)}MB, '
+  String toString() =>
+      'BtConfig(cache=${cacheSize ~/ (1024 * 1024)}MB, '
       'readAhead=$readerReadAhead%, conns=$connectionsLimit, '
       'encrypt=$forceEncrypt, responsive=$responsiveMode)';
 }

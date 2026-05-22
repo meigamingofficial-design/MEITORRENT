@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -49,8 +51,10 @@ class OemBatteryGuard {
     return _oemNames[manufacturer.toLowerCase()];
   }
 
-  Future<void> promptIfNeeded(BuildContext context,
-      {bool force = false}) async {
+  Future<void> promptIfNeeded(
+    BuildContext context, {
+    bool force = false,
+  }) async {
     final androidInfo = await DeviceInfoPlugin().androidInfo;
     final manufacturer = androidInfo.manufacturer.toLowerCase();
 
@@ -77,21 +81,24 @@ class OemBatteryGuard {
     String oemName,
     String packageName,
   ) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) =>
-          _OemPromptSheet(oemName: oemName, packageName: packageName),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
+        builder: (ctx) =>
+            _OemPromptSheet(oemName: oemName, packageName: packageName),
+      ),
     );
   }
 
   /// Launches the OEM battery management app via platform channel.
   static Future<void> launchOemSettings(String packageName) async {
     try {
-      await _platform
-          .invokeMethod('launchOemSettings', {'package': packageName});
+      await _platform.invokeMethod('launchOemSettings', {
+        'package': packageName,
+      });
     } on PlatformException catch (e) {
       AppLogger.w('[OemGuard] Failed to launch OEM settings', error: e);
     }
@@ -163,7 +170,9 @@ class _OemPromptSheet extends StatelessWidget {
                   const SizedBox(height: 12),
                   const _Step(number: '1', text: 'Open Battery Settings below'),
                   const _Step(
-                      number: '2', text: 'Find Meitorrent in the app list'),
+                    number: '2',
+                    text: 'Find Meitorrent in the app list',
+                  ),
                   const _Step(
                     number: '3',
                     text: 'Set to "No restrictions" or "Unrestricted"',
@@ -189,7 +198,9 @@ class _OemPromptSheet extends StatelessWidget {
                         width: 190,
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            OemBatteryGuard.launchOemSettings(packageName);
+                            unawaited(
+                              OemBatteryGuard.launchOemSettings(packageName),
+                            );
                             Navigator.pop(context);
                           },
                           icon: const Icon(Icons.open_in_new, size: 18),

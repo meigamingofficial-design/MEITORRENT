@@ -19,32 +19,19 @@ enum TorrentState {
 }
 
 extension TorrentStateX on TorrentState {
-  String get displayName {
-    switch (this) {
-      case TorrentState.unknown:
-        return 'Unknown';
-      case TorrentState.checkingFiles:
-        return 'Checking Files';
-      case TorrentState.downloadingMetadata:
-        return 'Fetching Metadata';
-      case TorrentState.downloading:
-        return 'Downloading';
-      case TorrentState.finished:
-        return 'Finished';
-      case TorrentState.seeding:
-        return 'Seeding';
-      case TorrentState.allocating:
-        return 'Allocating';
-      case TorrentState.checkingResume:
-        return 'Checking Resume';
-      case TorrentState.paused:
-        return 'Paused';
-      case TorrentState.stopped:
-        return 'Stopped';
-      case TorrentState.error:
-        return 'Error';
-    }
-  }
+  String get displayName => switch (this) {
+    TorrentState.unknown => 'Unknown',
+    TorrentState.checkingFiles => 'Checking Files',
+    TorrentState.downloadingMetadata => 'Fetching Metadata',
+    TorrentState.downloading => 'Downloading',
+    TorrentState.finished => 'Finished',
+    TorrentState.seeding => 'Seeding',
+    TorrentState.allocating => 'Allocating',
+    TorrentState.checkingResume => 'Checking Resume',
+    TorrentState.paused => 'Paused',
+    TorrentState.stopped => 'Stopped',
+    TorrentState.error => 'Error',
+  };
 
   bool get isActive =>
       this == TorrentState.downloading ||
@@ -142,32 +129,32 @@ class TorrentStatus extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        progress,
-        downloadSpeed,
-        uploadSpeed,
-        peers,
-        seeds,
-        state,
-        totalSize,
-        downloadedBytes,
-        uploadedBytes,
-        savePath,
-        addedAt,
-        lastActivityAt,
-        completedAt,
-        ratio,
-        etaSeconds,
-        errorMessage,
-        magnetUri,
-        torrentFilePath,
-        isPaused,
-        isStopped,
-        isCompleted,
-        isSequentialDownload,
-        resumeData,
-      ];
+    id,
+    name,
+    progress,
+    downloadSpeed,
+    uploadSpeed,
+    peers,
+    seeds,
+    state,
+    totalSize,
+    downloadedBytes,
+    uploadedBytes,
+    savePath,
+    addedAt,
+    lastActivityAt,
+    completedAt,
+    ratio,
+    etaSeconds,
+    errorMessage,
+    magnetUri,
+    torrentFilePath,
+    isPaused,
+    isStopped,
+    isCompleted,
+    isSequentialDownload,
+    resumeData,
+  ];
 
   /// Usesprops for deep equality comparison.
   bool deepEquals(TorrentStatus other) {

@@ -5,5 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Must be overridden in main.dart inside the ProviderScope.
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError(
-      'sharedPreferencesProvider must be overridden in ProviderScope');
+    'sharedPreferencesProvider must be overridden in ProviderScope',
+  );
 });

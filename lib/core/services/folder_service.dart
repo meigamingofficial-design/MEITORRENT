@@ -41,7 +41,8 @@ class FolderService {
           await openDownloadFolder(basePath);
         } else {
           AppLogger.w(
-              '[Folder] Folder location not found, opening root download folder');
+            '[Folder] Folder location not found, opening root download folder',
+          );
           await openDownloadFolder();
         }
       }
@@ -73,23 +74,23 @@ class FolderService {
       switch (result) {
         case 'exact':
           AppLogger.i('[Folder] Successfully opened folder: $path');
-          break;
         case 'chooser':
           AppLogger.w('[Folder] Opened fallback chooser for folder: $path');
-          break;
         case 'settings':
           AppLogger.w(
             '[Folder] Opened system documents UI instead of exact folder: $path',
           );
-          break;
         default:
           AppLogger.w(
-              '[Folder] File manager did not open the requested folder: $path');
-          break;
+            '[Folder] File manager did not open the requested folder: $path',
+          );
       }
     } catch (e, st) {
-      AppLogger.e('[Folder] Failed to open download folder',
-          error: e, stack: st);
+      AppLogger.e(
+        '[Folder] Failed to open download folder',
+        error: e,
+        stack: st,
+      );
       rethrow;
     }
   }

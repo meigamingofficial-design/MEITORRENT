@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:logger/logger.dart';
 
@@ -27,39 +29,48 @@ class AppLogger {
   static void i(String message, {Object? error, StackTrace? stack}) {
     _logger.i(message, error: error, stackTrace: stack);
     // Crashlytics logs are saved on the device and sent with the next crash.
-    FirebaseCrashlytics.instance.log('[INFO] $message');
+    unawaited(FirebaseCrashlytics.instance.log('[INFO] $message'));
   }
 
   /// Log a warning (Local + Firebase Non-Fatal if error exists)
   static void w(String message, {Object? error, StackTrace? stack}) {
     _logger.w(message, error: error, stackTrace: stack);
-    FirebaseCrashlytics.instance.log('[WARN] $message');
+    unawaited(FirebaseCrashlytics.instance.log('[WARN] $message'));
     if (error != null) {
-      FirebaseCrashlytics.instance
-          .recordError(error, stack, reason: 'Warning: $message');
+      unawaited(
+        FirebaseCrashlytics.instance.recordError(
+          error,
+          stack,
+          reason: 'Warning: $message',
+        ),
+      );
     }
   }
 
   /// Log an error (Local + Firebase Non-Fatal)
   static void e(String message, {Object? error, StackTrace? stack}) {
     _logger.e(message, error: error, stackTrace: stack);
-    FirebaseCrashlytics.instance.log('[ERROR] $message');
-    FirebaseCrashlytics.instance.recordError(
-      error ?? message,
-      stack,
-      reason: 'Caught Error: $message',
+    unawaited(FirebaseCrashlytics.instance.log('[ERROR] $message'));
+    unawaited(
+      FirebaseCrashlytics.instance.recordError(
+        error ?? message,
+        stack,
+        reason: 'Caught Error: $message',
+      ),
     );
   }
 
   /// Log a fatal error (Local + Firebase Fatal)
   static void wtf(String message, {Object? error, StackTrace? stack}) {
     _logger.f(message, error: error, stackTrace: stack);
-    FirebaseCrashlytics.instance.log('[FATAL] $message');
-    FirebaseCrashlytics.instance.recordError(
-      error ?? message,
-      stack,
-      fatal: true,
-      reason: 'Fatal Crash Triggered: $message',
+    unawaited(FirebaseCrashlytics.instance.log('[FATAL] $message'));
+    unawaited(
+      FirebaseCrashlytics.instance.recordError(
+        error ?? message,
+        stack,
+        fatal: true,
+        reason: 'Fatal Crash Triggered: $message',
+      ),
     );
   }
 
@@ -72,13 +83,13 @@ class AppLogger {
   /// Track app-specific state for crash analysis
   static void setCustomKey(String key, Object value) {
     if (value is String) {
-      FirebaseCrashlytics.instance.setCustomKey(key, value);
+      unawaited(FirebaseCrashlytics.instance.setCustomKey(key, value));
     } else if (value is bool) {
-      FirebaseCrashlytics.instance.setCustomKey(key, value);
+      unawaited(FirebaseCrashlytics.instance.setCustomKey(key, value));
     } else if (value is int) {
-      FirebaseCrashlytics.instance.setCustomKey(key, value);
+      unawaited(FirebaseCrashlytics.instance.setCustomKey(key, value));
     } else if (value is double) {
-      FirebaseCrashlytics.instance.setCustomKey(key, value);
+      unawaited(FirebaseCrashlytics.instance.setCustomKey(key, value));
     }
   }
 

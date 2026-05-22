@@ -12,156 +12,235 @@ class $TorrentsTableTable extends TorrentsTable
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
-      'id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _isPausedMeta =
-      const VerificationMeta('isPaused');
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isPausedMeta = const VerificationMeta(
+    'isPaused',
+  );
   @override
   late final GeneratedColumn<bool> isPaused = GeneratedColumn<bool>(
-      'is_paused', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_paused" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _isStoppedMeta =
-      const VerificationMeta('isStopped');
+    'is_paused',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_paused" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isStoppedMeta = const VerificationMeta(
+    'isStopped',
+  );
   @override
   late final GeneratedColumn<bool> isStopped = GeneratedColumn<bool>(
-      'is_stopped', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_stopped" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _isCompletedMeta =
-      const VerificationMeta('isCompleted');
+    'is_stopped',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_stopped" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isCompletedMeta = const VerificationMeta(
+    'isCompleted',
+  );
   @override
   late final GeneratedColumn<bool> isCompleted = GeneratedColumn<bool>(
-      'is_completed', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_completed" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _magnetUriMeta =
-      const VerificationMeta('magnetUri');
+    'is_completed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_completed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _magnetUriMeta = const VerificationMeta(
+    'magnetUri',
+  );
   @override
   late final GeneratedColumn<String> magnetUri = GeneratedColumn<String>(
-      'magnet_uri', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _torrentFilePathMeta =
-      const VerificationMeta('torrentFilePath');
+    'magnet_uri',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _torrentFilePathMeta = const VerificationMeta(
+    'torrentFilePath',
+  );
   @override
   late final GeneratedColumn<String> torrentFilePath = GeneratedColumn<String>(
-      'torrent_file_path', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _savePathMeta =
-      const VerificationMeta('savePath');
+    'torrent_file_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _savePathMeta = const VerificationMeta(
+    'savePath',
+  );
   @override
   late final GeneratedColumn<String> savePath = GeneratedColumn<String>(
-      'save_path', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'save_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _totalSizeMeta =
-      const VerificationMeta('totalSize');
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _totalSizeMeta = const VerificationMeta(
+    'totalSize',
+  );
   @override
   late final GeneratedColumn<int> totalSize = GeneratedColumn<int>(
-      'total_size', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _downloadedBytesMeta =
-      const VerificationMeta('downloadedBytes');
+    'total_size',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _downloadedBytesMeta = const VerificationMeta(
+    'downloadedBytes',
+  );
   @override
   late final GeneratedColumn<int> downloadedBytes = GeneratedColumn<int>(
-      'downloaded_bytes', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _progressMeta =
-      const VerificationMeta('progress');
+    'downloaded_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _progressMeta = const VerificationMeta(
+    'progress',
+  );
   @override
   late final GeneratedColumn<double> progress = GeneratedColumn<double>(
-      'progress', aliasedName, false,
-      type: DriftSqlType.double,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0.0));
+    'progress',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
   static const VerificationMeta _stateMeta = const VerificationMeta('state');
   @override
   late final GeneratedColumn<String> state = GeneratedColumn<String>(
-      'state', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('unknown'));
-  static const VerificationMeta _addedAtMeta =
-      const VerificationMeta('addedAt');
+    'state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('unknown'),
+  );
+  static const VerificationMeta _addedAtMeta = const VerificationMeta(
+    'addedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> addedAt = GeneratedColumn<DateTime>(
-      'added_at', aliasedName, false,
-      type: DriftSqlType.dateTime, requiredDuringInsert: true);
-  static const VerificationMeta _lastActivityAtMeta =
-      const VerificationMeta('lastActivityAt');
+    'added_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastActivityAtMeta = const VerificationMeta(
+    'lastActivityAt',
+  );
   @override
   late final GeneratedColumn<DateTime> lastActivityAt =
-      GeneratedColumn<DateTime>('last_activity_at', aliasedName, false,
-          type: DriftSqlType.dateTime,
-          requiredDuringInsert: false,
-          defaultValue: currentDateAndTime);
-  static const VerificationMeta _completedAtMeta =
-      const VerificationMeta('completedAt');
+      GeneratedColumn<DateTime>(
+        'last_activity_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      );
+  static const VerificationMeta _completedAtMeta = const VerificationMeta(
+    'completedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
-      'completed_at', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+    'completed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isSequentialDownloadMeta =
       const VerificationMeta('isSequentialDownload');
   @override
   late final GeneratedColumn<bool> isSequentialDownload = GeneratedColumn<bool>(
-      'is_sequential_download', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_sequential_download" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _resumeDataMeta =
-      const VerificationMeta('resumeData');
+    'is_sequential_download',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_sequential_download" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _resumeDataMeta = const VerificationMeta(
+    'resumeData',
+  );
   @override
   late final GeneratedColumn<Uint8List> resumeData = GeneratedColumn<Uint8List>(
-      'resume_data', aliasedName, true,
-      type: DriftSqlType.blob, requiredDuringInsert: false);
+    'resume_data',
+    aliasedName,
+    true,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        id,
-        isPaused,
-        isStopped,
-        isCompleted,
-        magnetUri,
-        torrentFilePath,
-        savePath,
-        name,
-        totalSize,
-        downloadedBytes,
-        progress,
-        state,
-        addedAt,
-        lastActivityAt,
-        completedAt,
-        isSequentialDownload,
-        resumeData
-      ];
+    id,
+    isPaused,
+    isStopped,
+    isCompleted,
+    magnetUri,
+    torrentFilePath,
+    savePath,
+    name,
+    totalSize,
+    downloadedBytes,
+    progress,
+    state,
+    addedAt,
+    lastActivityAt,
+    completedAt,
+    isSequentialDownload,
+    resumeData,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'torrents_table';
   @override
-  VerificationContext validateIntegrity(Insertable<TorrentsTableData> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<TorrentsTableData> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -170,88 +249,124 @@ class $TorrentsTableTable extends TorrentsTable
       context.missing(_idMeta);
     }
     if (data.containsKey('is_paused')) {
-      context.handle(_isPausedMeta,
-          isPaused.isAcceptableOrUnknown(data['is_paused']!, _isPausedMeta));
+      context.handle(
+        _isPausedMeta,
+        isPaused.isAcceptableOrUnknown(data['is_paused']!, _isPausedMeta),
+      );
     }
     if (data.containsKey('is_stopped')) {
-      context.handle(_isStoppedMeta,
-          isStopped.isAcceptableOrUnknown(data['is_stopped']!, _isStoppedMeta));
+      context.handle(
+        _isStoppedMeta,
+        isStopped.isAcceptableOrUnknown(data['is_stopped']!, _isStoppedMeta),
+      );
     }
     if (data.containsKey('is_completed')) {
       context.handle(
+        _isCompletedMeta,
+        isCompleted.isAcceptableOrUnknown(
+          data['is_completed']!,
           _isCompletedMeta,
-          isCompleted.isAcceptableOrUnknown(
-              data['is_completed']!, _isCompletedMeta));
+        ),
+      );
     }
     if (data.containsKey('magnet_uri')) {
-      context.handle(_magnetUriMeta,
-          magnetUri.isAcceptableOrUnknown(data['magnet_uri']!, _magnetUriMeta));
+      context.handle(
+        _magnetUriMeta,
+        magnetUri.isAcceptableOrUnknown(data['magnet_uri']!, _magnetUriMeta),
+      );
     }
     if (data.containsKey('torrent_file_path')) {
       context.handle(
+        _torrentFilePathMeta,
+        torrentFilePath.isAcceptableOrUnknown(
+          data['torrent_file_path']!,
           _torrentFilePathMeta,
-          torrentFilePath.isAcceptableOrUnknown(
-              data['torrent_file_path']!, _torrentFilePathMeta));
+        ),
+      );
     }
     if (data.containsKey('save_path')) {
-      context.handle(_savePathMeta,
-          savePath.isAcceptableOrUnknown(data['save_path']!, _savePathMeta));
+      context.handle(
+        _savePathMeta,
+        savePath.isAcceptableOrUnknown(data['save_path']!, _savePathMeta),
+      );
     } else if (isInserting) {
       context.missing(_savePathMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('total_size')) {
-      context.handle(_totalSizeMeta,
-          totalSize.isAcceptableOrUnknown(data['total_size']!, _totalSizeMeta));
+      context.handle(
+        _totalSizeMeta,
+        totalSize.isAcceptableOrUnknown(data['total_size']!, _totalSizeMeta),
+      );
     }
     if (data.containsKey('downloaded_bytes')) {
       context.handle(
+        _downloadedBytesMeta,
+        downloadedBytes.isAcceptableOrUnknown(
+          data['downloaded_bytes']!,
           _downloadedBytesMeta,
-          downloadedBytes.isAcceptableOrUnknown(
-              data['downloaded_bytes']!, _downloadedBytesMeta));
+        ),
+      );
     }
     if (data.containsKey('progress')) {
-      context.handle(_progressMeta,
-          progress.isAcceptableOrUnknown(data['progress']!, _progressMeta));
+      context.handle(
+        _progressMeta,
+        progress.isAcceptableOrUnknown(data['progress']!, _progressMeta),
+      );
     }
     if (data.containsKey('state')) {
       context.handle(
-          _stateMeta, state.isAcceptableOrUnknown(data['state']!, _stateMeta));
+        _stateMeta,
+        state.isAcceptableOrUnknown(data['state']!, _stateMeta),
+      );
     }
     if (data.containsKey('added_at')) {
-      context.handle(_addedAtMeta,
-          addedAt.isAcceptableOrUnknown(data['added_at']!, _addedAtMeta));
+      context.handle(
+        _addedAtMeta,
+        addedAt.isAcceptableOrUnknown(data['added_at']!, _addedAtMeta),
+      );
     } else if (isInserting) {
       context.missing(_addedAtMeta);
     }
     if (data.containsKey('last_activity_at')) {
       context.handle(
+        _lastActivityAtMeta,
+        lastActivityAt.isAcceptableOrUnknown(
+          data['last_activity_at']!,
           _lastActivityAtMeta,
-          lastActivityAt.isAcceptableOrUnknown(
-              data['last_activity_at']!, _lastActivityAtMeta));
+        ),
+      );
     }
     if (data.containsKey('completed_at')) {
       context.handle(
+        _completedAtMeta,
+        completedAt.isAcceptableOrUnknown(
+          data['completed_at']!,
           _completedAtMeta,
-          completedAt.isAcceptableOrUnknown(
-              data['completed_at']!, _completedAtMeta));
+        ),
+      );
     }
     if (data.containsKey('is_sequential_download')) {
       context.handle(
+        _isSequentialDownloadMeta,
+        isSequentialDownload.isAcceptableOrUnknown(
+          data['is_sequential_download']!,
           _isSequentialDownloadMeta,
-          isSequentialDownload.isAcceptableOrUnknown(
-              data['is_sequential_download']!, _isSequentialDownloadMeta));
+        ),
+      );
     }
     if (data.containsKey('resume_data')) {
       context.handle(
-          _resumeDataMeta,
-          resumeData.isAcceptableOrUnknown(
-              data['resume_data']!, _resumeDataMeta));
+        _resumeDataMeta,
+        resumeData.isAcceptableOrUnknown(data['resume_data']!, _resumeDataMeta),
+      );
     }
     return context;
   }
@@ -262,40 +377,74 @@ class $TorrentsTableTable extends TorrentsTable
   TorrentsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return TorrentsTableData(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
-      isPaused: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_paused'])!,
-      isStopped: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_stopped'])!,
-      isCompleted: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_completed'])!,
-      magnetUri: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}magnet_uri']),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      isPaused: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_paused'],
+      )!,
+      isStopped: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_stopped'],
+      )!,
+      isCompleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_completed'],
+      )!,
+      magnetUri: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}magnet_uri'],
+      ),
       torrentFilePath: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}torrent_file_path']),
-      savePath: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}save_path'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      totalSize: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}total_size'])!,
-      downloadedBytes: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}downloaded_bytes'])!,
-      progress: attachedDatabase.typeMapping
-          .read(DriftSqlType.double, data['${effectivePrefix}progress'])!,
-      state: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}state'])!,
-      addedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}added_at'])!,
+        DriftSqlType.string,
+        data['${effectivePrefix}torrent_file_path'],
+      ),
+      savePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}save_path'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      totalSize: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_size'],
+      )!,
+      downloadedBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}downloaded_bytes'],
+      )!,
+      progress: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}progress'],
+      )!,
+      state: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}state'],
+      )!,
+      addedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}added_at'],
+      )!,
       lastActivityAt: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime, data['${effectivePrefix}last_activity_at'])!,
-      completedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}completed_at']),
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_activity_at'],
+      )!,
+      completedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completed_at'],
+      ),
       isSequentialDownload: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool, data['${effectivePrefix}is_sequential_download'])!,
-      resumeData: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}resume_data']),
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_sequential_download'],
+      )!,
+      resumeData: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}resume_data'],
+      ),
     );
   }
 
@@ -357,24 +506,25 @@ class TorrentsTableData extends DataClass
 
   /// Fast-resume binary buffer from libtorrent.
   final Uint8List? resumeData;
-  const TorrentsTableData(
-      {required this.id,
-      required this.isPaused,
-      required this.isStopped,
-      required this.isCompleted,
-      this.magnetUri,
-      this.torrentFilePath,
-      required this.savePath,
-      required this.name,
-      required this.totalSize,
-      required this.downloadedBytes,
-      required this.progress,
-      required this.state,
-      required this.addedAt,
-      required this.lastActivityAt,
-      this.completedAt,
-      required this.isSequentialDownload,
-      this.resumeData});
+  const TorrentsTableData({
+    required this.id,
+    required this.isPaused,
+    required this.isStopped,
+    required this.isCompleted,
+    this.magnetUri,
+    this.torrentFilePath,
+    required this.savePath,
+    required this.name,
+    required this.totalSize,
+    required this.downloadedBytes,
+    required this.progress,
+    required this.state,
+    required this.addedAt,
+    required this.lastActivityAt,
+    this.completedAt,
+    required this.isSequentialDownload,
+    this.resumeData,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -436,8 +586,10 @@ class TorrentsTableData extends DataClass
     );
   }
 
-  factory TorrentsTableData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory TorrentsTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return TorrentsTableData(
       id: serializer.fromJson<String>(json['id']),
@@ -455,8 +607,9 @@ class TorrentsTableData extends DataClass
       addedAt: serializer.fromJson<DateTime>(json['addedAt']),
       lastActivityAt: serializer.fromJson<DateTime>(json['lastActivityAt']),
       completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
-      isSequentialDownload:
-          serializer.fromJson<bool>(json['isSequentialDownload']),
+      isSequentialDownload: serializer.fromJson<bool>(
+        json['isSequentialDownload'],
+      ),
       resumeData: serializer.fromJson<Uint8List?>(json['resumeData']),
     );
   }
@@ -484,52 +637,53 @@ class TorrentsTableData extends DataClass
     };
   }
 
-  TorrentsTableData copyWith(
-          {String? id,
-          bool? isPaused,
-          bool? isStopped,
-          bool? isCompleted,
-          Value<String?> magnetUri = const Value.absent(),
-          Value<String?> torrentFilePath = const Value.absent(),
-          String? savePath,
-          String? name,
-          int? totalSize,
-          int? downloadedBytes,
-          double? progress,
-          String? state,
-          DateTime? addedAt,
-          DateTime? lastActivityAt,
-          Value<DateTime?> completedAt = const Value.absent(),
-          bool? isSequentialDownload,
-          Value<Uint8List?> resumeData = const Value.absent()}) =>
-      TorrentsTableData(
-        id: id ?? this.id,
-        isPaused: isPaused ?? this.isPaused,
-        isStopped: isStopped ?? this.isStopped,
-        isCompleted: isCompleted ?? this.isCompleted,
-        magnetUri: magnetUri.present ? magnetUri.value : this.magnetUri,
-        torrentFilePath: torrentFilePath.present
-            ? torrentFilePath.value
-            : this.torrentFilePath,
-        savePath: savePath ?? this.savePath,
-        name: name ?? this.name,
-        totalSize: totalSize ?? this.totalSize,
-        downloadedBytes: downloadedBytes ?? this.downloadedBytes,
-        progress: progress ?? this.progress,
-        state: state ?? this.state,
-        addedAt: addedAt ?? this.addedAt,
-        lastActivityAt: lastActivityAt ?? this.lastActivityAt,
-        completedAt: completedAt.present ? completedAt.value : this.completedAt,
-        isSequentialDownload: isSequentialDownload ?? this.isSequentialDownload,
-        resumeData: resumeData.present ? resumeData.value : this.resumeData,
-      );
+  TorrentsTableData copyWith({
+    String? id,
+    bool? isPaused,
+    bool? isStopped,
+    bool? isCompleted,
+    Value<String?> magnetUri = const Value.absent(),
+    Value<String?> torrentFilePath = const Value.absent(),
+    String? savePath,
+    String? name,
+    int? totalSize,
+    int? downloadedBytes,
+    double? progress,
+    String? state,
+    DateTime? addedAt,
+    DateTime? lastActivityAt,
+    Value<DateTime?> completedAt = const Value.absent(),
+    bool? isSequentialDownload,
+    Value<Uint8List?> resumeData = const Value.absent(),
+  }) => TorrentsTableData(
+    id: id ?? this.id,
+    isPaused: isPaused ?? this.isPaused,
+    isStopped: isStopped ?? this.isStopped,
+    isCompleted: isCompleted ?? this.isCompleted,
+    magnetUri: magnetUri.present ? magnetUri.value : this.magnetUri,
+    torrentFilePath: torrentFilePath.present
+        ? torrentFilePath.value
+        : this.torrentFilePath,
+    savePath: savePath ?? this.savePath,
+    name: name ?? this.name,
+    totalSize: totalSize ?? this.totalSize,
+    downloadedBytes: downloadedBytes ?? this.downloadedBytes,
+    progress: progress ?? this.progress,
+    state: state ?? this.state,
+    addedAt: addedAt ?? this.addedAt,
+    lastActivityAt: lastActivityAt ?? this.lastActivityAt,
+    completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    isSequentialDownload: isSequentialDownload ?? this.isSequentialDownload,
+    resumeData: resumeData.present ? resumeData.value : this.resumeData,
+  );
   TorrentsTableData copyWithCompanion(TorrentsTableCompanion data) {
     return TorrentsTableData(
       id: data.id.present ? data.id.value : this.id,
       isPaused: data.isPaused.present ? data.isPaused.value : this.isPaused,
       isStopped: data.isStopped.present ? data.isStopped.value : this.isStopped,
-      isCompleted:
-          data.isCompleted.present ? data.isCompleted.value : this.isCompleted,
+      isCompleted: data.isCompleted.present
+          ? data.isCompleted.value
+          : this.isCompleted,
       magnetUri: data.magnetUri.present ? data.magnetUri.value : this.magnetUri,
       torrentFilePath: data.torrentFilePath.present
           ? data.torrentFilePath.value
@@ -546,13 +700,15 @@ class TorrentsTableData extends DataClass
       lastActivityAt: data.lastActivityAt.present
           ? data.lastActivityAt.value
           : this.lastActivityAt,
-      completedAt:
-          data.completedAt.present ? data.completedAt.value : this.completedAt,
+      completedAt: data.completedAt.present
+          ? data.completedAt.value
+          : this.completedAt,
       isSequentialDownload: data.isSequentialDownload.present
           ? data.isSequentialDownload.value
           : this.isSequentialDownload,
-      resumeData:
-          data.resumeData.present ? data.resumeData.value : this.resumeData,
+      resumeData: data.resumeData.present
+          ? data.resumeData.value
+          : this.resumeData,
     );
   }
 
@@ -582,23 +738,24 @@ class TorrentsTableData extends DataClass
 
   @override
   int get hashCode => Object.hash(
-      id,
-      isPaused,
-      isStopped,
-      isCompleted,
-      magnetUri,
-      torrentFilePath,
-      savePath,
-      name,
-      totalSize,
-      downloadedBytes,
-      progress,
-      state,
-      addedAt,
-      lastActivityAt,
-      completedAt,
-      isSequentialDownload,
-      $driftBlobEquality.hash(resumeData));
+    id,
+    isPaused,
+    isStopped,
+    isCompleted,
+    magnetUri,
+    torrentFilePath,
+    savePath,
+    name,
+    totalSize,
+    downloadedBytes,
+    progress,
+    state,
+    addedAt,
+    lastActivityAt,
+    completedAt,
+    isSequentialDownload,
+    $driftBlobEquality.hash(resumeData),
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -680,10 +837,10 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
     this.isSequentialDownload = const Value.absent(),
     this.resumeData = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : id = Value(id),
-        savePath = Value(savePath),
-        name = Value(name),
-        addedAt = Value(addedAt);
+  }) : id = Value(id),
+       savePath = Value(savePath),
+       name = Value(name),
+       addedAt = Value(addedAt);
   static Insertable<TorrentsTableData> custom({
     Expression<String>? id,
     Expression<bool>? isPaused,
@@ -727,25 +884,26 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
     });
   }
 
-  TorrentsTableCompanion copyWith(
-      {Value<String>? id,
-      Value<bool>? isPaused,
-      Value<bool>? isStopped,
-      Value<bool>? isCompleted,
-      Value<String?>? magnetUri,
-      Value<String?>? torrentFilePath,
-      Value<String>? savePath,
-      Value<String>? name,
-      Value<int>? totalSize,
-      Value<int>? downloadedBytes,
-      Value<double>? progress,
-      Value<String>? state,
-      Value<DateTime>? addedAt,
-      Value<DateTime>? lastActivityAt,
-      Value<DateTime?>? completedAt,
-      Value<bool>? isSequentialDownload,
-      Value<Uint8List?>? resumeData,
-      Value<int>? rowid}) {
+  TorrentsTableCompanion copyWith({
+    Value<String>? id,
+    Value<bool>? isPaused,
+    Value<bool>? isStopped,
+    Value<bool>? isCompleted,
+    Value<String?>? magnetUri,
+    Value<String?>? torrentFilePath,
+    Value<String>? savePath,
+    Value<String>? name,
+    Value<int>? totalSize,
+    Value<int>? downloadedBytes,
+    Value<double>? progress,
+    Value<String>? state,
+    Value<DateTime>? addedAt,
+    Value<DateTime>? lastActivityAt,
+    Value<DateTime?>? completedAt,
+    Value<bool>? isSequentialDownload,
+    Value<Uint8List?>? resumeData,
+    Value<int>? rowid,
+  }) {
     return TorrentsTableCompanion(
       id: id ?? this.id,
       isPaused: isPaused ?? this.isPaused,
@@ -817,8 +975,9 @@ class TorrentsTableCompanion extends UpdateCompanion<TorrentsTableData> {
       map['completed_at'] = Variable<DateTime>(completedAt.value);
     }
     if (isSequentialDownload.present) {
-      map['is_sequential_download'] =
-          Variable<bool>(isSequentialDownload.value);
+      map['is_sequential_download'] = Variable<bool>(
+        isSequentialDownload.value,
+      );
     }
     if (resumeData.present) {
       map['resume_data'] = Variable<Uint8List>(resumeData.value);
@@ -866,48 +1025,48 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [torrentsTable];
 }
 
-typedef $$TorrentsTableTableCreateCompanionBuilder = TorrentsTableCompanion
-    Function({
-  required String id,
-  Value<bool> isPaused,
-  Value<bool> isStopped,
-  Value<bool> isCompleted,
-  Value<String?> magnetUri,
-  Value<String?> torrentFilePath,
-  required String savePath,
-  required String name,
-  Value<int> totalSize,
-  Value<int> downloadedBytes,
-  Value<double> progress,
-  Value<String> state,
-  required DateTime addedAt,
-  Value<DateTime> lastActivityAt,
-  Value<DateTime?> completedAt,
-  Value<bool> isSequentialDownload,
-  Value<Uint8List?> resumeData,
-  Value<int> rowid,
-});
-typedef $$TorrentsTableTableUpdateCompanionBuilder = TorrentsTableCompanion
-    Function({
-  Value<String> id,
-  Value<bool> isPaused,
-  Value<bool> isStopped,
-  Value<bool> isCompleted,
-  Value<String?> magnetUri,
-  Value<String?> torrentFilePath,
-  Value<String> savePath,
-  Value<String> name,
-  Value<int> totalSize,
-  Value<int> downloadedBytes,
-  Value<double> progress,
-  Value<String> state,
-  Value<DateTime> addedAt,
-  Value<DateTime> lastActivityAt,
-  Value<DateTime?> completedAt,
-  Value<bool> isSequentialDownload,
-  Value<Uint8List?> resumeData,
-  Value<int> rowid,
-});
+typedef $$TorrentsTableTableCreateCompanionBuilder =
+    TorrentsTableCompanion Function({
+      required String id,
+      Value<bool> isPaused,
+      Value<bool> isStopped,
+      Value<bool> isCompleted,
+      Value<String?> magnetUri,
+      Value<String?> torrentFilePath,
+      required String savePath,
+      required String name,
+      Value<int> totalSize,
+      Value<int> downloadedBytes,
+      Value<double> progress,
+      Value<String> state,
+      required DateTime addedAt,
+      Value<DateTime> lastActivityAt,
+      Value<DateTime?> completedAt,
+      Value<bool> isSequentialDownload,
+      Value<Uint8List?> resumeData,
+      Value<int> rowid,
+    });
+typedef $$TorrentsTableTableUpdateCompanionBuilder =
+    TorrentsTableCompanion Function({
+      Value<String> id,
+      Value<bool> isPaused,
+      Value<bool> isStopped,
+      Value<bool> isCompleted,
+      Value<String?> magnetUri,
+      Value<String?> torrentFilePath,
+      Value<String> savePath,
+      Value<String> name,
+      Value<int> totalSize,
+      Value<int> downloadedBytes,
+      Value<double> progress,
+      Value<String> state,
+      Value<DateTime> addedAt,
+      Value<DateTime> lastActivityAt,
+      Value<DateTime?> completedAt,
+      Value<bool> isSequentialDownload,
+      Value<Uint8List?> resumeData,
+      Value<int> rowid,
+    });
 
 class $$TorrentsTableTableFilterComposer
     extends Composer<_$AppDatabase, $TorrentsTableTable> {
@@ -919,59 +1078,89 @@ class $$TorrentsTableTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get isPaused => $composableBuilder(
-      column: $table.isPaused, builder: (column) => ColumnFilters(column));
+    column: $table.isPaused,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get isStopped => $composableBuilder(
-      column: $table.isStopped, builder: (column) => ColumnFilters(column));
+    column: $table.isStopped,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get isCompleted => $composableBuilder(
-      column: $table.isCompleted, builder: (column) => ColumnFilters(column));
+    column: $table.isCompleted,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get magnetUri => $composableBuilder(
-      column: $table.magnetUri, builder: (column) => ColumnFilters(column));
+    column: $table.magnetUri,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get torrentFilePath => $composableBuilder(
-      column: $table.torrentFilePath,
-      builder: (column) => ColumnFilters(column));
+    column: $table.torrentFilePath,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get savePath => $composableBuilder(
-      column: $table.savePath, builder: (column) => ColumnFilters(column));
+    column: $table.savePath,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnFilters(column));
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get totalSize => $composableBuilder(
-      column: $table.totalSize, builder: (column) => ColumnFilters(column));
+    column: $table.totalSize,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get downloadedBytes => $composableBuilder(
-      column: $table.downloadedBytes,
-      builder: (column) => ColumnFilters(column));
+    column: $table.downloadedBytes,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<double> get progress => $composableBuilder(
-      column: $table.progress, builder: (column) => ColumnFilters(column));
+    column: $table.progress,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get state => $composableBuilder(
-      column: $table.state, builder: (column) => ColumnFilters(column));
+    column: $table.state,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get addedAt => $composableBuilder(
-      column: $table.addedAt, builder: (column) => ColumnFilters(column));
+    column: $table.addedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get lastActivityAt => $composableBuilder(
-      column: $table.lastActivityAt,
-      builder: (column) => ColumnFilters(column));
+    column: $table.lastActivityAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get completedAt => $composableBuilder(
-      column: $table.completedAt, builder: (column) => ColumnFilters(column));
+    column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get isSequentialDownload => $composableBuilder(
-      column: $table.isSequentialDownload,
-      builder: (column) => ColumnFilters(column));
+    column: $table.isSequentialDownload,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<Uint8List> get resumeData => $composableBuilder(
-      column: $table.resumeData, builder: (column) => ColumnFilters(column));
+    column: $table.resumeData,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$TorrentsTableTableOrderingComposer
@@ -984,59 +1173,89 @@ class $$TorrentsTableTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get isPaused => $composableBuilder(
-      column: $table.isPaused, builder: (column) => ColumnOrderings(column));
+    column: $table.isPaused,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get isStopped => $composableBuilder(
-      column: $table.isStopped, builder: (column) => ColumnOrderings(column));
+    column: $table.isStopped,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get isCompleted => $composableBuilder(
-      column: $table.isCompleted, builder: (column) => ColumnOrderings(column));
+    column: $table.isCompleted,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get magnetUri => $composableBuilder(
-      column: $table.magnetUri, builder: (column) => ColumnOrderings(column));
+    column: $table.magnetUri,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get torrentFilePath => $composableBuilder(
-      column: $table.torrentFilePath,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.torrentFilePath,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get savePath => $composableBuilder(
-      column: $table.savePath, builder: (column) => ColumnOrderings(column));
+    column: $table.savePath,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnOrderings(column));
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get totalSize => $composableBuilder(
-      column: $table.totalSize, builder: (column) => ColumnOrderings(column));
+    column: $table.totalSize,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get downloadedBytes => $composableBuilder(
-      column: $table.downloadedBytes,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.downloadedBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<double> get progress => $composableBuilder(
-      column: $table.progress, builder: (column) => ColumnOrderings(column));
+    column: $table.progress,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get state => $composableBuilder(
-      column: $table.state, builder: (column) => ColumnOrderings(column));
+    column: $table.state,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get addedAt => $composableBuilder(
-      column: $table.addedAt, builder: (column) => ColumnOrderings(column));
+    column: $table.addedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get lastActivityAt => $composableBuilder(
-      column: $table.lastActivityAt,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.lastActivityAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get completedAt => $composableBuilder(
-      column: $table.completedAt, builder: (column) => ColumnOrderings(column));
+    column: $table.completedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get isSequentialDownload => $composableBuilder(
-      column: $table.isSequentialDownload,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.isSequentialDownload,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<Uint8List> get resumeData => $composableBuilder(
-      column: $table.resumeData, builder: (column) => ColumnOrderings(column));
+    column: $table.resumeData,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TorrentsTableTableAnnotationComposer
@@ -1058,13 +1277,17 @@ class $$TorrentsTableTableAnnotationComposer
       $composableBuilder(column: $table.isStopped, builder: (column) => column);
 
   GeneratedColumn<bool> get isCompleted => $composableBuilder(
-      column: $table.isCompleted, builder: (column) => column);
+    column: $table.isCompleted,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get magnetUri =>
       $composableBuilder(column: $table.magnetUri, builder: (column) => column);
 
   GeneratedColumn<String> get torrentFilePath => $composableBuilder(
-      column: $table.torrentFilePath, builder: (column) => column);
+    column: $table.torrentFilePath,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get savePath =>
       $composableBuilder(column: $table.savePath, builder: (column) => column);
@@ -1076,7 +1299,9 @@ class $$TorrentsTableTableAnnotationComposer
       $composableBuilder(column: $table.totalSize, builder: (column) => column);
 
   GeneratedColumn<int> get downloadedBytes => $composableBuilder(
-      column: $table.downloadedBytes, builder: (column) => column);
+    column: $table.downloadedBytes,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<double> get progress =>
       $composableBuilder(column: $table.progress, builder: (column) => column);
@@ -1088,35 +1313,51 @@ class $$TorrentsTableTableAnnotationComposer
       $composableBuilder(column: $table.addedAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastActivityAt => $composableBuilder(
-      column: $table.lastActivityAt, builder: (column) => column);
+    column: $table.lastActivityAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get completedAt => $composableBuilder(
-      column: $table.completedAt, builder: (column) => column);
+    column: $table.completedAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isSequentialDownload => $composableBuilder(
-      column: $table.isSequentialDownload, builder: (column) => column);
+    column: $table.isSequentialDownload,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<Uint8List> get resumeData => $composableBuilder(
-      column: $table.resumeData, builder: (column) => column);
+    column: $table.resumeData,
+    builder: (column) => column,
+  );
 }
 
-class $$TorrentsTableTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $TorrentsTableTable,
-    TorrentsTableData,
-    $$TorrentsTableTableFilterComposer,
-    $$TorrentsTableTableOrderingComposer,
-    $$TorrentsTableTableAnnotationComposer,
-    $$TorrentsTableTableCreateCompanionBuilder,
-    $$TorrentsTableTableUpdateCompanionBuilder,
-    (
-      TorrentsTableData,
-      BaseReferences<_$AppDatabase, $TorrentsTableTable, TorrentsTableData>
-    ),
-    TorrentsTableData,
-    PrefetchHooks Function()> {
+class $$TorrentsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TorrentsTableTable,
+          TorrentsTableData,
+          $$TorrentsTableTableFilterComposer,
+          $$TorrentsTableTableOrderingComposer,
+          $$TorrentsTableTableAnnotationComposer,
+          $$TorrentsTableTableCreateCompanionBuilder,
+          $$TorrentsTableTableUpdateCompanionBuilder,
+          (
+            TorrentsTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $TorrentsTableTable,
+              TorrentsTableData
+            >,
+          ),
+          TorrentsTableData,
+          PrefetchHooks Function()
+        > {
   $$TorrentsTableTableTableManager(_$AppDatabase db, $TorrentsTableTable table)
-      : super(TableManagerState(
+    : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -1125,108 +1366,111 @@ class $$TorrentsTableTableTableManager extends RootTableManager<
               $$TorrentsTableTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$TorrentsTableTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> id = const Value.absent(),
-            Value<bool> isPaused = const Value.absent(),
-            Value<bool> isStopped = const Value.absent(),
-            Value<bool> isCompleted = const Value.absent(),
-            Value<String?> magnetUri = const Value.absent(),
-            Value<String?> torrentFilePath = const Value.absent(),
-            Value<String> savePath = const Value.absent(),
-            Value<String> name = const Value.absent(),
-            Value<int> totalSize = const Value.absent(),
-            Value<int> downloadedBytes = const Value.absent(),
-            Value<double> progress = const Value.absent(),
-            Value<String> state = const Value.absent(),
-            Value<DateTime> addedAt = const Value.absent(),
-            Value<DateTime> lastActivityAt = const Value.absent(),
-            Value<DateTime?> completedAt = const Value.absent(),
-            Value<bool> isSequentialDownload = const Value.absent(),
-            Value<Uint8List?> resumeData = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              TorrentsTableCompanion(
-            id: id,
-            isPaused: isPaused,
-            isStopped: isStopped,
-            isCompleted: isCompleted,
-            magnetUri: magnetUri,
-            torrentFilePath: torrentFilePath,
-            savePath: savePath,
-            name: name,
-            totalSize: totalSize,
-            downloadedBytes: downloadedBytes,
-            progress: progress,
-            state: state,
-            addedAt: addedAt,
-            lastActivityAt: lastActivityAt,
-            completedAt: completedAt,
-            isSequentialDownload: isSequentialDownload,
-            resumeData: resumeData,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String id,
-            Value<bool> isPaused = const Value.absent(),
-            Value<bool> isStopped = const Value.absent(),
-            Value<bool> isCompleted = const Value.absent(),
-            Value<String?> magnetUri = const Value.absent(),
-            Value<String?> torrentFilePath = const Value.absent(),
-            required String savePath,
-            required String name,
-            Value<int> totalSize = const Value.absent(),
-            Value<int> downloadedBytes = const Value.absent(),
-            Value<double> progress = const Value.absent(),
-            Value<String> state = const Value.absent(),
-            required DateTime addedAt,
-            Value<DateTime> lastActivityAt = const Value.absent(),
-            Value<DateTime?> completedAt = const Value.absent(),
-            Value<bool> isSequentialDownload = const Value.absent(),
-            Value<Uint8List?> resumeData = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              TorrentsTableCompanion.insert(
-            id: id,
-            isPaused: isPaused,
-            isStopped: isStopped,
-            isCompleted: isCompleted,
-            magnetUri: magnetUri,
-            torrentFilePath: torrentFilePath,
-            savePath: savePath,
-            name: name,
-            totalSize: totalSize,
-            downloadedBytes: downloadedBytes,
-            progress: progress,
-            state: state,
-            addedAt: addedAt,
-            lastActivityAt: lastActivityAt,
-            completedAt: completedAt,
-            isSequentialDownload: isSequentialDownload,
-            resumeData: resumeData,
-            rowid: rowid,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<bool> isPaused = const Value.absent(),
+                Value<bool> isStopped = const Value.absent(),
+                Value<bool> isCompleted = const Value.absent(),
+                Value<String?> magnetUri = const Value.absent(),
+                Value<String?> torrentFilePath = const Value.absent(),
+                Value<String> savePath = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> totalSize = const Value.absent(),
+                Value<int> downloadedBytes = const Value.absent(),
+                Value<double> progress = const Value.absent(),
+                Value<String> state = const Value.absent(),
+                Value<DateTime> addedAt = const Value.absent(),
+                Value<DateTime> lastActivityAt = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<bool> isSequentialDownload = const Value.absent(),
+                Value<Uint8List?> resumeData = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TorrentsTableCompanion(
+                id: id,
+                isPaused: isPaused,
+                isStopped: isStopped,
+                isCompleted: isCompleted,
+                magnetUri: magnetUri,
+                torrentFilePath: torrentFilePath,
+                savePath: savePath,
+                name: name,
+                totalSize: totalSize,
+                downloadedBytes: downloadedBytes,
+                progress: progress,
+                state: state,
+                addedAt: addedAt,
+                lastActivityAt: lastActivityAt,
+                completedAt: completedAt,
+                isSequentialDownload: isSequentialDownload,
+                resumeData: resumeData,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<bool> isPaused = const Value.absent(),
+                Value<bool> isStopped = const Value.absent(),
+                Value<bool> isCompleted = const Value.absent(),
+                Value<String?> magnetUri = const Value.absent(),
+                Value<String?> torrentFilePath = const Value.absent(),
+                required String savePath,
+                required String name,
+                Value<int> totalSize = const Value.absent(),
+                Value<int> downloadedBytes = const Value.absent(),
+                Value<double> progress = const Value.absent(),
+                Value<String> state = const Value.absent(),
+                required DateTime addedAt,
+                Value<DateTime> lastActivityAt = const Value.absent(),
+                Value<DateTime?> completedAt = const Value.absent(),
+                Value<bool> isSequentialDownload = const Value.absent(),
+                Value<Uint8List?> resumeData = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TorrentsTableCompanion.insert(
+                id: id,
+                isPaused: isPaused,
+                isStopped: isStopped,
+                isCompleted: isCompleted,
+                magnetUri: magnetUri,
+                torrentFilePath: torrentFilePath,
+                savePath: savePath,
+                name: name,
+                totalSize: totalSize,
+                downloadedBytes: downloadedBytes,
+                progress: progress,
+                state: state,
+                addedAt: addedAt,
+                lastActivityAt: lastActivityAt,
+                completedAt: completedAt,
+                isSequentialDownload: isSequentialDownload,
+                resumeData: resumeData,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$TorrentsTableTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $TorrentsTableTable,
-    TorrentsTableData,
-    $$TorrentsTableTableFilterComposer,
-    $$TorrentsTableTableOrderingComposer,
-    $$TorrentsTableTableAnnotationComposer,
-    $$TorrentsTableTableCreateCompanionBuilder,
-    $$TorrentsTableTableUpdateCompanionBuilder,
-    (
+typedef $$TorrentsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TorrentsTableTable,
       TorrentsTableData,
-      BaseReferences<_$AppDatabase, $TorrentsTableTable, TorrentsTableData>
-    ),
-    TorrentsTableData,
-    PrefetchHooks Function()>;
+      $$TorrentsTableTableFilterComposer,
+      $$TorrentsTableTableOrderingComposer,
+      $$TorrentsTableTableAnnotationComposer,
+      $$TorrentsTableTableCreateCompanionBuilder,
+      $$TorrentsTableTableUpdateCompanionBuilder,
+      (
+        TorrentsTableData,
+        BaseReferences<_$AppDatabase, $TorrentsTableTable, TorrentsTableData>,
+      ),
+      TorrentsTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;

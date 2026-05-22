@@ -24,8 +24,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _kThemeModeKey = 'theme_mode';
 
 /// Riverpod provider — provides the current [ThemeMode] and allows toggling.
-final themeServiceProvider =
-    AsyncNotifierProvider<ThemeService, ThemeMode>(ThemeService.new);
+final themeServiceProvider = AsyncNotifierProvider<ThemeService, ThemeMode>(
+  ThemeService.new,
+);
 
 class ThemeService extends AsyncNotifier<ThemeMode> {
   static const _light = 'light';
@@ -48,14 +49,14 @@ class ThemeService extends AsyncNotifier<ThemeMode> {
 
   /// Toggle between light and dark.
   Future<void> toggle() async {
-    final current = state.valueOrNull ?? ThemeMode.light;
+    final current = state.value ?? ThemeMode.light;
     await _persist(
       current == ThemeMode.light ? ThemeMode.dark : ThemeMode.light,
     );
   }
 
   /// Returns true if current mode is dark.
-  bool get isDark => state.valueOrNull == ThemeMode.dark;
+  bool get isDark => state.value == ThemeMode.dark;
 
   // ── Internal ───────────────────────────────────────────────────────────────
 
@@ -84,7 +85,7 @@ class ThemeService extends AsyncNotifier<ThemeMode> {
 // ─────────────────────────────────────────────────────────────────────────────
 extension ThemeServiceX on WidgetRef {
   ThemeMode get themeMode =>
-      watch(themeServiceProvider).valueOrNull ?? ThemeMode.light;
+      watch(themeServiceProvider).value ?? ThemeMode.light;
 
   bool get isDarkMode => themeMode == ThemeMode.dark;
 }

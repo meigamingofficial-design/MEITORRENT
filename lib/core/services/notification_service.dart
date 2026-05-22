@@ -46,7 +46,8 @@ class NotificationService {
   bool _initialized = false;
 
   /// Broadcast stream to dispatch action button presses to Riverpod state controllers.
-  final _actionController = StreamController<NotificationActionEvent>.broadcast();
+  final _actionController =
+      StreamController<NotificationActionEvent>.broadcast();
   Stream<NotificationActionEvent> get actionStream => _actionController.stream;
 
   /// Channel IDs for separate active and completed alerts.
@@ -70,10 +71,11 @@ class NotificationService {
   Future<void> initialize() async {
     if (_initialized) return;
 
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     await _plugin.initialize(
-      const InitializationSettings(android: androidSettings),
+      settings: const InitializationSettings(android: androidSettings),
       onDidReceiveNotificationResponse: (details) {
         final payload = details.payload;
         final actionId = details.actionId;
@@ -85,21 +87,25 @@ class NotificationService {
             final torrentId = data['id'] as String;
 
             if (actionId != null) {
-              _actionController.add(NotificationActionEvent(
-                actionId: actionId,
-                torrentId: torrentId,
-                savePath: savePath,
-                name: name,
-              ));
+              _actionController.add(
+                NotificationActionEvent(
+                  actionId: actionId,
+                  torrentId: torrentId,
+                  savePath: savePath,
+                  name: name,
+                ),
+              );
               if (actionId == NotificationActions.openFolder) {
-                cancelNotification(torrentId);
+                unawaited(cancelNotification(torrentId));
               }
             } else {
-              FolderService.instance.openDownloadTarget(
-                savePath: savePath,
-                name: name,
+              unawaited(
+                FolderService.instance.openDownloadTarget(
+                  savePath: savePath,
+                  name: name,
+                ),
               );
-              cancelNotification(torrentId);
+              unawaited(cancelNotification(torrentId));
             }
           } catch (_) {}
         }
@@ -215,10 +221,10 @@ class NotificationService {
     );
 
     await _plugin.show(
-      notifId,
-      status.name,
-      body,
-      NotificationDetails(android: androidDetails),
+      id: notifId,
+      title: status.name,
+      body: body,
+      notificationDetails: NotificationDetails(android: androidDetails),
       payload: jsonEncode({
         'path': status.savePath,
         'name': status.name,
@@ -262,10 +268,10 @@ class NotificationService {
     );
 
     await _plugin.show(
-      notifId,
-      status.name,
-      body,
-      NotificationDetails(android: androidDetails),
+      id: notifId,
+      title: status.name,
+      body: body,
+      notificationDetails: NotificationDetails(android: androidDetails),
       payload: jsonEncode({
         'path': status.savePath,
         'name': status.name,
@@ -295,7 +301,7 @@ class NotificationService {
       _notifiedCompletionsMemory.add(torrentId);
 
       final notifId = _notificationId(torrentId);
-      await _plugin.cancel(notifId);
+      await _plugin.cancel(id: notifId);
     } catch (_) {}
   }
 
@@ -305,7 +311,7 @@ class NotificationService {
     try {
       if (!_initialized) return;
       final notifId = _notificationId(oldId);
-      await _plugin.cancel(notifId);
+      await _plugin.cancel(id: notifId);
     } catch (_) {}
   }
 

@@ -21,12 +21,14 @@ class AppTheme {
   static const _shuRed = Color(0xFFD63031); // Traditional Japanese Crimson Red
   static const _sumizome = Color(0xFF1C1C1C); // Ink Black (Sumizome)
   static const _torinoko = Color(
-      0xFFF9F6F0); // Warm Washi Parchment Ivory (from user painting background)
+    0xFFF9F6F0,
+  ); // Warm Washi Parchment Ivory (from user painting background)
   static const _kumen = Color(0xFFFFFDF9); // Soft Clean Paper White
   static const _takeGreen = Color(0xFF316745); // Bamboo Green (Take-gaki)
   static const _yamabuki = Color(0xFFFFB11B); // Golden Yellow (Yamabuki)
-  static const _beni =
-      Color(0xFFB71C1C); // Deep Traditional Blossom Crimson / Dark Scarlet
+  static const _beni = Color(
+    0xFFB71C1C,
+  ); // Deep Traditional Blossom Crimson / Dark Scarlet
   static const _charcoal = Color(0xFF5D5D5D); // Charcoal Gray
   static const _paperBorder = Color(0xFFE2D7C7); // Soft Warm Washi Paper Edge
 
@@ -39,13 +41,15 @@ class AppTheme {
   // ── Dark palette (Night Ink Aesthetic) ──────────────────────────
   static const _darkInk = Color(0xFF141517); // Midnight Ink (Background)
   static const _darkSurface = Color(0xFF1F2023); // Soot Gray (Surface/Cards)
-  static const _riceWhite =
-      Color(0xFFE5E2D9); // Rice Paper White (Primary Text)
+  static const _riceWhite = Color(
+    0xFFE5E2D9,
+  ); // Rice Paper White (Primary Text)
   static const _charcoalFaded = Color(0xFF8A8A8A); // Faded Ink (Secondary Text)
   static const _darkBorder = Color(0xFF2C2D33); // Deep Paper Edge
   static const _darkInput = Color(0xFF1A1B1E); // Input Fill (Dark)
-  static const _hankoRedDark =
-      Color(0xFFB71C1C); // Deep Blossom Crimson in Dark
+  static const _hankoRedDark = Color(
+    0xFFB71C1C,
+  ); // Deep Blossom Crimson in Dark
 
   // ── Light Color Scheme ──────────────────────────────────────
   static const ColorScheme _scheme = ColorScheme(
@@ -119,9 +123,9 @@ class AppTheme {
       // Outfit for UI, Shippori Mincho for headers
       textTheme: GoogleFonts.outfitTextTheme(
         ThemeData.light().textTheme.apply(
-              bodyColor: _sumizome,
-              displayColor: _sumizome,
-            ),
+          bodyColor: _sumizome,
+          displayColor: _sumizome,
+        ),
       ),
 
       // ── Card (Handmade Paper Style) ───────────────────────────
@@ -166,8 +170,9 @@ class AppTheme {
         foregroundColor: Colors.white,
         elevation: 6,
         shape: RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.circular(12), // Squares off slightly like a stamp
+          borderRadius: BorderRadius.circular(
+            12,
+          ), // Squares off slightly like a stamp
         ),
       ),
 
@@ -220,8 +225,10 @@ class AppTheme {
           borderSide: const BorderSide(color: _crimson, width: 1.5),
         ),
         hintStyle: TextStyle(color: _inkBlack.withValues(alpha: 0.35)),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
 
       // ── SnackBar ──────────────────────────────────────────────
@@ -287,9 +294,9 @@ class AppTheme {
       // Outfit for UI, Shippori Mincho for headers
       textTheme: GoogleFonts.outfitTextTheme(
         ThemeData.dark().textTheme.apply(
-              bodyColor: _riceWhite,
-              displayColor: _riceWhite,
-            ),
+          bodyColor: _riceWhite,
+          displayColor: _riceWhite,
+        ),
       ),
 
       // ── Card (Dark Paper Style) ───────────────────────────────
@@ -385,8 +392,10 @@ class AppTheme {
           borderSide: const BorderSide(color: _shuRed, width: 1.5),
         ),
         hintStyle: TextStyle(color: _riceWhite.withValues(alpha: 0.35)),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
 
       // ── SnackBar ──────────────────────────────────────────────
@@ -450,32 +459,33 @@ class AppColors {
   // ── Theme-Aware Semantic Colors ──────────────────────────────────
   static Color surface(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
-          ? kumen
-          : (Theme.of(context).cardTheme.color ?? darkSurface);
+      ? kumen
+      : (Theme.of(context).cardTheme.color ?? darkSurface);
 
   static Color background(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
-          ? torinoko
-          : darkBackground;
+      ? torinoko
+      : darkBackground;
 
   static Color text(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
-          ? sumizome
-          : const Color(0xFFE5E2D9); // Rice White
+      ? sumizome
+      : const Color(0xFFE5E2D9); // Rice White
 
   static Color textSecondary(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
-          ? charcoal
-          : const Color(0xFF8A8A8A); // Faded Ink
+      ? charcoal
+      : const Color(0xFF8A8A8A); // Faded Ink
 
   static Color border(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
-          ? paperBorder
-          : const Color(0xFF2C2D33); // Dark Border
+      ? paperBorder
+      : const Color(0xFF2C2D33); // Dark Border
 
   // ── Static Palette ───────────────────────────────────────────────
   static const torinoko = Color(
-      0xFFF9F6F0); // Warm Washi Parchment Ivory (from user painting background)
+    0xFFF9F6F0,
+  ); // Warm Washi Parchment Ivory (from user painting background)
   static const kumen = Color(0xFFFFFDF9); // Soft Clean Paper White
   static const darkBackground = Color(0xFF141517); // dark background
   static const darkSurface = Color(0xFF1F2023); // Soot Black (Surface/Cards)
@@ -490,18 +500,20 @@ class AppColors {
 
   static Color inputFill(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
-          ? const Color(0xFFF4EDE0)
-          : const Color(0xFF1A1B1E);
+      ? const Color(0xFFF4EDE0)
+      : const Color(0xFF1A1B1E);
 
   static const sumizome = Color(0xFF1C1C1C); // primary text (light)
   static const charcoal = Color(0xFF5D5D5D); // secondary text (light)
   static const paperBorder = Color(0xFFE2D7C7); // borders / dividers (light)
 
   // ── Torrent state colours (Static across themes) ──────────────────
-  static const downloading =
-      Color(0xFFD63031); // Traditional Japanese Crimson Red
-  static const downloadingDark =
-      Color(0xFFB71C1C); // Deep Traditional Blossom Crimson / Dark Scarlet
+  static const downloading = Color(
+    0xFFD63031,
+  ); // Traditional Japanese Crimson Red
+  static const downloadingDark = Color(
+    0xFFB71C1C,
+  ); // Deep Traditional Blossom Crimson / Dark Scarlet
   static const seeding = Color(0xFF316745); // Take Green
   static const paused = Color(0xFFD35400); // Autumn Orange
   static const error = Color(0xFFB71C1C); // Deep Traditional Blossom Crimson

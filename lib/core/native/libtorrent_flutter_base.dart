@@ -24,8 +24,11 @@ class TrackerManager {
     try {
       final client = HttpClient();
       client.connectionTimeout = const Duration(seconds: 5);
-      final req = await client.getUrl(Uri.parse(
-          'https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_best.txt'));
+      final req = await client.getUrl(
+        Uri.parse(
+          'https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_best.txt',
+        ),
+      );
       final res = await req.close();
       if (res.statusCode == 200) {
         final body = await res.transform(const SystemEncoding().decoder).join();
@@ -57,47 +60,47 @@ class TrackerManager {
 // ─── Status converters ──────────────────────────────────────────────────────
 
 TorrentInfo _toTorrentInfo(LtTorrentStatus s) => TorrentInfo(
-      id: s.id,
-      name: readCharArray(s.name, 512),
-      savePath: readCharArray(s.savePath, 1024),
-      errorMsg: readCharArray(s.errorMsg, 256),
-      state: stateFromInt(s.state),
-      progress: s.progress.clamp(0.0, 1.0),
-      downloadRate: s.downloadRate,
-      uploadRate: s.uploadRate,
-      totalDone: s.totalDone,
-      totalWanted: s.totalWanted,
-      totalUploaded: s.totalUploaded,
-      numPeers: s.numPeers,
-      numSeeds: s.numSeeds,
-      isPaused: s.isPaused != 0,
-      isFinished: s.isFinished != 0,
-      hasMetadata: s.hasMetadata != 0,
-      queuePosition: s.queuePosition,
-    );
+  id: s.id,
+  name: readCharArray(s.name, 512),
+  savePath: readCharArray(s.savePath, 1024),
+  errorMsg: readCharArray(s.errorMsg, 256),
+  state: stateFromInt(s.state),
+  progress: s.progress.clamp(0.0, 1.0),
+  downloadRate: s.downloadRate,
+  uploadRate: s.uploadRate,
+  totalDone: s.totalDone,
+  totalWanted: s.totalWanted,
+  totalUploaded: s.totalUploaded,
+  numPeers: s.numPeers,
+  numSeeds: s.numSeeds,
+  isPaused: s.isPaused != 0,
+  isFinished: s.isFinished != 0,
+  hasMetadata: s.hasMetadata != 0,
+  queuePosition: s.queuePosition,
+);
 
 FileInfo _toFileInfo(LtFileInfo f) => FileInfo(
-      index: f.index,
-      name: readCharArray(f.name, 512),
-      path: readCharArray(f.path, 1024),
-      size: f.size,
-      isStreamable: f.isStreamable != 0,
-    );
+  index: f.index,
+  name: readCharArray(f.name, 512),
+  path: readCharArray(f.path, 1024),
+  size: f.size,
+  isStreamable: f.isStreamable != 0,
+);
 
 StreamInfo _toStreamInfo(LtStreamStatus s) => StreamInfo(
-      id: s.id,
-      torrentId: s.torrentId,
-      fileIndex: s.fileIndex,
-      url: readCharArray(s.url, 256),
-      fileSize: s.fileSize,
-      readHead: s.readHead,
-      streamState: streamStateFromInt(s.streamState),
-      bufferSeconds: s.bufferSeconds,
-      bufferPieces: s.bufferPieces,
-      readaheadWindow: s.readaheadWindow,
-      activePeers: s.activePeers,
-      downloadRate: s.downloadRate,
-    );
+  id: s.id,
+  torrentId: s.torrentId,
+  fileIndex: s.fileIndex,
+  url: readCharArray(s.url, 256),
+  fileSize: s.fileSize,
+  readHead: s.readHead,
+  streamState: streamStateFromInt(s.streamState),
+  bufferSeconds: s.bufferSeconds,
+  bufferPieces: s.bufferPieces,
+  readaheadWindow: s.readaheadWindow,
+  activePeers: s.activePeers,
+  downloadRate: s.downloadRate,
+);
 
 // ─── LibtorrentFlutter ──────────────────────────────────────────────────────
 
@@ -163,7 +166,7 @@ class LibtorrentFlutter {
 
     // Fetch best trackers in background (fire & forget)
     if (fetchTrackers) {
-      TrackerManager.fetchBestTrackers();
+      unawaited(TrackerManager.fetchBestTrackers());
     }
 
     final lib = TorrentBridgeBindings.open();
@@ -171,8 +174,11 @@ class LibtorrentFlutter {
 
     final iface = listenInterface.toNativeUtf8();
     try {
-      final session =
-          engine.bindings.createSession(iface, downloadLimit, uploadLimit);
+      final session = engine.bindings.createSession(
+        iface,
+        downloadLimit,
+        uploadLimit,
+      );
       if (session == nullptr) {
         final err = engine.bindings.lastError().toDartString();
         throw StateError('Failed to create libtorrent session: $err');
@@ -241,7 +247,10 @@ class LibtorrentFlutter {
 
   /// Add a torrent from a magnet URI with fast-resume data.
   int addMagnetWithResume(
-      String magnetUri, String savePath, Uint8List resumeData) {
+    String magnetUri,
+    String savePath,
+    Uint8List resumeData,
+  ) {
     final enhanced = TrackerManager.injectTrackers(magnetUri);
     final m = enhanced.toNativeUtf8();
     final s = savePath.toNativeUtf8();
@@ -265,8 +274,11 @@ class LibtorrentFlutter {
   }
 
   /// Add a torrent from a .torrent file path.
-  int addTorrentFile(String filePath,
-      [String? savePath, bool streamOnly = false]) {
+  int addTorrentFile(
+    String filePath, [
+    String? savePath,
+    bool streamOnly = false,
+  ]) {
     final f = filePath.toNativeUtf8();
     final s = (savePath ?? _defaultSavePath).toNativeUtf8();
     try {
@@ -281,7 +293,10 @@ class LibtorrentFlutter {
 
   /// Add a torrent from a .torrent file with fast-resume data.
   int addTorrentFileWithResume(
-      String filePath, String savePath, Uint8List resumeData) {
+    String filePath,
+    String savePath,
+    Uint8List resumeData,
+  ) {
     final f = filePath.toNativeUtf8();
     final s = savePath.toNativeUtf8();
     final resumePtr = malloc<Uint8>(resumeData.length);
@@ -291,7 +306,8 @@ class LibtorrentFlutter {
       final binding = bindings.addTorrentFileWithResume;
       if (binding == null) {
         throw UnimplementedError(
-            'Native lt_add_torrent_file_with_resume not found');
+          'Native lt_add_torrent_file_with_resume not found',
+        );
       }
 
       final id = binding(session, f, s, resumePtr, resumeData.length);
@@ -392,13 +408,21 @@ class LibtorrentFlutter {
   /// Returns [StreamInfo] with an HTTP URL that can be passed to any video player.
   /// [fileIndex] = -1 auto-selects the largest streamable file.
   /// [maxCacheBytes] controls how much RAM the piece cache uses (0 = default ~128MB).
-  StreamInfo startStream(int torrentId,
-      {int fileIndex = -1, int maxCacheBytes = 0}) {
-    final streamId =
-        bindings.startStream(session, torrentId, fileIndex, maxCacheBytes);
+  StreamInfo startStream(
+    int torrentId, {
+    int fileIndex = -1,
+    int maxCacheBytes = 0,
+  }) {
+    final streamId = bindings.startStream(
+      session,
+      torrentId,
+      fileIndex,
+      maxCacheBytes,
+    );
     if (streamId < 0) {
       throw Exception(
-          'startStream failed: ${bindings.lastError().toDartString()}');
+        'startStream failed: ${bindings.lastError().toDartString()}',
+      );
     }
     final statusBuf = calloc<LtStreamStatus>();
     try {
@@ -458,7 +482,12 @@ class LibtorrentFlutter {
     int connectionsLimit = 0,
   }) {
     bindings.setCacheSettings(
-        session, streamId, capacity, readAheadPct, connectionsLimit);
+      session,
+      streamId,
+      capacity,
+      readAheadPct,
+      connectionsLimit,
+    );
   }
 
   // ─── Speed Limits ─────────────────────────────────────────────────────────
@@ -548,8 +577,9 @@ class LibtorrentFlutter {
   }
 
   void _pollAlerts() {
-    final callback =
-        NativeCallable<LtAlertCallbackNative>.isolateLocal(_onAlert);
+    final callback = NativeCallable<LtAlertCallbackNative>.isolateLocal(
+      _onAlert,
+    );
     try {
       bindings.pollAlerts(session, callback.nativeFunction, nullptr);
     } finally {
@@ -558,7 +588,11 @@ class LibtorrentFlutter {
   }
 
   static void _onAlert(
-      int type, int torrentId, Pointer<Utf8> message, Pointer<Void> userData) {
+    int type,
+    int torrentId,
+    Pointer<Utf8> message,
+    Pointer<Void> userData,
+  ) {
     // Silently consume alerts — users can listen to torrentUpdates for state changes.
     // Uncomment for debugging:
     // final msg = message.toDartString();

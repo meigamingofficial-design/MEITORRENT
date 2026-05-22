@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/services/shared_preferences_provider.dart';
@@ -23,9 +25,13 @@ class SettingsNotifier extends _$SettingsNotifier {
     );
 
     // Apply the saved settings to the engine upon startup
-    Future.microtask(() {
-      ref.read(torrentRepositoryProvider).applyEngineConfig(config);
-    });
+    unawaited(
+      Future.microtask(() {
+        unawaited(
+          ref.read(torrentRepositoryProvider).applyEngineConfig(config),
+        );
+      }),
+    );
 
     return config;
   }
@@ -71,11 +77,15 @@ class SettingsNotifier extends _$SettingsNotifier {
     await prefs.setInt('meitorrent_upload_limit', state.uploadLimit);
     await prefs.setBool('meitorrent_wifi_only', state.wifiOnlyMode);
     await prefs.setBool(
-        'meitorrent_stop_seeding', state.stopSeedingWhenFinished);
+      'meitorrent_stop_seeding',
+      state.stopSeedingWhenFinished,
+    );
     await prefs.setBool('meitorrent_dht', state.dhtEnabled);
     await prefs.setBool('meitorrent_pex', state.pexEnabled);
     await prefs.setInt(
-        'meitorrent_max_connections', state.maxGlobalConnections);
+      'meitorrent_max_connections',
+      state.maxGlobalConnections,
+    );
 
     await ref.read(torrentRepositoryProvider).applyEngineConfig(state);
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,7 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Skips the async SharedPreferences lookup so the screen builds immediately.
 class _SyncThemeService extends ThemeService {
   @override
-  Future<ThemeMode> build() async => ThemeMode.light;
+  Future<ThemeMode> build() async => ThemeMode.dark;
 }
 
 // ─── No-op TorrentRepository ──────────────────────────────────────────────────
@@ -67,8 +68,10 @@ class _FakeTorrentRepository implements TorrentRepository {
   Future<void> resumeMultiple(List<String> ids) async {}
 
   @override
-  Future<void> deleteMultiple(List<String> ids,
-      {bool deleteFiles = false}) async {}
+  Future<void> deleteMultiple(
+    List<String> ids, {
+    bool deleteFiles = false,
+  }) async {}
 
   @override
   Future<void> recheckTorrent(String id) async {}
@@ -89,15 +92,49 @@ void _stubChannels() {
   ]) {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-      MethodChannel(ch),
-      (_) async => <String, dynamic>{
-        'manufacturer': 'Xiaomi',
-        'model': 'Mi 11',
-        'brand': 'Xiaomi',
-        'isPhysicalDevice': true,
-        'version': <String, dynamic>{'sdkInt': 30},
-      },
-    );
+          MethodChannel(ch),
+          (_) async => <String, dynamic>{
+            'manufacturer': 'Xiaomi',
+            'model': 'Mi 11',
+            'brand': 'Xiaomi',
+            'device': 'mi11',
+            'display': 'display',
+            'fingerprint': 'fingerprint',
+            'hardware': 'hardware',
+            'host': 'host',
+            'id': 'id',
+            'product': 'product',
+            'supportedAbis': <String>['arm64-v8a'],
+            'supported32BitAbis': <String>[],
+            'supported64BitAbis': <String>['arm64-v8a'],
+            'tags': 'tags',
+            'type': 'type',
+            'isPhysicalDevice': true,
+            'board': 'board',
+            'bootloader': 'bootloader',
+            'systemFeatures': <String>[],
+            'displayMetrics': <String, dynamic>{
+              'widthPx': 1080.0,
+              'heightPx': 2400.0,
+              'xDpi': 400.0,
+              'yDpi': 400.0,
+            },
+            'freeDiskSize': 1024 * 1024 * 1024,
+            'totalDiskSize': 128 * 1024 * 1024 * 1024,
+            'isLowRamDevice': false,
+            'physicalRamSize': 8000,
+            'availableRamSize': 4000,
+            'version': <String, dynamic>{
+              'sdkInt': 30,
+              'baseOS': '',
+              'codename': 'REL',
+              'incremental': '',
+              'previewSdkInt': 0,
+              'release': '11',
+              'securityPatch': '',
+            },
+          },
+        );
   }
 
   for (final ch in [
@@ -106,12 +143,12 @@ void _stubChannels() {
   ]) {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-      MethodChannel(ch),
-      (call) async {
-        if (call.method == 'isIgnoringBatteryOptimizations') return false;
-        return null;
-      },
-    );
+          MethodChannel(ch),
+          (call) async {
+            if (call.method == 'isIgnoringBatteryOptimizations') return false;
+            return null;
+          },
+        );
   }
 }
 
@@ -141,40 +178,50 @@ void main() {
       _stubChannels();
     });
 
-    tearDown(_clearChannels);
+    tearDown(() {
+      _clearChannels();
+    });
 
     testWidgets(
       'renders Battery Optimization tile and Performance section header',
       (WidgetTester tester) async {
-        // Use a very tall surface so the entire ListView is built in one pass —
-        // lazy lists only instantiate items that fit in the viewport, so
-        // skipOffstage:false on find.text() does NOT help with ListView items
-        // that were never constructed.
-        tester.view.physicalSize = const Size(1080, 6000);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
+        debugDefaultTargetPlatformOverride = TargetPlatform.android;
+        try {
+          // Use a very tall surface so the entire ListView is built in one pass —
+          // lazy lists only instantiate items that fit in the viewport, so
+          // skipOffstage:false on find.text() does NOT help with ListView items
+          // that were never constructed.
+          tester.view.physicalSize = const Size(1080, 6000);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
 
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              sharedPreferencesProvider.overrideWithValue(prefs),
-              themeServiceProvider.overrideWith(() => _SyncThemeService()),
-              torrentRepositoryProvider
-                  .overrideWithValue(_FakeTorrentRepository()),
-            ],
-            child: const MaterialApp(home: SettingsScreen()),
-          ),
-        );
+          await tester.pumpWidget(
+            ProviderScope(
+              overrides: [
+                sharedPreferencesProvider.overrideWithValue(prefs),
+                themeServiceProvider.overrideWith(() => _SyncThemeService()),
+                torrentRepositoryProvider.overrideWithValue(
+                  _FakeTorrentRepository(),
+                ),
+              ],
+              child: const MaterialApp(home: SettingsScreen()),
+            ),
+          );
 
-        // Pump the initial frame + one microtask flush.
-        // We avoid pumpAndSettle() because _BatteryOptimizationTile's async
-        // _checkStatus() call may never resolve in the pure-Dart test env.
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 50));
+          await tester.runAsync(() async {
+            await tester.pump();
+            // Wait for addPostFrameCallback and async calls
+            await Future.delayed(const Duration(milliseconds: 100));
+          });
+          await tester.pumpAndSettle();
 
-        expect(find.text('PERFORMANCE'), findsOneWidget);
-        expect(find.text('Ignore Battery Optimizations'), findsOneWidget);
+          expect(find.text('PERFORMANCE'), findsOneWidget);
+          expect(find.text('Ignore Battery Optimizations'), findsOneWidget);
+          expect(find.text('Detected Xiaomi Device'), findsOneWidget);
+        } finally {
+          debugDefaultTargetPlatformOverride = null;
+        }
       },
     );
   });

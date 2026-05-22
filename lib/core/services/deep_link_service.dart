@@ -12,8 +12,10 @@ bool isValidMagnetUri(String uri) {
 
   // Professional-grade regex: searches for the info-hash (xt parameter)
   // anywhere in the URI, supporting both 40-char hex and 32-char base32 hashes.
-  return RegExp(r'xt=urn:btih:[a-z0-9]{32,40}', caseSensitive: false)
-      .hasMatch(trimmed);
+  return RegExp(
+    r'xt=urn:btih:[a-z0-9]{32,40}',
+    caseSensitive: false,
+  ).hasMatch(trimmed);
 }
 
 /// Handles cold-start and warm-start magnet and local .torrent file links.
@@ -102,15 +104,21 @@ class DeepLinkService {
         pathLower.endsWith('.torrent')) {
       try {
         AppLogger.i(
-            '[DeepLink] Copying incoming torrent URI to secure cache: $raw');
-        final String? cachedPath =
-            await _channel.invokeMethod('copyContentUriToCache', {'uri': raw});
+          '[DeepLink] Copying incoming torrent URI to secure cache: $raw',
+        );
+        final String? cachedPath = await _channel.invokeMethod(
+          'copyContentUriToCache',
+          {'uri': raw},
+        );
         if (cachedPath != null) {
           return cachedPath;
         }
       } catch (e, st) {
-        AppLogger.w('[DeepLink] Failed to resolve local torrent file content',
-            error: e, stack: st);
+        AppLogger.w(
+          '[DeepLink] Failed to resolve local torrent file content',
+          error: e,
+          stack: st,
+        );
       }
     }
 
@@ -118,7 +126,7 @@ class DeepLinkService {
   }
 
   void dispose() {
-    _sub?.cancel();
-    _controller.close();
+    unawaited(_sub?.cancel());
+    unawaited(_controller.close());
   }
 }

@@ -12,7 +12,7 @@ class AddTorrentFileUsecase {
   /// Throws [ArgumentError] if the file doesn't exist or is not a .torrent file.
   Future<String> call(String filePath, {String? savePath}) async {
     final file = File(filePath);
-    if (!await file.exists()) {
+    if (!file.existsSync()) {
       throw ArgumentError('Torrent file not found: $filePath');
     }
     if (!filePath.toLowerCase().endsWith('.torrent')) {

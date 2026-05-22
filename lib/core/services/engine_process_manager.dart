@@ -42,7 +42,8 @@ class EngineProcessManager {
     _started = true;
 
     AppLogger.i(
-        '[ProcessManager] Restoring ${storedTorrents.length} torrents (background)…');
+      '[ProcessManager] Restoring ${storedTorrents.length} torrents (background)…',
+    );
     // Start restoration without blocking the caller (SplashScreen)
     // to prevent UI freezes on cold-start with many torrents.
     unawaited(_restoreAndValidate(storedTorrents, database));
@@ -58,8 +59,9 @@ class EngineProcessManager {
     // Process in parallel batches of 5 to balance speed and stability.
     const batchSize = 5;
     for (var i = 0; i < stored.length; i += batchSize) {
-      final end =
-          (i + batchSize < stored.length) ? i + batchSize : stored.length;
+      final end = (i + batchSize < stored.length)
+          ? i + batchSize
+          : stored.length;
       final batch = stored.sublist(i, end);
 
       try {
@@ -76,7 +78,8 @@ class EngineProcessManager {
     int? engineId;
 
     var actuallyUsedFastResume = false;
-    final hasValidResume = t.resumeData != null &&
+    final hasValidResume =
+        t.resumeData != null &&
         t.resumeData!.length > 100 &&
         Directory(t.savePath).existsSync() &&
         t.totalSize > 0;
@@ -85,17 +88,25 @@ class EngineProcessManager {
       try {
         if ((t.magnetUri ?? '').isNotEmpty) {
           engineId = _engine.addMagnetWithResume(
-              t.magnetUri!, t.savePath, t.resumeData!);
+            t.magnetUri!,
+            t.savePath,
+            t.resumeData!,
+          );
         } else if ((t.torrentFilePath ?? '').isNotEmpty) {
           engineId = _engine.addTorrentFileWithResume(
-              t.torrentFilePath!, t.savePath, t.resumeData!);
+            t.torrentFilePath!,
+            t.savePath,
+            t.resumeData!,
+          );
         }
         AppLogger.i(
-            '[ProcessManager] Restored "${t.name}" with fast-resume (id $engineId)');
+          '[ProcessManager] Restored "${t.name}" with fast-resume (id $engineId)',
+        );
         actuallyUsedFastResume = true;
       } catch (e) {
         AppLogger.w(
-            '[ProcessManager] Fast-resume failed for "${t.name}", falling back to recheck: $e');
+          '[ProcessManager] Fast-resume failed for "${t.name}", falling back to recheck: $e',
+        );
         // Fallback to normal add
         if ((t.magnetUri ?? '').isNotEmpty) {
           engineId = _engine.addMagnet(t.magnetUri!, t.savePath);
@@ -118,7 +129,8 @@ class EngineProcessManager {
       // 2. 🆔 ID Sync
       if (newId != t.id) {
         AppLogger.i(
-            '[ProcessManager] Syncing ID for "${t.name}": ${t.id} → $newId');
+          '[ProcessManager] Syncing ID for "${t.name}": ${t.id} → $newId',
+        );
         await db.deleteTorrentById(t.id);
         await db.upsertTorrent(TorrentModel.toCompanion(t.copyWith(id: newId)));
       }
@@ -133,7 +145,8 @@ class EngineProcessManager {
       if (!actuallyUsedFastResume && filesExist) {
         _engine.forceRecheck(engineId);
         AppLogger.d(
-            '[ProcessManager] Triggered fallback recheck for "${t.name}"');
+          '[ProcessManager] Triggered fallback recheck for "${t.name}"',
+        );
       }
     } else {
       await db.upsertTorrent(

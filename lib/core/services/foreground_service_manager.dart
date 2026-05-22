@@ -45,9 +45,11 @@ class TorrentTaskHandler extends TaskHandler {
       final title = data['title'] as String? ?? 'Meitorrent';
       final text = data['text'] as String? ?? '';
 
-      FlutterForegroundTask.updateService(
-        notificationTitle: title,
-        notificationText: text,
+      unawaited(
+        FlutterForegroundTask.updateService(
+          notificationTitle: title,
+          notificationText: text,
+        ),
       );
 
       // 2. Capture session address, save path, and real timestamps
@@ -74,7 +76,8 @@ class TorrentTaskHandler extends TaskHandler {
     if (_sessionAddress == null) return;
 
     AppLogger.i(
-        '[FGService] Attaching to native engine at 0x${_sessionAddress!.toRadixString(16)}');
+      '[FGService] Attaching to native engine at 0x${_sessionAddress!.toRadixString(16)}',
+    );
 
     lt.LibtorrentFlutter.attach(
       sessionAddress: _sessionAddress!,
@@ -102,7 +105,12 @@ class TorrentTaskHandler extends TaskHandler {
           .where((t) => t.isCompleted || t.progress >= 1.0)
           .toList();
       final paused = torrents
-          .where((t) => (t.isPaused || t.isStopped) && !t.isCompleted && t.progress < 1.0)
+          .where(
+            (t) =>
+                (t.isPaused || t.isStopped) &&
+                !t.isCompleted &&
+                t.progress < 1.0,
+          )
           .toList();
 
       final String summaryText;
@@ -120,15 +128,18 @@ class TorrentTaskHandler extends TaskHandler {
         summaryText = 'No torrents added';
       }
 
-      FlutterForegroundTask.updateService(
-        notificationTitle: 'Meitorrent',
-        notificationText: summaryText,
+      unawaited(
+        FlutterForegroundTask.updateService(
+          notificationTitle: 'Meitorrent',
+          notificationText: summaryText,
+        ),
       );
     });
   }
 
   TorrentStatus _mapToStatus(lt_models.TorrentInfo info) {
-    final bool isReallyDone = info.totalWanted > 0 &&
+    final bool isReallyDone =
+        info.totalWanted > 0 &&
         info.totalDone >= info.totalWanted &&
         info.progress >= 1.0;
 
@@ -231,7 +242,8 @@ class ForegroundServiceManager {
       callback: torrentServiceCallback,
     );
 
-    _serviceStarted = result is ServiceRequestSuccess ||
+    _serviceStarted =
+        result is ServiceRequestSuccess ||
         await FlutterForegroundTask.isRunningService;
     AppLogger.i(
       '[FGService] Start result: ${_serviceStarted ? 'success' : 'failed'}',
@@ -243,9 +255,11 @@ class ForegroundServiceManager {
   void _flushPending() {
     final data = _pendingData;
     if (data != null) {
-      FlutterForegroundTask.updateService(
-        notificationTitle: data['title'],
-        notificationText: data['text'],
+      unawaited(
+        FlutterForegroundTask.updateService(
+          notificationTitle: data['title'],
+          notificationText: data['text'],
+        ),
       );
       _pendingData = null;
     }
@@ -269,7 +283,7 @@ class ForegroundServiceManager {
     final currentIds = statuses.map((s) => s.id).toSet();
     final toCancel = _showingNotificationIds.difference(currentIds);
     for (final id in toCancel) {
-      NotificationService.instance.cancelNotification(id);
+      unawaited(NotificationService.instance.cancelNotification(id));
     }
     _showingNotificationIds
       ..clear()
@@ -282,13 +296,16 @@ class ForegroundServiceManager {
         .where((t) => t.isCompleted || t.progress >= 1.0)
         .toList();
     final paused = statuses
-        .where((t) => (t.isPaused || t.isStopped) && !t.isCompleted && t.progress < 1.0)
+        .where(
+          (t) =>
+              (t.isPaused || t.isStopped) && !t.isCompleted && t.progress < 1.0,
+        )
         .toList();
 
     if (active.isEmpty) {
       if (_serviceStarted && _stopServiceTimer == null) {
         _stopServiceTimer = Timer(const Duration(seconds: 10), () {
-          if (_serviceStarted) stopService();
+          if (_serviceStarted) unawaited(stopService());
         });
       }
     } else {
@@ -319,23 +336,23 @@ class ForegroundServiceManager {
 
     for (final s in active) {
       if (!visibleIds.contains(s.id)) {
-        NotificationService.instance.cancelNotification(s.id);
+        unawaited(NotificationService.instance.cancelNotification(s.id));
       }
     }
 
     // 2. Suppress paused notifications
     for (final s in paused) {
-      NotificationService.instance.cancelNotification(s.id);
+      unawaited(NotificationService.instance.cancelNotification(s.id));
     }
 
     // 3. Show completed notifications
     for (final s in completed) {
-      NotificationService.instance.showCompletionNotification(s);
+      unawaited(NotificationService.instance.showCompletionNotification(s));
     }
 
     // 4. Show active notifications (top 3)
     for (final s in topActive) {
-      NotificationService.instance.showActiveNotification(s);
+      unawaited(NotificationService.instance.showActiveNotification(s));
     }
 
     const String title = 'Meitorrent';
@@ -365,7 +382,7 @@ class ForegroundServiceManager {
 
     if (!_serviceStarted && active.isNotEmpty) {
       _pendingData = payload;
-      startService();
+      unawaited(startService());
       return;
     }
 

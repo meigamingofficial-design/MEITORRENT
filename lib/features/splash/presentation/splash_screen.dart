@@ -41,7 +41,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void initState() {
     super.initState();
     _setupAnimations();
-    _boot();
+    unawaited(_boot());
   }
 
   void _setupAnimations() {
@@ -68,7 +68,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       ),
     );
 
-    _logoController.forward();
+    unawaited(_logoController.forward());
   }
 
   Future<void> _boot() async {
@@ -102,13 +102,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
       // 8. Navigate
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder<void>(
-            pageBuilder: (_, __, ___) => const DashboardScreen(),
-            transitionsBuilder: (_, animation, __, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-            transitionDuration: const Duration(milliseconds: 400),
+        unawaited(
+          Navigator.of(context).pushReplacement(
+            PageRouteBuilder<void>(
+              pageBuilder: (_, _, _) => const DashboardScreen(),
+              transitionsBuilder: (_, animation, _, child) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+              transitionDuration: const Duration(milliseconds: 400),
+            ),
           ),
         );
       }
@@ -224,18 +226,20 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                             scale: _logoScale.value,
                             child: Opacity(
                               opacity: _logoOpacity.value,
-                              child: Container(
+                              child: DecoratedBox(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(24),
                                   border: Border.all(
-                                    color: AppColors.border(context)
-                                        .withValues(alpha: 0.8),
+                                    color: AppColors.border(
+                                      context,
+                                    ).withValues(alpha: 0.8),
                                     width: 1.5,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.08),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.08,
+                                      ),
                                       blurRadius: 16,
                                       offset: const Offset(0, 4),
                                     ),
@@ -261,20 +265,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     // App name
                     AnimatedBuilder(
                       animation: _logoOpacity,
-                      builder: (_, __) => Text(
+                      builder: (_, _) => Text(
                         'Meitorrent',
-                        style:
-                            Theme.of(context).textTheme.displayLarge?.copyWith(
-                                  color: AppColors.text(context)
-                                      .withValues(alpha: _logoOpacity.value),
-                                  fontSize: 34,
-                                ),
+                        style: Theme.of(context).textTheme.displayLarge
+                            ?.copyWith(
+                              color: AppColors.text(
+                                context,
+                              ).withValues(alpha: _logoOpacity.value),
+                              fontSize: 34,
+                            ),
                       ),
                     ),
                     const SizedBox(height: 8),
                     AnimatedBuilder(
                       animation: _logoOpacity,
-                      builder: (_, __) => Text(
+                      builder: (_, _) => Text(
                         'Fast. Private. Reliable.',
                         style: TextStyle(
                           fontSize: 14,
@@ -304,16 +309,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         child: Text(
                           _statusText,
                           key: ValueKey(_statusText),
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: AppColors.textSecondary(context),
-                                    fontSize: 13,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: AppColors.textSecondary(context),
+                                fontSize: 13,
+                              ),
                         ),
                       ),
                     ] else ...[
-                      const Icon(Icons.error_outline,
-                          color: AppColors.error, size: 32),
+                      const Icon(
+                        Icons.error_outline,
+                        color: AppColors.error,
+                        size: 32,
+                      ),
                       const SizedBox(height: 12),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -321,7 +329,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           _statusText,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
-                              color: AppColors.error, fontSize: 13),
+                            color: AppColors.error,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -340,7 +350,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 right: 0,
                 child: AnimatedBuilder(
                   animation: _logoOpacity,
-                  builder: (_, __) => Opacity(
+                  builder: (_, _) => Opacity(
                     opacity: _logoOpacity.value * 0.25,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
