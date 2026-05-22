@@ -198,6 +198,43 @@ class SettingsScreen extends ConsumerWidget {
               ),
               onTap: () => _launchUrl('https://www.gnu.org/licenses/gpl-3.0.en.html'),
             ),
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.border(context).withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.mail_outline_rounded,
+                  color: AppColors.textSecondary(context),
+                  size: 20,
+                ),
+              ),
+              title: Text(
+                'Contact Support',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.text(context),
+                ),
+              ),
+              subtitle: Text(
+                'meigaming.official@gmail.com',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary(context),
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              trailing: Icon(
+                Icons.chevron_right,
+                color: AppColors.textSecondary(context),
+                size: 18,
+              ),
+              onTap: () => _launchUrl('mailto:meigaming.official@gmail.com'),
+            ),
             const SizedBox(height: 60),
           ],
         ),
@@ -587,27 +624,10 @@ class _AboutTile extends ConsumerWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              _AboutActionBtn(
-                icon: Icons.code_rounded,
-                label: 'GitHub',
-                onPressed: () => _launchUrl('https://github.com/meigamingofficial-design'),
-              ),
-              const SizedBox(width: 8),
-              _AboutActionBtn(
-                icon: Icons.mail_outline_rounded,
-                label: 'Email',
-                onPressed: () => _launchUrl('mailto:meigaming.official@gmail.com'),
-              ),
-            ],
-          ),
         ],
       ),
     );
   }
-
 }
 
 Future<void> _launchUrl(String urlString) async {
@@ -619,54 +639,7 @@ Future<void> _launchUrl(String urlString) async {
   }
 }
 
-class _AboutActionBtn extends StatelessWidget {
-  const _AboutActionBtn({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-  });
 
-  final IconData icon;
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: AppColors.border(context).withValues(alpha: 0.6),
-            width: 1,
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 13,
-              color: AppColors.downloading,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppColors.text(context),
-                fontWeight: FontWeight.w600,
-                fontSize: 10.5,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 
 class _LegalTile extends StatelessWidget {
