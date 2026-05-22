@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -548,7 +549,7 @@ class _AboutTile extends ConsumerWidget {
               fontSize: 11,
             ),
           ),
-          const SizedBox(height: 1),
+          const SizedBox(height: 2),
           Text(
             'Designed & Developed by MeiGamingOfficial',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -557,11 +558,86 @@ class _AboutTile extends ConsumerWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _AboutActionBtn(
+                icon: Icons.code_rounded,
+                label: 'GitHub',
+                onPressed: () => _launchUrl('https://github.com/meigamingofficial-design'),
+              ),
+              const SizedBox(width: 8),
+              _AboutActionBtn(
+                icon: Icons.mail_outline_rounded,
+                label: 'Email',
+                onPressed: () => _launchUrl('mailto:meigaming.official@gmail.com'),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
+
+  Future<void> _launchUrl(String urlString) async {
+    try {
+      final uri = Uri.parse(urlString);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint('Could not launch $urlString: $e');
+    }
+  }
 }
+
+class _AboutActionBtn extends StatelessWidget {
+  const _AboutActionBtn({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: AppColors.border(context).withValues(alpha: 0.6),
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 13,
+              color: AppColors.downloading,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: AppColors.text(context),
+                fontWeight: FontWeight.w600,
+                fontSize: 10.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 
 class _LegalTile extends StatelessWidget {
   const _LegalTile({
