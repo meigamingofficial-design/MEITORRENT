@@ -16,7 +16,7 @@ By downloading, installing, or using Meitorrent, you agree to be bound by these 
 - **No Hosting Liability:** Under no circumstances shall MeiGamingOfficial be held liable for any content accessed, downloaded, or shared through the application, or for any third-party links or torrent files loaded into the application by users.
 
 ### 3. Open Source Licensing
-- Meitorrent is open-source software. The application's source code and its core libraries are licensed under the **GNU General Public License v3.0 (GPLv3)**. You are permitted to view, modify, and distribute the source code in accordance with the terms of that license.
+- Meitorrent is open-source software. The application's source code and its custom wrapper are licensed under the **GNU General Public License v3.0 (GPLv3)**, while underlying core components (like the C++ libtorrent engine) are subject to their respective open-source licenses (such as BSD 3-Clause). You are permitted to view, modify, and distribute the source code in accordance with those licenses.
 
 ### 4. Disclaimer of Warranties
 - Meitorrent is provided to you **"AS IS"** and **"AS AVAILABLE"** without warranties of any kind, either express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement. We do not guarantee that the application will be uninterrupted, error-free, secure, or free of data loss.
