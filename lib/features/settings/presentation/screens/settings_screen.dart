@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -102,49 +103,51 @@ class SettingsScreen extends ConsumerWidget {
             const _BatteryOptimizationTile(),
 
             // ── Maintenance ──────────────────────────────────────────
-            const _SectionHeader(title: 'Maintenance'),
-            _SwitchTile(
-              icon: Icons.bug_report_outlined,
-              label: 'Detailed Logging',
-              subtitle: 'Send non-fatal errors to Crashlytics',
-              value: true, // Always on for now
-              onChanged: (_) async {},
-            ),
-            ListTile(
-              leading: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.paused.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.flash_on_rounded,
-                  color: AppColors.paused,
-                  size: 20,
-                ),
+            if (kDebugMode) ...[
+              const _SectionHeader(title: 'Maintenance'),
+              _SwitchTile(
+                icon: Icons.bug_report_outlined,
+                label: 'Detailed Logging',
+                subtitle: 'Send non-fatal errors to Crashlytics',
+                value: true, // Always on for now
+                onChanged: (_) async {},
               ),
-              title: Text(
-                'Test Crash',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text(context),
+              ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.paused.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.flash_on_rounded,
+                    color: AppColors.paused,
+                    size: 20,
+                  ),
                 ),
-              ),
-              subtitle: Text(
-                'Force a crash to test Firebase integration',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary(context),
-                  fontSize: 12,
+                title: Text(
+                  'Test Crash',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.text(context),
+                  ),
                 ),
+                subtitle: Text(
+                  'Force a crash to test Firebase integration',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary(context),
+                    fontSize: 12,
+                  ),
+                ),
+                onTap: () {
+                  AppLogger.wtf('User triggered a manual test crash');
+                  // This will crash the app immediately
+                  throw Exception('Meitorrent Crash Test: ${DateTime.now()}');
+                },
               ),
-              onTap: () {
-                AppLogger.wtf('User triggered a manual test crash');
-                // This will crash the app immediately
-                throw Exception('Meitorrent Crash Test: ${DateTime.now()}');
-              },
-            ),
+            ],
 
             // ── About ─────────────────────────────────────────────────
             const _SectionHeader(title: 'About'),
