@@ -403,7 +403,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                   context,
                                 ).withValues(alpha: 0.7),
                                 fontSize: 11,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],

@@ -94,7 +94,7 @@ class FilterSegmentedControl extends StatelessWidget {
                             fontSize: 13,
                             fontWeight: isActive
                                 ? FontWeight.w700
-                                : FontWeight.w500,
+                                : FontWeight.w600,
                             letterSpacing: isActive ? -0.1 : 0,
                           ),
                           child: Text(_labels[i]),

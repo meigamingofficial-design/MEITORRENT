@@ -1348,7 +1348,7 @@ class _ExitDialogState extends State<_ExitDialog> {
               style: TextStyle(
                 color: AppColors.textSecondary(context),
                 fontSize: 13,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 24),
@@ -1402,7 +1402,7 @@ class _ExitDialogState extends State<_ExitDialog> {
                       style: TextStyle(
                         color: AppColors.textSecondary(context),
                         fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -1550,7 +1550,7 @@ class _ExitOption extends StatelessWidget {
                         style: TextStyle(
                           color: AppColors.textSecondary(context),
                           fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],

@@ -776,7 +776,7 @@ class _SequentialRow extends StatelessWidget {
               style: TextStyle(
                 color: AppColors.text(context),
                 fontSize: 13.5,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
