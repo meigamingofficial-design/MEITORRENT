@@ -802,6 +802,7 @@ class _DeleteDialogState extends State<_DeleteDialog> {
               color: AppColors.textSecondary(context),
               fontSize: 13,
               height: 1.4,
+              fontWeight: FontWeight.w600,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -847,7 +848,7 @@ class _DeleteDialogState extends State<_DeleteDialog> {
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.textSecondary(context),
                             fontSize: 11,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],

@@ -759,6 +759,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       color: AppColors.textSecondary(context),
                       fontSize: 13,
                       height: 1.4,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -803,7 +804,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: AppColors.textSecondary(context),
                                     fontSize: 11,
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
