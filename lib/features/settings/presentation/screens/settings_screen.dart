@@ -28,7 +28,14 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background(context),
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        title: Text(
+          'Settings',
+          style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
+            fontSize: 28,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.symmetric(vertical: 8),
