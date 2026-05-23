@@ -140,7 +140,7 @@ class SettingsScreen extends ConsumerWidget {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.textSecondary(context),
                     fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 onTap: () {
@@ -225,7 +225,7 @@ class SettingsScreen extends ConsumerWidget {
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppColors.textSecondary(context),
                   fontSize: 11.5,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               trailing: Icon(
@@ -323,7 +323,7 @@ class _SpeedLimitTile extends StatelessWidget {
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: AppColors.textSecondary(context),
           fontSize: 12,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
         ),
       ),
       trailing: Icon(
@@ -443,7 +443,7 @@ class _SwitchTile extends StatelessWidget {
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: AppColors.textSecondary(context),
           fontSize: 12,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
         ),
       ),
       trailing: Switch(
@@ -492,7 +492,7 @@ class _ConnectionsTile extends StatelessWidget {
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: AppColors.textSecondary(context),
           fontSize: 12,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
         ),
       ),
       trailing: Icon(
@@ -618,7 +618,7 @@ class _AboutTile extends ConsumerWidget {
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondary(context),
               fontSize: 11,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 2),
@@ -869,7 +869,7 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondary(context),
               fontSize: 12,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
           trailing: _isLoading
@@ -937,7 +937,7 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
                       color: AppColors.textSecondary(context),
                       fontSize: 11,
                       height: 1.3,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 10),
