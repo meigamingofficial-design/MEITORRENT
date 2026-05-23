@@ -96,13 +96,16 @@ flutter test
 ```
 
 #### 🧹 Maintenance & Cleaning
-If you run into compilation caches or stale assets, perform a clean sweep:
+If you run into compilation caches, stale assets, or want to reclaim disk space from unused package versions, perform a clean sweep:
 ```bash
 # Wipe out build artifacts and build cache
 flutter clean
 
 # Fetch and sync package dependencies
 flutter pub get
+
+# Garbage-collect unused packages from the global pub cache to free up disk space
+dart pub cache gc
 ```
 
 ---
