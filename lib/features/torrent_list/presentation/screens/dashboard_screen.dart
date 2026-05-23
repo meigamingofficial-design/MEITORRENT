@@ -876,137 +876,140 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       showModalBottomSheet<void>(
         context: context,
         backgroundColor: Colors.transparent,
-        builder: (ctx) => Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.surface(context),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.paused.withValues(alpha: 0.25)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, -4),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.paused.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.bolt_rounded,
-                      color: AppColors.paused,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Sluggish Download Speeds?',
-                    style: TextStyle(
-                      color: AppColors.text(context),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Your downloads may be throttled or paused by system battery limits. Whitelisting Meitorrent helps keep transfers active when the screen is locked.',
-                style: TextStyle(
-                  color: AppColors.textSecondary(context),
-                  fontSize: 13,
-                  height: 1.4,
+        builder: (ctx) => SafeArea(
+          top: false,
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.surface(context),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.paused.withValues(alpha: 0.25)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 20,
+                  offset: const Offset(0, -4),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.paused.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      onPressed: () async {
-                        Navigator.pop(ctx);
-                        try {
-                          final prefs = await SharedPreferences.getInstance();
-                          await prefs.setBool(
-                            'meitorrent_speed_warning_dismissed',
-                            true,
-                          );
-                        } catch (_) {}
-                      },
-                      child: const Text(
-                        'Not Now',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                      child: const Icon(
+                        Icons.bolt_rounded,
+                        color: AppColors.paused,
+                        size: 20,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.downloading,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Sluggish Download Speeds?',
+                      style: TextStyle(
+                        color: AppColors.text(context),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
                       ),
-                      onPressed: () async {
-                        Navigator.pop(ctx);
-                        try {
-                          final prefs = await SharedPreferences.getInstance();
-                          await prefs.setBool(
-                            'meitorrent_speed_warning_dismissed',
-                            true,
-                          );
-                        } catch (_) {}
-                        if (context.mounted) {
-                          unawaited(
-                            Navigator.push(
-                              context,
-                              PageRouteBuilder<void>(
-                                pageBuilder: (_, _, _) =>
-                                    const SettingsScreen(),
-                                transitionsBuilder: (_, animation, _, child) =>
-                                    FadeTransition(
-                                      opacity: CurvedAnimation(
-                                        parent: animation,
-                                        curve: Curves.easeOut,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Your downloads may be throttled or paused by system battery limits. Whitelisting Meitorrent helps keep transfers active when the screen is locked.',
+                  style: TextStyle(
+                    color: AppColors.textSecondary(context),
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: () async {
+                          Navigator.pop(ctx);
+                          try {
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setBool(
+                              'meitorrent_speed_warning_dismissed',
+                              true,
+                            );
+                          } catch (_) {}
+                        },
+                        child: const Text(
+                          'Not Now',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.downloading,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: () async {
+                          Navigator.pop(ctx);
+                          try {
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setBool(
+                              'meitorrent_speed_warning_dismissed',
+                              true,
+                            );
+                          } catch (_) {}
+                          if (context.mounted) {
+                            unawaited(
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder<void>(
+                                  pageBuilder: (_, _, _) =>
+                                      const SettingsScreen(),
+                                  transitionsBuilder: (_, animation, _, child) =>
+                                      FadeTransition(
+                                        opacity: CurvedAnimation(
+                                          parent: animation,
+                                          curve: Curves.easeOut,
+                                        ),
+                                        child: child,
                                       ),
-                                      child: child,
-                                    ),
-                                transitionDuration: const Duration(
-                                  milliseconds: 220,
+                                  transitionDuration: const Duration(
+                                    milliseconds: 220,
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        }
-                      },
-                      child: const Text(
-                        'Optimize Speed',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                            );
+                          }
+                        },
+                        child: const Text(
+                          'Optimize Speed',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

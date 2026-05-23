@@ -1,6 +1,6 @@
 # Terms and Conditions – Meitorrent
 
-**Last Updated:** May 07, 2026
+**Last Updated:** May 23, 2026
 
 By downloading, installing, or using Meitorrent, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use the application. Meitorrent is developed, published, and maintained by **MeiGamingOfficial** ("we", "our", or "us").
 

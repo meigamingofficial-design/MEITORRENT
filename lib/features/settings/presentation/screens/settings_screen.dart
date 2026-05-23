@@ -340,57 +340,60 @@ class _SpeedLimitTile extends StatelessWidget {
       showModalBottomSheet<void>(
         context: context,
         backgroundColor: Colors.transparent,
-        builder: (_) => Container(
-          margin: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.surface(context),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.border(context)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.text(context),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              ...List.generate(_presets.length, (i) {
-                final bps = _presets[i] * 1024;
-                final selected = currentBps == bps;
-                return ListTile(
-                  title: Text(
-                    _presetLabels[i],
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: selected
-                          ? AppColors.downloading
-                          : AppColors.textSecondary(context),
-                      fontWeight: selected
-                          ? FontWeight.w600
-                          : FontWeight.normal,
+        builder: (_) => SafeArea(
+          top: false,
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            decoration: BoxDecoration(
+              color: AppColors.surface(context),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.border(context)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppColors.text(context),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  trailing: selected
-                      ? const Icon(
-                          Icons.check,
-                          color: AppColors.downloading,
-                          size: 18,
-                        )
-                      : null,
-                  onTap: () {
-                    unawaited(onChanged(bps));
-                    Navigator.pop(context);
-                  },
-                );
-              }),
-              const SizedBox(height: 12),
-            ],
+                ),
+                ...List.generate(_presets.length, (i) {
+                  final bps = _presets[i] * 1024;
+                  final selected = currentBps == bps;
+                  return ListTile(
+                    title: Text(
+                      _presetLabels[i],
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: selected
+                            ? AppColors.downloading
+                            : AppColors.textSecondary(context),
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
+                    ),
+                    trailing: selected
+                        ? const Icon(
+                            Icons.check,
+                            color: AppColors.downloading,
+                            size: 18,
+                          )
+                        : null,
+                    onTap: () {
+                      unawaited(onChanged(bps));
+                      Navigator.pop(context);
+                    },
+                  );
+                }),
+                const SizedBox(height: 12),
+              ],
+            ),
           ),
         ),
       ),
@@ -500,56 +503,59 @@ class _ConnectionsTile extends StatelessWidget {
       onTap: () => showModalBottomSheet<void>(
         context: context,
         backgroundColor: Colors.transparent,
-        builder: (_) => Container(
-          margin: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.surface(context),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.border(context)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Text(
-                  'Max Global Connections',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.text(context),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              ..._options.map((n) {
-                final selected = current == n;
-                return ListTile(
-                  title: Text(
-                    '$n peers',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: selected
-                          ? AppColors.downloading
-                          : AppColors.textSecondary(context),
-                      fontWeight: selected
-                          ? FontWeight.w600
-                          : FontWeight.normal,
+        builder: (_) => SafeArea(
+          top: false,
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            decoration: BoxDecoration(
+              color: AppColors.surface(context),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.border(context)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Text(
+                    'Max Global Connections',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppColors.text(context),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  trailing: selected
-                      ? const Icon(
-                          Icons.check,
-                          color: AppColors.downloading,
-                          size: 18,
-                        )
-                      : null,
-                  onTap: () {
-                    unawaited(onChanged(n));
-                    Navigator.pop(context);
-                  },
-                );
-              }),
-              const SizedBox(height: 12),
-            ],
+                ),
+                ..._options.map((n) {
+                  final selected = current == n;
+                  return ListTile(
+                    title: Text(
+                      '$n peers',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: selected
+                            ? AppColors.downloading
+                            : AppColors.textSecondary(context),
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
+                    ),
+                    trailing: selected
+                        ? const Icon(
+                            Icons.check,
+                            color: AppColors.downloading,
+                            size: 18,
+                          )
+                        : null,
+                    onTap: () {
+                      unawaited(onChanged(n));
+                      Navigator.pop(context);
+                    },
+                  );
+                }),
+                const SizedBox(height: 12),
+              ],
+            ),
           ),
         ),
       ),

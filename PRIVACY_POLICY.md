@@ -1,6 +1,6 @@
 # Privacy Policy – Meitorrent
 
-**Last Updated:** May 07, 2026
+**Last Updated:** May 23, 2026
 
 Meitorrent is built, published, and maintained by **MeiGamingOfficial** ("we", "our", or "us"). Meitorrent is designed with privacy as a fundamental priority. We do not collect, transmit, store, or share any personal information, usage data, or download logs. All torrent metadata and downloads are stored purely locally on your own device.
 
