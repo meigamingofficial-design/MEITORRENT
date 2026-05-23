@@ -317,21 +317,28 @@ class _SpeedLimitTile extends StatelessWidget {
         ),
         child: Icon(icon, color: iconColor, size: 20),
       ),
-      title: Text(
-        label,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: AppColors.text(context),
-        ),
-      ),
-      subtitle: Text(
-        displayLabel,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: AppColors.textSecondary(context),
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.text(context),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            displayLabel,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary(context),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
       trailing: Icon(
         Icons.chevron_right,
@@ -437,21 +444,28 @@ class _SwitchTile extends StatelessWidget {
         ),
         child: Icon(icon, color: AppColors.textSecondary(context), size: 20),
       ),
-      title: Text(
-        label,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: AppColors.text(context),
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: AppColors.textSecondary(context),
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.text(context),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary(context),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
       trailing: Switch(
         value: value,
@@ -486,21 +500,28 @@ class _ConnectionsTile extends StatelessWidget {
           size: 20,
         ),
       ),
-      title: Text(
-        'Max Connections',
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: AppColors.text(context),
-        ),
-      ),
-      subtitle: Text(
-        '$current peers',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: AppColors.textSecondary(context),
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Max Connections',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.text(context),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '$current peers',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary(context),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
       trailing: Icon(
         Icons.chevron_right,
@@ -603,19 +624,19 @@ class _AboutTile extends ConsumerWidget {
           ),
         ),
       ),
-      title: Text(
-        'Meitorrent',
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-          color: AppColors.text(context),
-        ),
-      ),
-      subtitle: Column(
+      title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 2),
+          Text(
+            'Meitorrent',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.text(context),
+            ),
+          ),
+          const SizedBox(height: 4),
           Text(
             versionAsync.when(
               data: (v) => 'v$v · Fast. Private. Reliable.',
@@ -628,7 +649,7 @@ class _AboutTile extends ConsumerWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           Text(
             'Designed & Developed by MeiGamingOfficial',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -861,23 +882,30 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
               size: 20,
             ),
           ),
-          title: Text(
-            'Ignore Battery Optimizations',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.text(context),
-            ),
-          ),
-          subtitle: Text(
-            _isIgnored
-                ? 'Battery optimizations are disabled'
-                : 'Helps keep torrent downloads active when the app is in the background or screen is off',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.textSecondary(context),
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Ignore Battery Optimizations',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.text(context),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _isIgnored
+                    ? 'Battery optimizations are disabled'
+                    : 'Helps keep torrent downloads active when the app is in the background or screen is off',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary(context),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
           trailing: _isLoading
               ? const SizedBox(
