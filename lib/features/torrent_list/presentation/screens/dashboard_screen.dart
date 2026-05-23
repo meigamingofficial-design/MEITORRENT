@@ -751,15 +751,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    isAll
-                        ? 'This will remove all torrents from your list.'
-                        : 'Remove ${ids.length} selected torrent${ids.length == 1 ? '' : 's'}?',
-                    style: TextStyle(
-                      color: AppColors.textSecondary(context),
-                      fontSize: 13,
-                      height: 1.4,
-                      fontWeight: FontWeight.w600,
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.inputFill(context).withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppColors.border(context).withValues(alpha: 0.7),
+                        width: 1.2,
+                      ),
+                    ),
+                    child: Text(
+                      isAll
+                          ? 'This will remove all torrents from your list.'
+                          : 'Remove ${ids.length} selected torrent${ids.length == 1 ? '' : 's'}?',
+                      style: TextStyle(
+                        color: AppColors.text(context),
+                        fontSize: 13,
+                        height: 1.4,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -771,17 +783,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Checkbox(
-                              value: deleteFiles,
-                              onChanged: (v) =>
-                                  setDialogState(() => deleteFiles = v ?? false),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Checkbox(
+                                value: deleteFiles,
+                                onChanged: (v) =>
+                                    setDialogState(() => deleteFiles = v ?? false),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                activeColor: AppColors.downloading,
+                                side: BorderSide(
+                                  color: AppColors.textSecondary(context).withValues(alpha: 0.5),
+                                  width: 1.5,
+                                ),
                               ),
-                              activeColor: AppColors.error,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -828,6 +847,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     ),
                   ),
                 ),
+                const SizedBox(width: 8),
                 FilledButton(
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.error,

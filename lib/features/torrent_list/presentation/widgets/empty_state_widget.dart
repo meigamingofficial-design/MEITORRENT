@@ -57,7 +57,7 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
       case TorrentFilter.all:
         return 'Paste a magnet link or open a\n.torrent file to get started';
       case TorrentFilter.downloading:
-        return 'Paused or completed torrents will\nappear in other tabs';
+        return 'Active downloading torrents will\nappear here';
       case TorrentFilter.completed:
         return 'Finished downloads will\nappear here';
     }

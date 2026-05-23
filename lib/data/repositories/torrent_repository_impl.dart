@@ -830,24 +830,23 @@ class TorrentRepositoryImpl implements TorrentRepository {
       final stored = await _db.getTorrentById(id);
       if (stored != null) {
         try {
-          final targetPath = '${stored.savePath}/${stored.name}';
-          final dir = Directory(targetPath);
-          final file = File(targetPath);
+          final deletionPaths = _resolveFilesToDelete(intId, stored.savePath, stored.name);
 
           String? parentPath;
-
-          if (dir.existsSync()) {
-            parentPath = dir.parent.path;
-            dir.deleteSync(recursive: true);
-            AppLogger.i('[Repo] Manually deleted folder: $targetPath');
-          } else if (file.existsSync()) {
-            parentPath = file.parent.path;
-            file.deleteSync();
-            AppLogger.i('[Repo] Manually deleted file: $targetPath');
-          } else {
-            AppLogger.w(
-              '[Repo] Deletion target not found on disk: $targetPath',
-            );
+          for (final targetPath in deletionPaths) {
+            final dir = Directory(targetPath);
+            final file = File(targetPath);
+            if (dir.existsSync()) {
+              parentPath ??= dir.parent.path;
+              dir.deleteSync(recursive: true);
+              AppLogger.i('[Repo] Deleted folder: $targetPath');
+            } else if (file.existsSync()) {
+              parentPath ??= file.parent.path;
+              file.deleteSync();
+              AppLogger.i('[Repo] Deleted file: $targetPath');
+            } else {
+              AppLogger.w('[Repo] Deletion target not found: $targetPath');
+            }
           }
 
           if (parentPath != null) {
@@ -1311,6 +1310,95 @@ class TorrentRepositoryImpl implements TorrentRepository {
       }
     }
     return uri.substring(0, uri.length.clamp(0, 20));
+  }
+
+  /// Resolves the list of absolute paths that should be deleted from disk for
+  /// a given torrent. Uses a three-tier strategy:
+  ///
+  /// **Tier 1 — Engine file list (most accurate)**
+  /// Always attempts [TorrentEngineService.getFiles] regardless of whether the
+  /// torrent is currently active, because the libtorrent session retains file
+  /// metadata for paused torrents too. For multi-file torrents the engine
+  /// returns paths like `Series/Season1/ep.mkv`; we take only the first path
+  /// segment (the root folder) so we delete the entire folder tree.
+  ///
+  /// **Tier 2 — Stored name fallback**
+  /// If the engine returned no files (e.g. torrent was stopped and removed
+  /// from the session), we try `savePath/storedName` directly.
+  ///
+  /// **Tier 3 — Disk scan fallback**
+  /// If neither the engine nor the direct name path resolves to an existing
+  /// entry, we scan the `savePath` directory itself and look for the first
+  /// directory or file whose name case-insensitively contains the torrent
+  /// name (or vice-versa). This handles the case where libtorrent created a
+  /// folder with a slightly different name than what we stored (e.g. with a
+  /// trailing `.` stripped by the OS).
+  List<String> _resolveFilesToDelete(
+    int? intId,
+    String savePath,
+    String storedName,
+  ) {
+    final Set<String> paths = {};
+
+    // ── Tier 1: Engine file list ──────────────────────────────────────────────
+    if (intId != null) {
+      try {
+        final files = _engine.getFiles(intId);
+        for (final f in files) {
+          if (f.path.isNotEmpty) {
+            // The engine returns relative paths from the save directory.
+            // For a multi-file torrent this looks like  "ShowName/Season1/ep01.mkv"
+            // For a single-file torrent (no sub-folder) it is just "episode.mkv"
+            // We always want the root-most segment so we delete the whole tree.
+            final rootSegment = f.path.split('/').first;
+            paths.add('$savePath/$rootSegment');
+          }
+        }
+        if (paths.isNotEmpty) {
+          AppLogger.d('[Repo] Resolved ${paths.length} deletion path(s) via engine');
+        }
+      } catch (e) {
+        AppLogger.w('[Repo] Engine getFiles() failed for deletion, will use fallback: $e');
+      }
+    }
+
+    // ── Tier 2: Stored name ───────────────────────────────────────────────────
+    if (paths.isEmpty) {
+      paths.add('$savePath/$storedName');
+      AppLogger.d('[Repo] Using stored name fallback for deletion: $storedName');
+    }
+
+    // ── Tier 3: Disk scan if no candidate exists yet ──────────────────────────
+    // At this point paths may contain entries that don't actually exist on disk
+    // (wrong name stored). Scan the savePath to find the real item.
+    final allExist = paths.every(
+      (p) => Directory(p).existsSync() || File(p).existsSync(),
+    );
+    if (!allExist) {
+      try {
+        final saveDir = Directory(savePath);
+        if (saveDir.existsSync()) {
+          final normName = storedName.toLowerCase();
+          for (final entry in saveDir.listSync()) {
+            final entryName = entry.uri.pathSegments
+                .lastWhere((s) => s.isNotEmpty, orElse: () => '');
+            final normEntry = entryName.toLowerCase();
+            // Match if names contain each other (handles truncation / OS sanitization)
+            if (normEntry.contains(normName) || normName.contains(normEntry)) {
+              final candidate = '$savePath/$entryName';
+              if (!paths.contains(candidate)) {
+                AppLogger.d('[Repo] Disk-scan found deletion candidate: $candidate');
+                paths.add(candidate);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        AppLogger.w('[Repo] Disk scan for deletion candidates failed: $e');
+      }
+    }
+
+    return paths.toList();
   }
 
   /// Cleans up empty parent directories starting from the deleted item's parent,
