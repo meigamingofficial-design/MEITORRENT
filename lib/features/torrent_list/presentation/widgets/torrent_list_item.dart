@@ -10,7 +10,6 @@ import '../../../../core/utils/speed_formatter.dart';
 import '../../../../domain/entities/torrent_status.dart';
 import '../controllers/torrent_notifier.dart';
 import 'quick_action_sheet.dart';
-import '../../../settings/presentation/controllers/settings_notifier.dart';
 import '../../../../core/services/folder_service.dart';
 
 /// Shared placeholder used by both the list item and action buttons
@@ -328,7 +327,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              // ── Telemetry (State & Download Speed only) ────
+                              // ── Telemetry (State + Speeds) ────────────────
                               Wrap(
                                 crossAxisAlignment: WrapCrossAlignment.center,
                                 spacing: 12,
@@ -344,7 +343,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                       fontFamily: 'Outfit',
                                     ),
                                   ),
-                                  if ((isDownloading || status.state == TorrentState.downloadingMetadata) && status.downloadSpeed > 0) ...[
+                                  if (status.downloadSpeed > 0) ...[
                                     Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
@@ -570,8 +569,6 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
     );
     if (status == null) return const SizedBox.shrink();
 
-    final config = ref.watch(settingsProvider);
-
     final isPaused = status.isPaused ||
         status.isStopped ||
         status.state == TorrentState.paused ||
@@ -580,19 +577,33 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
     final isSeeding = status.state == TorrentState.seeding;
 
     // ── Dynamic Button Resolution ───────────────────────────────────────────
-    final bool showOpenFolder = isDone && config.stopSeedingWhenFinished && !isSeeding;
-    final bool showPause = !showOpenFolder &&
+    // Completed + actively seeding → show Stop Seeding
+    // Completed + not seeding (any setting) → show Open Folder
+    // Downloading → show Pause
+    // Paused (not done) → show Resume
+    final bool showStopSeeding = isSeeding;
+    final bool showOpenFolder = isDone && !isSeeding;
+    final bool showPause = !isDone &&
         (status.state == TorrentState.downloading ||
-            status.state == TorrentState.downloadingMetadata ||
-            isSeeding);
-    final bool showPlay = !showOpenFolder && isPaused && !isDone;
-    final bool showSeed = !showOpenFolder && isPaused && isDone;
+            status.state == TorrentState.downloadingMetadata);
+    final bool showPlay = !isDone && isPaused;
 
     final IconData iconData;
     final String tooltipMessage;
     final VoidCallback onTapAction;
 
-    if (showOpenFolder) {
+    if (showStopSeeding) {
+      iconData = Icons.stop_rounded;
+      tooltipMessage = 'Stop Seeding';
+      onTapAction = () async {
+        final messenger = ScaffoldMessenger.of(context);
+        try {
+          await ref.read(torrentProvider.notifier).pauseTorrent(status.id);
+        } catch (e) {
+          _showErrorSnackBar(messenger, 'Failed to stop seeding: $e');
+        }
+      };
+    } else if (showOpenFolder) {
       iconData = Icons.folder_open_rounded;
       tooltipMessage = 'Open Folder';
       onTapAction = () async {
@@ -605,16 +616,13 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
       };
     } else if (showPause) {
       iconData = Icons.pause_rounded;
-      tooltipMessage = isDone ? 'Stop Seeding' : 'Pause';
+      tooltipMessage = 'Pause';
       onTapAction = () async {
         final messenger = ScaffoldMessenger.of(context);
         try {
           await ref.read(torrentProvider.notifier).pauseTorrent(status.id);
         } catch (e) {
-          _showErrorSnackBar(
-            messenger,
-            isDone ? 'Failed to stop seeding: $e' : 'Failed to pause: $e',
-          );
+          _showErrorSnackBar(messenger, 'Failed to pause: $e');
         }
       };
     } else if (showPlay) {
@@ -638,33 +646,24 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
         }
       };
     } else {
-      // showSeed
-      iconData = Icons.upload_rounded;
-      tooltipMessage = 'Start Seeding';
+      // Fallback: open folder
+      iconData = Icons.folder_open_rounded;
+      tooltipMessage = 'Open Folder';
       onTapAction = () async {
-        final messenger = ScaffoldMessenger.of(context);
-        final granted = await PermissionService.isStorageGranted();
-        if (!context.mounted) return;
-        if (!granted) {
-          final retry = await PermissionService.showStorageRationale(context);
-          if (retry && mounted) {
-            await Permission.manageExternalStorage.request();
-          }
-          return;
-        }
         try {
-          await ref.read(torrentProvider.notifier).resumeTorrent(status.id);
-        } catch (e) {
-          _showErrorSnackBar(messenger, 'Failed to start seeding: $e');
-        }
+          await FolderService.instance.openDownloadTarget(
+            savePath: status.savePath,
+            name: status.name,
+          );
+        } catch (_) {}
       };
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sealColor = isDark ? const Color(0xFFE53935) : const Color(0xFFC82127);
-    
-    // Premium Bamboo Green for finished/seeding actions, traditional Crimson for downloading
-    final Color buttonColor = (showOpenFolder || showSeed || (showPause && isSeeding))
+
+    // Bamboo Green for completed/seeding states, Crimson for active download/pause actions
+    final Color buttonColor = (showStopSeeding || showOpenFolder)
         ? AppColors.seeding
         : sealColor;
 
