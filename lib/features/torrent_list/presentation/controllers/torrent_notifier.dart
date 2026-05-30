@@ -7,6 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/services/foreground_service_manager.dart';
 import '../../../../core/services/logger_service.dart';
 import '../../../../core/services/torrent_engine_service.dart';
+import '../../../../core/services/shared_preferences_provider.dart';
 import '../../../../data/database/app_database.dart';
 import '../../../../data/repositories/torrent_repository_impl.dart';
 import '../../../../domain/entities/torrent_status.dart';
@@ -30,7 +31,8 @@ AppDatabase appDatabase(Ref ref) {
 TorrentRepository torrentRepository(Ref ref) {
   final db = ref.watch(appDatabaseProvider);
   final engine = TorrentEngineService.instance;
-  final repo = TorrentRepositoryImpl(database: db, engine: engine);
+  final prefs = ref.watch(sharedPreferencesProvider);
+  final repo = TorrentRepositoryImpl(database: db, engine: engine, sharedPreferences: prefs);
   ref.onDispose(repo.dispose);
   return repo;
 }
@@ -46,6 +48,22 @@ class ActiveFilter extends _$ActiveFilter {
     state = filter;
   }
 }
+
+// ⚠️ Bug 3 fix: state-priority mapping used by the stable sort below.
+// Lower value = higher position in the list.
+int _torrentSortPriority(TorrentState state) => switch (state) {
+  TorrentState.downloading => 0,
+  TorrentState.downloadingMetadata => 0,
+  TorrentState.checkingFiles => 1,
+  TorrentState.checkingResume => 1,
+  TorrentState.allocating => 1,
+  TorrentState.seeding => 2,
+  TorrentState.finished => 3,
+  TorrentState.paused => 4,
+  TorrentState.stopped => 5,
+  TorrentState.error => 6,
+  _ => 7,
+};
 
 @riverpod
 List<TorrentStatus> filteredTorrents(Ref ref) {
@@ -67,7 +85,9 @@ List<TorrentStatus> filteredTorrents(Ref ref) {
       )
       .toList();
 
-  // (B) Immutable Sorting with Secondary Stability Fallback
+  // (B) Stable Sorting — cards must not jump position during active downloads.
+  // Completed tab: most recently finished first (completedAt or addedAt).
+  // All / Downloading tabs: state-priority order, then stable addedAt (never changes).
   final sorted = [...filtered];
   if (activeFilter == TorrentFilter.completed) {
     sorted.sort((a, b) {
@@ -75,13 +95,18 @@ List<TorrentStatus> filteredTorrents(Ref ref) {
       final bTime = b.completedAt ?? b.addedAt;
       final byCompleted = bTime.compareTo(aTime);
       if (byCompleted != 0) return byCompleted;
-      return b.id.compareTo(a.id); // secondary stable sorting
+      return b.id.compareTo(a.id);
     });
   } else {
+    // ⚠️ Bug 3 fix: sort by state-priority first (active downloads bubble up),
+    // then by addedAt (immutable — never causes re-sort during download).
     sorted.sort((a, b) {
-      final byActivity = b.lastActivityAt.compareTo(a.lastActivityAt);
-      if (byActivity != 0) return byActivity;
-      return b.id.compareTo(a.id); // secondary stable sorting
+      final aPriority = _torrentSortPriority(a.state);
+      final bPriority = _torrentSortPriority(b.state);
+      if (aPriority != bPriority) return aPriority.compareTo(bPriority);
+      final byAdded = b.addedAt.compareTo(a.addedAt);
+      if (byAdded != 0) return byAdded;
+      return b.id.compareTo(a.id);
     });
   }
 
@@ -110,7 +135,7 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   /// Optimistic state overrides applied immediately on user action.
   /// These shield the UI from reverting during the DB-write race window.
   /// Cleared once the live stream confirms the new state for each torrent.
-  final _optimisticOverrides = <String, ({bool isPaused, bool isStopped})>{};
+  final _optimisticOverrides = <String, ({bool isPaused, bool isStopped, DateTime timestamp})>{};
 
   @override
   Future<List<TorrentStatus>> build() async {
@@ -172,10 +197,17 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
       (statuses) {
         List<TorrentStatus> resolved = statuses;
         if (_optimisticOverrides.isNotEmpty) {
+          final now = DateTime.now();
           final toRemove = <String>{};
           resolved = statuses.map((t) {
             final override = _optimisticOverrides[t.id];
             if (override == null) return t;
+
+            // Timeout after 3 seconds: if the engine hasn't processed it, revert
+            if (now.difference(override.timestamp).inSeconds > 3) {
+              toRemove.add(t.id);
+              return t;
+            }
 
             // Check whether the live stream has caught up to our optimistic state.
             final confirmed =
@@ -378,7 +410,7 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   }
 
   Future<void> pauseTorrent(String id) async {
-    _optimisticOverrides[id] = (isPaused: true, isStopped: false);
+    _optimisticOverrides[id] = (isPaused: true, isStopped: false, timestamp: DateTime.now());
     _updateOptimisticStatus(id, isPaused: true);
     try {
       final repo = ref.read(torrentRepositoryProvider);
@@ -398,7 +430,7 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
 
   Future<void> pauseMultiple(List<String> ids) async {
     for (final id in ids) {
-      _optimisticOverrides[id] = (isPaused: true, isStopped: false);
+      _optimisticOverrides[id] = (isPaused: true, isStopped: false, timestamp: DateTime.now());
     }
     _updateOptimisticStatusMultiple(ids, isPaused: true);
     try {
@@ -420,7 +452,7 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   }
 
   Future<void> stopTorrent(String id) async {
-    _optimisticOverrides[id] = (isPaused: true, isStopped: true);
+    _optimisticOverrides[id] = (isPaused: true, isStopped: true, timestamp: DateTime.now());
     _updateOptimisticStatus(id, isPaused: true, isStopped: true);
     try {
       final repo = ref.read(torrentRepositoryProvider);
@@ -439,7 +471,7 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
 
   Future<void> stopMultiple(List<String> ids) async {
     for (final id in ids) {
-      _optimisticOverrides[id] = (isPaused: true, isStopped: true);
+      _optimisticOverrides[id] = (isPaused: true, isStopped: true, timestamp: DateTime.now());
     }
     _updateOptimisticStatusMultiple(ids, isPaused: true, isStopped: true);
     try {
@@ -460,7 +492,7 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   }
 
   Future<void> resumeTorrent(String id) async {
-    _optimisticOverrides[id] = (isPaused: false, isStopped: false);
+    _optimisticOverrides[id] = (isPaused: false, isStopped: false, timestamp: DateTime.now());
     _updateOptimisticStatus(id, isPaused: false, isStopped: false);
     try {
       final repo = ref.read(torrentRepositoryProvider);
@@ -479,7 +511,7 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
 
   Future<void> resumeMultiple(List<String> ids) async {
     for (final id in ids) {
-      _optimisticOverrides[id] = (isPaused: false, isStopped: false);
+      _optimisticOverrides[id] = (isPaused: false, isStopped: false, timestamp: DateTime.now());
     }
     _updateOptimisticStatusMultiple(ids, isPaused: false, isStopped: false);
     try {
@@ -591,6 +623,14 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
       );
       state = AsyncValue.error(e, st);
       rethrow;
+    }
+  }
+
+  Future<void> setFilePriorities(String id, List<int> priorities) async {
+    final intId = int.tryParse(id);
+    if (intId != null) {
+      TorrentEngineService.instance.setFilePriorities(intId, priorities);
+      AppLogger.i('[Notifier] Successfully updated file priorities for torrent: $id');
     }
   }
 

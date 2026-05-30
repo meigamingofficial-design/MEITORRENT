@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
-
 import 'package:drift/drift.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/services/disk_space_service.dart';
@@ -31,10 +31,12 @@ class TorrentRepositoryImpl implements TorrentRepository {
   TorrentRepositoryImpl({
     required AppDatabase database,
     required this._engine,
-  }) : _db = database;
+    required SharedPreferences sharedPreferences,
+  }) : _db = database, _prefs = sharedPreferences;
 
   final AppDatabase _db;
   final TorrentEngineService _engine;
+  final SharedPreferences _prefs;
 
   Timer? _dbWriteTimer;
   StreamSubscription? _alertSubscription;
@@ -106,17 +108,48 @@ class TorrentRepositoryImpl implements TorrentRepository {
           .whereType<String>()
           .toSet();
 
+      // Extracted InfoHashes of live magnet links
+      final liveHashes = liveMagnets
+          .map(_infoHashFromMagnet)
+          .whereType<String>()
+          .toSet();
+
+      // Normalised name fingerprints of live torrents
+      final liveFingerprints = liveStatuses.map((s) {
+        final norm = s.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+        return '${norm}_${s.totalSize}';
+      }).toSet();
+
       final engineSkipped = dbTorrents
           .where((t) => !liveIds.contains(t.id))
           .where((t) => !_deletedIds.contains(t.id))
           .where((t) {
-            if (t.magnetUri != null && liveMagnets.contains(t.magnetUri)) {
-              return false;
+            // A. Magnet InfoHash comparison (ignores tracker differences)
+            if (t.magnetUri != null) {
+              final dbHash = _infoHashFromMagnet(t.magnetUri!);
+              if (dbHash != null && liveHashes.contains(dbHash)) {
+                return false;
+              }
             }
+
+            // B. File path comparison
             if (t.torrentFilePath != null &&
                 liveFiles.contains(t.torrentFilePath)) {
               return false;
             }
+
+            // C. Fingerprint (Name + Size) comparison
+            final dbNorm = t.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+            final dbFingerprint = '${dbNorm}_${t.totalSize}';
+            
+            // Only compare fingerprints if name is not a placeholder
+            final isRealDbName = t.name.isNotEmpty &&
+                !t.name.startsWith('Torrent #') &&
+                t.name != '…';
+            if (isRealDbName && liveFingerprints.contains(dbFingerprint)) {
+              return false;
+            }
+
             return true;
           })
           .toList();
@@ -246,13 +279,11 @@ class TorrentRepositoryImpl implements TorrentRepository {
               status = status.copyWith(isCompleted: true);
             }
 
-            // Capture/Update lastActivityAt (Throttled to prevent reshuffling and excessive DB writes)
+            // Capture/Update lastActivityAt (Throttled to state changes and timed transfers only).
+            // ⚠️ Bug 3 fix: progressChanged removed — updating lastActivityAt on every 1% tick
+            // was the sort key changing constantly, causing cards to jump position.
             DateTime lastActivityAt =
                 persisted?.lastActivityAt ?? status.addedAt;
-            final progressDelta = persisted == null
-                ? 0.0
-                : (status.progress - persisted.progress).abs();
-            final progressChanged = progressDelta >= 0.01;
             final stateChanged =
                 persisted != null && status.state != persisted.state;
             final isActivelyTransferring =
@@ -265,7 +296,6 @@ class TorrentRepositoryImpl implements TorrentRepository {
             final shouldRefreshActivity =
                 persisted == null ||
                 stateChanged ||
-                progressChanged ||
                 (timePassed && isActivelyTransferring);
 
             if (shouldRefreshActivity) {
@@ -286,10 +316,11 @@ class TorrentRepositoryImpl implements TorrentRepository {
           })
           .toList();
 
-      // Default sorting: stable latest activity first
+      // Default sorting: stable by addedAt — prevents position jumping during active downloads.
+      // ⚠️ Bug 3 fix: using addedAt (immutable) instead of lastActivityAt (volatile).
       corrected.sort((a, b) {
-        final byActivity = b.lastActivityAt.compareTo(a.lastActivityAt);
-        if (byActivity != 0) return byActivity;
+        final byAdded = b.addedAt.compareTo(a.addedAt);
+        if (byAdded != 0) return byAdded;
         return b.id.compareTo(a.id);
       });
 
@@ -402,8 +433,13 @@ class TorrentRepositoryImpl implements TorrentRepository {
     // engine and the persisted snapshot while the engine is still warming up.
     // This prevents the "Jump to 0%" effect on cold starts.
 
+    final savePath = persisted.savePath.isNotEmpty ? persisted.savePath : live.savePath;
+
     // 🧱 HARD LOCK: Completed torrents should NEVER go backwards to 0% or Checking.
     if (persisted.isCompleted) {
+      // ⚠️ Bug 1 + 2 fix: Use live.isPaused (engine is the source of truth for pause state).
+      // Using persisted.isPaused here caused stale DB values to override the actual engine
+      // state, creating icon/label desync after resume (e.g. showing ▶ while actually running).
       return live.copyWith(
         name: _isPlaceholderName(live.name) ? persisted.name : live.name,
         progress: 1.0,
@@ -413,8 +449,9 @@ class TorrentRepositoryImpl implements TorrentRepository {
             ? TorrentState.seeding
             : TorrentState.finished,
         isCompleted: true,
-        isPaused: persisted.isPaused || persisted.isStopped,
+        isPaused: live.isPaused || persisted.isStopped,
         isStopped: persisted.isStopped,
+        savePath: savePath,
       );
     }
     final isWarmingUp =
@@ -442,19 +479,28 @@ class TorrentRepositoryImpl implements TorrentRepository {
       torrentFilePath: live.torrentFilePath ?? persisted.torrentFilePath,
       isSequentialDownload:
           live.isSequentialDownload || persisted.isSequentialDownload,
-      savePath: live.savePath.isEmpty ? persisted.savePath : live.savePath,
+      savePath: savePath,
       name: _isPlaceholderName(live.name) ? persisted.name : live.name,
       progress: mergedProgress,
       downloadedBytes: mergedDownloaded,
       totalSize: mergedTotal,
-      isPaused: persisted.isPaused || persisted.isStopped,
+      // ⚠️ Bug 1 + 2 fix: Trust live.isPaused (engine truth) instead of persisted.isPaused.
+      // Persisted value is stale during the DB write window after resume, causing the icon
+      // to flip back to ▶ while the engine is actively downloading.
+      isPaused: live.isPaused || persisted.isStopped,
       isStopped: persisted.isStopped,
     );
 
     // If persisted says stopped, force the state to stopped
     if (persisted.isStopped) {
       result = result.copyWith(state: TorrentState.stopped);
-    } else if (persisted.isPaused && result.state != TorrentState.paused) {
+    } else if (live.isPaused &&
+        result.state != TorrentState.paused &&
+        result.progress < 1.0) {
+      // ⚠️ Bug 1 fix: Only force paused state for genuinely incomplete torrents.
+      // Without the progress < 1.0 guard, a 100%-complete torrent that had isPaused=true
+      // in DB (from a pause-before-finish scenario) would be overridden to PAUSED even
+      // though its canonical state is FINISHED.
       result = result.copyWith(state: TorrentState.paused);
     }
 
@@ -469,9 +515,10 @@ class TorrentRepositoryImpl implements TorrentRepository {
     final torrents = rows.map(TorrentModel.fromRow).toList();
 
     // Default sorting on stored torrents: latest activity first
+    // Stable sort by addedAt for stored-only records on cold start.
     torrents.sort((a, b) {
-      final byActivity = b.lastActivityAt.compareTo(a.lastActivityAt);
-      if (byActivity != 0) return byActivity;
+      final byAdded = b.addedAt.compareTo(a.addedAt);
+      if (byAdded != 0) return byAdded;
       return b.id.compareTo(a.id);
     });
 
@@ -1242,6 +1289,16 @@ class TorrentRepositoryImpl implements TorrentRepository {
   // ─── Helpers ──────────────────────────────────────────────────────
 
   Future<String> _defaultSavePath() async {
+    final customPath = _prefs.getString('meitorrent_default_save_path');
+    if (customPath != null && customPath.isNotEmpty) {
+      final dir = Directory(customPath);
+      if (!dir.existsSync()) {
+        try {
+          await dir.create(recursive: true);
+        } catch (_) {}
+      }
+      return customPath;
+    }
     final storage = StorageService.instance;
     await storage.ensureDirectoryExists();
     return storage.getDownloadPath();

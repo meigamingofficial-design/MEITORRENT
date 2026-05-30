@@ -22,6 +22,7 @@ class SettingsNotifier extends _$SettingsNotifier {
       dhtEnabled: prefs.getBool('meitorrent_dht') ?? true,
       pexEnabled: prefs.getBool('meitorrent_pex') ?? true,
       maxGlobalConnections: prefs.getInt('meitorrent_max_connections') ?? 500,
+      defaultSavePath: prefs.getString('meitorrent_default_save_path'),
     );
 
     // Apply the saved settings to the engine upon startup
@@ -71,6 +72,12 @@ class SettingsNotifier extends _$SettingsNotifier {
     await _apply();
   }
 
+  /// Sets the global default download directory.
+  Future<void> setSavePath(String path) async {
+    state = state.copyWith(defaultSavePath: path);
+    await _apply();
+  }
+
   Future<void> _apply() async {
     final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setInt('meitorrent_download_limit', state.downloadLimit);
@@ -86,6 +93,10 @@ class SettingsNotifier extends _$SettingsNotifier {
       'meitorrent_max_connections',
       state.maxGlobalConnections,
     );
+    if (state.defaultSavePath != null) {
+      await prefs.setString(
+          'meitorrent_default_save_path', state.defaultSavePath!);
+    }
 
     await ref.read(torrentRepositoryProvider).applyEngineConfig(state);
   }

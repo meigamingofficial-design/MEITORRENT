@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../controllers/torrent_notifier.dart';
 
@@ -17,7 +18,8 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _floatAnim;
-  late final Animation<double> _pulseAnim;
+  late final Animation<double> _pulseInner;
+  late final Animation<double> _pulseOuter;
 
   @override
   void initState() {
@@ -27,11 +29,20 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
       duration: const Duration(milliseconds: 2600),
     );
     unawaited(_controller.repeat(reverse: true));
+
     _floatAnim = Tween<double>(begin: 0, end: -10).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
-    _pulseAnim = Tween<double>(begin: 0.06, end: 0.16).animate(
+    // Inner ring — tighter pulse
+    _pulseInner = Tween<double>(begin: 0.08, end: 0.20).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    // Outer ring — wider, softer pulse (offset phase via reversed interval)
+    _pulseOuter = Tween<double>(begin: 0.03, end: 0.10).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.15, 1.0, curve: Curves.easeInOut),
+      ),
     );
   }
 
@@ -71,38 +82,69 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Floating animated magnet icon
+            // ── Double-layer breathing glow ring + floating icon ──────────
             AnimatedBuilder(
               animation: _controller,
               builder: (_, _) => Transform.translate(
                 offset: Offset(0, _floatAnim.value),
-                child: Container(
-                  width: 96,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    color: AppColors.downloading.withValues(
-                      alpha: _pulseAnim.value,
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.downloading.withValues(
-                          alpha: _pulseAnim.value * 0.7,
-                        ),
-                        blurRadius: 32,
-                        spreadRadius: 4,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Outer soft glow ring
+                    Container(
+                      width: 136,
+                      height: 136,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.downloading.withValues(
+                              alpha: _pulseOuter.value,
+                            ),
+                            blurRadius: 56,
+                            spreadRadius: 20,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.link_rounded,
-                    color: AppColors.downloading,
-                    size: 44,
-                  ),
+                    ),
+                    // Inner sharper glow ring
+                    Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        color: AppColors.downloading.withValues(
+                          alpha: _pulseInner.value,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.downloading.withValues(
+                              alpha: _pulseInner.value * 0.8,
+                            ),
+                            blurRadius: 24,
+                            spreadRadius: 4,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.link_rounded,
+                        color: AppColors.downloading,
+                        size: 44,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(height: 32),
+            ).animate().scale(
+                  begin: const Offset(0.7, 0.7),
+                  end: const Offset(1.0, 1.0),
+                  duration: 700.ms,
+                  curve: Curves.elasticOut,
+                ).fadeIn(duration: 400.ms),
+
+            const SizedBox(height: 36),
+
+            // ── Title ─────────────────────────────────────────────────────
             Text(
               _title,
               style: TextStyle(
@@ -112,8 +154,20 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.3,
               ),
-            ),
+            )
+                .animate()
+                .fadeIn(delay: 100.ms, duration: 500.ms)
+                .slideY(
+                  begin: 0.3,
+                  end: 0,
+                  delay: 100.ms,
+                  duration: 500.ms,
+                  curve: Curves.easeOutCubic,
+                ),
+
             const SizedBox(height: 10),
+
+            // ── Subtitle ──────────────────────────────────────────────────
             Text(
               _subtitle,
               textAlign: TextAlign.center,
@@ -122,21 +176,33 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
                 fontSize: 14,
                 height: 1.65,
               ),
-            ),
+            )
+                .animate()
+                .fadeIn(delay: 200.ms, duration: 500.ms)
+                .slideY(
+                  begin: 0.3,
+                  end: 0,
+                  delay: 200.ms,
+                  duration: 500.ms,
+                  curve: Curves.easeOutCubic,
+                ),
+
             const SizedBox(height: 28),
-            // Subtle breathing arrow pointing toward the FAB
+
+            // ── Breathing arrow toward FAB ─────────────────────────────────
             if (widget.filter == TorrentFilter.all)
               AnimatedBuilder(
                 animation: _controller,
                 builder: (_, _) => Opacity(
-                  opacity: 0.35 + 0.45 * _controller.value,
+                  opacity: 0.3 + 0.5 * _controller.value,
                   child: const Icon(
                     Icons.keyboard_arrow_down_rounded,
                     color: AppColors.downloading,
-                    size: 28,
+                    size: 30,
                   ),
                 ),
-              ),
+              ).animate().fadeIn(delay: 350.ms, duration: 500.ms),
+
             const SizedBox(height: 80),
           ],
         ),

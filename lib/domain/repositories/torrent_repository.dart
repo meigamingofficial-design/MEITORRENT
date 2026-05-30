@@ -74,6 +74,7 @@ class EngineConfig {
     this.lsdEnabled = true,
     this.wifiOnlyMode = false,
     this.stopSeedingWhenFinished = true,
+    this.defaultSavePath,
   });
 
   /// bytes/sec, 0 = unlimited
@@ -90,6 +91,9 @@ class EngineConfig {
   final bool wifiOnlyMode;
   final bool stopSeedingWhenFinished;
 
+  /// Global default download directory. Null = engine default.
+  final String? defaultSavePath;
+
   EngineConfig copyWith({
     int? downloadLimit,
     int? uploadLimit,
@@ -100,6 +104,8 @@ class EngineConfig {
     bool? lsdEnabled,
     bool? wifiOnlyMode,
     bool? stopSeedingWhenFinished,
+    String? defaultSavePath,
+    bool clearSavePath = false,
   }) {
     return EngineConfig(
       downloadLimit: downloadLimit ?? this.downloadLimit,
@@ -113,6 +119,7 @@ class EngineConfig {
       wifiOnlyMode: wifiOnlyMode ?? this.wifiOnlyMode,
       stopSeedingWhenFinished:
           stopSeedingWhenFinished ?? this.stopSeedingWhenFinished,
+      defaultSavePath: clearSavePath ? null : (defaultSavePath ?? this.defaultSavePath),
     );
   }
 
@@ -128,7 +135,8 @@ class EngineConfig {
           pexEnabled == other.pexEnabled &&
           lsdEnabled == other.lsdEnabled &&
           wifiOnlyMode == other.wifiOnlyMode &&
-          stopSeedingWhenFinished == other.stopSeedingWhenFinished;
+          stopSeedingWhenFinished == other.stopSeedingWhenFinished &&
+          defaultSavePath == other.defaultSavePath;
 
   @override
   int get hashCode => Object.hash(
@@ -141,5 +149,6 @@ class EngineConfig {
     lsdEnabled,
     wifiOnlyMode,
     stopSeedingWhenFinished,
+    defaultSavePath,
   );
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,11 +29,14 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _logoController;
-  late Animation<double> _logoScale;
-  late Animation<double> _logoOpacity;
-  late Animation<double> _glowOpacity;
+    with TickerProviderStateMixin {
+  // Dual-pulse glow rings
+  late final AnimationController _glowController;
+  late final Animation<double> _glowPulse1;
+  late final Animation<double> _glowPulse2;
+
+  // Indeterminate loading bar
+  late final AnimationController _progressController;
 
   String _statusText = 'Initializing…';
   bool _hasError = false;
@@ -45,30 +49,25 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   void _setupAnimations() {
-    _logoController = AnimationController(
+    // Dual-pulse glow: two rings breathing at different intensities
+    _glowController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 2400),
     );
-
-    _logoScale = Tween<double>(begin: 0.7, end: 1.0).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.elasticOut),
+    _glowPulse1 = Tween<double>(begin: 0.3, end: 0.85).animate(
+      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
     );
-
-    _logoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _logoController,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
-      ),
+    _glowPulse2 = Tween<double>(begin: 0.06, end: 0.22).animate(
+      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
     );
+    unawaited(_glowController.repeat(reverse: true));
 
-    _glowOpacity = Tween<double>(begin: 0.0, end: 0.6).animate(
-      CurvedAnimation(
-        parent: _logoController,
-        curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
-      ),
+    // Smooth indeterminate shimmer bar
+    _progressController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
     );
-
-    unawaited(_logoController.forward());
+    unawaited(_progressController.repeat());
   }
 
   Future<void> _boot() async {
@@ -97,19 +96,25 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       // 5. Start foreground service
       await ForegroundServiceManager.instance.startService();
 
-      // 6. Brief pause for logo animation
+      // 6. Brief pause for logo animation to complete
       await Future<void>.delayed(const Duration(milliseconds: 600));
 
-      // 8. Navigate
+      // 7. Navigate to dashboard
       if (mounted) {
         unawaited(
           Navigator.of(context).pushReplacement(
             PageRouteBuilder<void>(
               pageBuilder: (_, _, _) => const DashboardScreen(),
               transitionsBuilder: (_, animation, _, child) {
-                return FadeTransition(opacity: animation, child: child);
+                return FadeTransition(
+                  opacity: CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOut,
+                  ),
+                  child: child,
+                );
               },
-              transitionDuration: const Duration(milliseconds: 400),
+              transitionDuration: const Duration(milliseconds: 500),
             ),
           ),
         );
@@ -132,15 +137,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       await FlutterForegroundTask.requestNotificationPermission();
     }
 
-    // Standard storage permission (Android 10 and below) — check once, request only if needed
+    // Standard storage permission (Android 10 and below)
     final storageStatus = await Permission.storage.status;
     if (storageStatus.isDenied) {
       await Permission.storage.request();
     }
 
-    // MANAGE_EXTERNAL_STORAGE (Android 11+)
-    // Only show the rationale dialog ONCE (first install). On subsequent launches where
-    // permission is still denied/skipped, we silently skip — no nagging.
+    // MANAGE_EXTERNAL_STORAGE (Android 11+) — only prompt once
     final manageStatus = await Permission.manageExternalStorage.status;
     if (!manageStatus.isGranted) {
       final prefs = await SharedPreferences.getInstance();
@@ -148,30 +151,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           prefs.getBool('meitorrent_storage_perm_shown') ?? false;
 
       if (!alreadyShown) {
-        // Mark as shown so we never prompt again (unless user explicitly triggers it)
         await prefs.setBool('meitorrent_storage_perm_shown', true);
         await _requestManageStorageWithRationale();
       }
-      // If already shown and still not granted — silently continue, app still works
     }
   }
 
   /// Shows a clear, friendly explanation dialog before directing the user to
-  /// the "All files access" system settings page. Handles rejection gracefully.
-  /// Only called ONCE per install — never nags again.
+  /// the "All files access" system settings page. Only called ONCE per install.
   Future<void> _requestManageStorageWithRationale() async {
     if (!mounted) return;
 
     final granted = await PermissionService.showStorageRationale(context);
 
     if (granted) {
-      // Open the system "All files access" settings page
       await Permission.manageExternalStorage.request();
-
-      // Check if the user actually granted it after returning from system settings
-      // Permission handled, continue
-    } else {
-      // User chose to skip
     }
   }
 
@@ -181,30 +175,69 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   void dispose() {
-    _logoController.dispose();
+    _glowController.dispose();
+    _progressController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return PopScope(
       canPop: false,
       child: Scaffold(
         backgroundColor: AppColors.background(context),
-        body: SafeArea(
-          child: Stack(
-            children: [
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Logo with glow
-                    AnimatedBuilder(
-                      animation: _logoController,
-                      builder: (context, child) => Stack(
+        body: Stack(
+          children: [
+            // ── Subtle radial background tint ─────────────────────────────
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0.0, -0.2),
+                    radius: 0.75,
+                    colors: [
+                      AppColors.downloading.withValues(
+                        alpha: isDark ? 0.06 : 0.04,
+                      ),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            SafeArea(
+              child: Column(
+                children: [
+                  const Spacer(flex: 2),
+
+                  // ── Logo + dual-pulse glow ──────────────────────────────
+                  Center(
+                    child: AnimatedBuilder(
+                      animation: _glowController,
+                      builder: (_, _) => Stack(
                         alignment: Alignment.center,
                         children: [
-                          // Glow backdrop
+                          // Outer breathing ring
+                          Container(
+                            width: 200,
+                            height: 200,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.downloading.withValues(
+                                    alpha: _glowPulse2.value,
+                                  ),
+                                  blurRadius: 72,
+                                  spreadRadius: 28,
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Inner sharp glow
                           Container(
                             width: 140,
                             height: 140,
@@ -213,176 +246,286 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                               boxShadow: [
                                 BoxShadow(
                                   color: AppColors.downloading.withValues(
-                                    alpha: 0.5 * _glowOpacity.value,
+                                    alpha: _glowPulse1.value * 0.4,
                                   ),
-                                  blurRadius: 60,
-                                  spreadRadius: 20,
+                                  blurRadius: 36,
+                                  spreadRadius: 10,
                                 ),
                               ],
                             ),
                           ),
-                          // Logo
-                          Transform.scale(
-                            scale: _logoScale.value,
-                            child: Opacity(
-                              opacity: _logoOpacity.value,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: AppColors.border(
-                                      context,
-                                    ).withValues(alpha: 0.8),
-                                    width: 1.5,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.08,
-                                      ),
-                                      blurRadius: 16,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
+                          // Logo card
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(28),
+                              border: Border.all(
+                                color: AppColors.downloading.withValues(
+                                  alpha: _glowPulse1.value * 0.22,
                                 ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(22.5),
-                                  child: Image.asset(
-                                    'assets/images/app_logo.png',
-                                    width: 100,
-                                    height: 100,
-                                    fit: BoxFit.cover,
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(
+                                    alpha: isDark ? 0.25 : 0.10,
                                   ),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 8),
                                 ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(26.5),
+                              child: Image.asset(
+                                'assets/images/app_logo.png',
+                                width: 110,
+                                height: 110,
+                                fit: BoxFit.cover,
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 32),
+                  )
+                      .animate()
+                      .scale(
+                        begin: const Offset(0.6, 0.6),
+                        end: const Offset(1.0, 1.0),
+                        duration: 950.ms,
+                        curve: Curves.elasticOut,
+                      )
+                      .fadeIn(duration: 500.ms),
 
-                    // App name
-                    AnimatedBuilder(
-                      animation: _logoOpacity,
-                      builder: (_, _) => Text(
-                        'Meitorrent',
-                        style: Theme.of(context).textTheme.displayLarge
-                            ?.copyWith(
-                              color: AppColors.text(
-                                context,
-                              ).withValues(alpha: _logoOpacity.value),
-                              fontSize: 34,
-                            ),
-                      ),
+                  const SizedBox(height: 40),
+
+                  // ── App name ───────────────────────────────────────────
+                  Text(
+                    'Meitorrent',
+                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                      color: AppColors.text(context),
+                      fontSize: 36,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.6,
                     ),
-                    const SizedBox(height: 8),
-                    AnimatedBuilder(
-                      animation: _logoOpacity,
-                      builder: (_, _) => Text(
-                        'Fast. Private. Reliable.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontSize: 14,
-                          color: AppColors.textSecondary(context).withValues(
-                            alpha: _logoOpacity.value * 0.7,
-                          ),
-                          letterSpacing: 1.2,
-                        ),
+                  )
+                      .animate()
+                      .fadeIn(delay: 300.ms, duration: 600.ms)
+                      .slideY(
+                        begin: 0.35,
+                        end: 0,
+                        delay: 300.ms,
+                        curve: Curves.easeOutCubic,
+                        duration: 600.ms,
                       ),
+
+                  const SizedBox(height: 8),
+
+                  // ── Tagline ────────────────────────────────────────────
+                  Text(
+                    'Fast. Private. Reliable.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary(context),
+                      fontSize: 13,
+                      letterSpacing: 2.0,
+                      fontWeight: FontWeight.w500,
                     ),
+                  )
+                      .animate()
+                      .fadeIn(delay: 500.ms, duration: 600.ms)
+                      .slideY(
+                        begin: 0.35,
+                        end: 0,
+                        delay: 500.ms,
+                        curve: Curves.easeOutCubic,
+                        duration: 600.ms,
+                      ),
 
-                    const SizedBox(height: 60),
+                  const Spacer(flex: 2),
 
-                    // Status indicator
-                    if (!_hasError) ...[
-                      const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.downloading,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: Text(
-                          _statusText,
-                          key: ValueKey(_statusText),
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: AppColors.textSecondary(context),
-                                fontSize: 13,
-                              ),
-                        ),
-                      ),
-                    ] else ...[
-                      const Icon(
-                        Icons.error_outline,
-                        color: AppColors.error,
-                        size: 32,
-                      ),
-                      const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 40),
-                        child: Text(
-                          _statusText,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.error,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        onPressed: _boot,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              Positioned(
-                bottom: 24,
-                left: 0,
-                right: 0,
-                child: AnimatedBuilder(
-                  animation: _logoOpacity,
-                  builder: (_, _) => Opacity(
-                    opacity: _logoOpacity.value * 0.25,
+                  // ── Loading / Error area ───────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 52),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          'from',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: AppColors.textSecondary(context),
-                            fontSize: 10,
-                            letterSpacing: 2,
-                            fontWeight: FontWeight.w500,
+                        if (!_hasError) ...[
+                          // Sleek shimmer loading bar
+                          _SleekLoadingBar(controller: _progressController),
+                          const SizedBox(height: 18),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 280),
+                            transitionBuilder: (child, anim) => FadeTransition(
+                              opacity: anim,
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(0, 0.4),
+                                  end: Offset.zero,
+                                ).animate(CurvedAnimation(
+                                  parent: anim,
+                                  curve: Curves.easeOut,
+                                )),
+                                child: child,
+                              ),
+                            ),
+                            child: Text(
+                              _statusText,
+                              key: ValueKey(_statusText),
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: AppColors.textSecondary(context),
+                                    fontSize: 12,
+                                    letterSpacing: 0.3,
+                                  ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'MeiGamingOfficial',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.text(context),
-                            fontSize: 13,
-                            letterSpacing: 1.5,
-                            fontWeight: FontWeight.w700,
+                        ] else ...[
+                          const Icon(
+                            Icons.error_outline_rounded,
+                            color: AppColors.error,
+                            size: 36,
                           ),
-                        ),
+                          const SizedBox(height: 14),
+                          Text(
+                            _statusText,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: AppColors.error,
+                                  fontSize: 13,
+                                  height: 1.5,
+                                ),
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton.icon(
+                            onPressed: _boot,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('Retry'),
+                          ),
+                        ],
                       ],
                     ),
-                  ),
-                ),
+                  ).animate().fadeIn(delay: 750.ms, duration: 500.ms),
+
+                  const SizedBox(height: 40),
+
+                  // ── Footer branding ────────────────────────────────────
+                  Column(
+                    children: [
+                      Text(
+                        'from',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppColors.textSecondary(context)
+                              .withValues(alpha: 0.35),
+                          fontSize: 10,
+                          letterSpacing: 2.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'MeiGamingOfficial',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary(context)
+                              .withValues(alpha: 0.35),
+                          fontSize: 12,
+                          letterSpacing: 2.2,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ).animate().fadeIn(delay: 950.ms, duration: 600.ms),
+
+                  const SizedBox(height: 28),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
+
+// ── Sleek Animated Loading Bar ─────────────────────────────────────────────────
+
+/// A premium thin shimmer bar that replaces the standard circular indicator.
+class _SleekLoadingBar extends StatelessWidget {
+  const _SleekLoadingBar({required this.controller});
+  final AnimationController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 2.5,
+      decoration: BoxDecoration(
+        color: AppColors.border(context).withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(2),
+      ),
+      clipBehavior: Clip.hardEdge,
+      child: AnimatedBuilder(
+        animation: controller,
+        builder: (_, _) {
+          final t = controller.value;
+          // Shimmer sweeps left to right, slightly wider than the bar
+          final start = ((t * 1.5) - 0.35).clamp(0.0, 1.0);
+          final end = ((t * 1.5) + 0.35).clamp(0.0, 1.0);
+          return CustomPaint(
+            size: Size.infinite,
+            painter: _ShimmerBarPainter(
+              start: start,
+              end: end,
+              color: AppColors.downloading,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ShimmerBarPainter extends CustomPainter {
+  const _ShimmerBarPainter({
+    required this.start,
+    required this.end,
+    required this.color,
+  });
+
+  final double start;
+  final double end;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (end <= start) return;
+    final left = size.width * start;
+    final right = size.width * end;
+
+    final paint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          color.withValues(alpha: 0),
+          color.withValues(alpha: 0.9),
+          color,
+          color.withValues(alpha: 0.9),
+          color.withValues(alpha: 0),
+        ],
+        stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+      ).createShader(Rect.fromLTWH(left, 0, right - left, size.height));
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(left, 0, right - left, size.height),
+        const Radius.circular(2),
+      ),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_ShimmerBarPainter o) =>
+      o.start != start || o.end != end || o.color != color;
 }

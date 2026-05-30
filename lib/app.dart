@@ -110,7 +110,12 @@ class _MeitorrentAppState extends ConsumerState<MeitorrentApp> {
       builder: (context, child) {
         final mq = MediaQuery.of(context);
         final scaled = MediaQuery(
-          data: mq.copyWith(textScaler: TextScaler.noScaling),
+          data: mq.copyWith(
+            textScaler: mq.textScaler.clamp(
+              minScaleFactor: 1.0,
+              maxScaleFactor: 1.3,
+            ),
+          ),
           child: child!,
         );
 

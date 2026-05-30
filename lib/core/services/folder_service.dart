@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'logger_service.dart';
 import 'storage_service.dart';
@@ -21,9 +22,14 @@ class FolderService {
     required String name,
   }) async {
     try {
-      final basePath = (savePath.isEmpty)
-          ? await StorageService.instance.getDownloadPath()
-          : savePath;
+      String basePath = savePath;
+      if (basePath.isEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        final customPath = prefs.getString('meitorrent_default_save_path');
+        basePath = (customPath != null && customPath.isNotEmpty)
+            ? customPath
+            : await StorageService.instance.getDownloadPath();
+      }
 
       // 🚀 Deep Dive: Try to open the specific torrent folder if it exists
       // Most torrents create a sub-folder named after themselves.
@@ -59,13 +65,26 @@ class FolderService {
   /// Opens the download directory or a specific sub-folder.
   Future<void> openDownloadFolder([String? specificPath]) async {
     try {
-      final fallbackPath = await StorageService.instance.getDownloadPath();
+      String fallbackPath;
+      final prefs = await SharedPreferences.getInstance();
+      final customPath = prefs.getString('meitorrent_default_save_path');
+      if (customPath != null && customPath.isNotEmpty) {
+        fallbackPath = customPath;
+      } else {
+        fallbackPath = await StorageService.instance.getDownloadPath();
+      }
+
       final path = (specificPath != null && specificPath.trim().isNotEmpty)
           ? specificPath
           : fallbackPath;
 
       // Ensure the base app directory exists so the file manager has something to show
-      await StorageService.instance.ensureDirectoryExists();
+      final dir = Directory(path);
+      if (!dir.existsSync()) {
+        try {
+          await dir.create(recursive: true);
+        } catch (_) {}
+      }
 
       final String? result = await _channel.invokeMethod<String>('openFolder', {
         'path': path,

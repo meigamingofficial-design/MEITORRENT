@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -34,6 +35,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   int _zeroSpeedTicks = 0;
   bool _hasPromptedSpeedWarning = false;
   bool _isStorageGranted = true;
+  DateTime? _lastBackPressTime;
 
   @override
   void initState() {
@@ -226,30 +228,73 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           (t) => t.state.isActive && !t.state.isFinished,
         );
 
-        if (!hasActive) {
-          // If nothing is active, just minimize to background silently
-          unawaited(
-            SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
-          );
+        if (hasActive) {
+          // Auto minimize to background
+          await ref.read(torrentRepositoryProvider).forceSaveAllResumeData();
+          try {
+            await const MethodChannel('com.meigaming.meitorrent/files').invokeMethod('minimizeApp');
+            FlutterForegroundTask.sendDataToTask({'minimize': true});
+          } catch (_) {
+            unawaited(SystemChannels.platform.invokeMethod('SystemNavigator.pop'));
+          }
+
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).clearSnackBars();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text(
+                  'Meitorrent is active; minimizing to background',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                backgroundColor: AppColors.downloading,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+              ),
+            );
+          }
           return;
         }
 
-        // Check for remembered choice
-        final prefs = await SharedPreferences.getInstance();
-        final remembered = prefs.getString('meitorrent_exit_preference');
-
-        if (remembered == 'background') {
-          // 🚀 Native Pro Minimize: The most stable way for production
-          await ref.read(torrentRepositoryProvider).forceSaveAllResumeData();
-          await const MethodChannel(
-            'com.meigaming.meitorrent/files',
-          ).invokeMethod('minimizeApp');
-          FlutterForegroundTask.sendDataToTask({'minimize': true});
-        } else if (remembered == 'exit') {
+        // If no torrents are active, allow double-tap back gesture
+        final now = DateTime.now();
+        if (_lastBackPressTime == null ||
+            now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
+          _lastBackPressTime = now;
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).clearSnackBars();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text(
+                  'Tap back again to exit',
+                  style: TextStyle(
+                    fontFamily: 'Outfit',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                backgroundColor: AppColors.inkFaded,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+              ),
+            );
+          }
+        } else {
           await ref.read(torrentRepositoryProvider).forceSaveAllResumeData();
           exit(0);
-        } else {
-          if (context.mounted) _showExitConfirmation(context);
         }
       },
       child: Scaffold(
@@ -597,74 +642,106 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
       child: Column(
         children: [
-          // ── Compact glass stats bar ─────────────────────────────────
-          Container(
-            height: 44,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: AppColors.surface(context),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.border(context)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                // ↓ Download
-                const Icon(
-                  Icons.arrow_downward_rounded,
-                  color: AppColors.downloading,
-                  size: 14,
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  SpeedFormatter.format(downTotal.toInt()),
-                  style: const TextStyle(
-                    color: AppColors.downloading,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
+          // ── Glassmorphism stats bar ─────────────────────────────────────
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: Container(
+                height: 48,
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                decoration: BoxDecoration(
+                  color: AppColors.surface(context).withValues(
+                    alpha: Theme.of(context).brightness == Brightness.dark
+                        ? 0.55
+                        : 0.80,
                   ),
-                ),
-                const Spacer(),
-                // ↑ Upload
-                const Icon(
-                  Icons.arrow_upward_rounded,
-                  color: AppColors.seeding,
-                  size: 14,
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  SpeedFormatter.format(upTotal.toInt()),
-                  style: const TextStyle(
-                    color: AppColors.seeding,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.border(context).withValues(alpha: 0.7),
                   ),
-                ),
-                if (!isCompletedTab) ...[
-                  const Spacer(),
-                  // Active count
-                  Icon(
-                    Icons.download_rounded,
-                    color: AppColors.textSecondary(context),
-                    size: 14,
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    '$activeCount Active',
-                    style: TextStyle(
-                      color: AppColors.textSecondary(context),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
                     ),
-                  ),
-                ],
-              ],
+                    BoxShadow(
+                      color: AppColors.downloading.withValues(alpha: 0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // ↓ Download
+                    const Icon(
+                      Icons.arrow_downward_rounded,
+                      color: AppColors.downloading,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      SpeedFormatter.format(downTotal.toInt()),
+                      style: const TextStyle(
+                        color: AppColors.downloading,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    // Decorative center divider dot
+                    Container(
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.downloading.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    const Spacer(),
+                    // ↑ Upload
+                    const Icon(
+                      Icons.arrow_upward_rounded,
+                      color: AppColors.seeding,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      SpeedFormatter.format(upTotal.toInt()),
+                      style: const TextStyle(
+                        color: AppColors.seeding,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (!isCompletedTab) ...[
+                      const Spacer(),
+                      Container(
+                        width: 1,
+                        height: 18,
+                        color: AppColors.border(context).withValues(alpha: 0.6),
+                      ),
+                      const SizedBox(width: 12),
+                      Icon(
+                        Icons.download_rounded,
+                        color: AppColors.textSecondary(context),
+                        size: 14,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        '$activeCount Active',
+                        style: TextStyle(
+                          color: AppColors.textSecondary(context),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 16),

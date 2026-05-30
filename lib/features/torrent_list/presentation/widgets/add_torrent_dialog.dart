@@ -38,6 +38,9 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
   String? _selectedFilePath;
   String? _infoMessage;
 
+  String? _clipboardMagnet;
+  bool _showClipboardBanner = false;
+
   @override
   void initState() {
     super.initState();
@@ -70,12 +73,8 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
     final magnet = await ClipboardService.instance.getMagnetFromClipboard();
     if (magnet != null && mounted) {
       setState(() {
-        _magnetController.text = magnet;
-        _tabController.index = 0;
-        _infoMessage = 'Detected magnet in clipboard';
-      });
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted) setState(() => _infoMessage = null);
+        _clipboardMagnet = magnet;
+        _showClipboardBanner = true;
       });
     }
   }
@@ -103,6 +102,7 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
       setState(() {
         _magnetController.text = magnet;
         _infoMessage = 'Pasted from clipboard';
+        _showClipboardBanner = false;
       });
       _magnetFormKey.currentState?.validate();
       Future.delayed(const Duration(seconds: 3), () {
@@ -217,6 +217,92 @@ class _AddTorrentDialogState extends State<AddTorrentDialog>
                         ),
                       ],
                     ),
+
+                    if (_showClipboardBanner && _clipboardMagnet != null) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.downloading.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.downloading.withValues(alpha: 0.15)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.link_rounded,
+                              color: AppColors.downloading,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Magnet link detected in clipboard',
+                                    style: TextStyle(
+                                      fontFamily: 'Outfit',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.text(context),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    _clipboardMagnet!.length > 35
+                                        ? '${_clipboardMagnet!.substring(0, 32)}...'
+                                        : _clipboardMagnet!,
+                                    style: TextStyle(
+                                      fontFamily: 'Outfit',
+                                      fontSize: 10,
+                                      color: AppColors.textSecondary(context),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _magnetController.text = _clipboardMagnet!;
+                                  _showClipboardBanner = false;
+                                  _tabController.index = 0;
+                                });
+                              },
+                              child: const Text(
+                                'Paste',
+                                style: TextStyle(
+                                  fontFamily: 'Outfit',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.downloading,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(Icons.close_rounded, size: 16),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () {
+                                setState(() {
+                                  _showClipboardBanner = false;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
 
                     const SizedBox(height: 14),
 
@@ -798,47 +884,93 @@ class _SequentialRow extends StatelessWidget {
 // Gradient Button
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _GradientButton extends StatelessWidget {
+class _GradientButton extends StatefulWidget {
   const _GradientButton({required this.onPressed, required this.child});
   final VoidCallback? onPressed;
   final Widget child;
 
   @override
+  State<_GradientButton> createState() => _GradientButtonState();
+}
+
+class _GradientButtonState extends State<_GradientButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scale = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeIn),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 44,
-      decoration: BoxDecoration(
-        gradient: onPressed == null ? null : AppGradients.primary,
-        color: onPressed == null ? AppColors.border(context) : null,
-        borderRadius: BorderRadius.circular(13),
-        boxShadow: onPressed == null
-            ? null
-            : [
-                BoxShadow(
-                  color: AppColors.downloading.withValues(alpha: 0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-      ),
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          foregroundColor: Colors.white,
-          padding: EdgeInsets.zero,
-          minimumSize: const Size.fromHeight(44),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(13),
+    return GestureDetector(
+      onTapDown: widget.onPressed != null ? (_) => unawaited(_ctrl.forward()) : null,
+      onTapUp: widget.onPressed != null
+          ? (_) {
+              unawaited(_ctrl.reverse());
+              widget.onPressed!();
+            }
+          : null,
+      onTapCancel: () => unawaited(_ctrl.reverse()),
+      child: AnimatedBuilder(
+        animation: _scale,
+        builder: (_, child) => Transform.scale(
+          scale: _scale.value,
+          child: child,
+        ),
+        child: Container(
+          height: 46,
+          decoration: BoxDecoration(
+            gradient: widget.onPressed == null ? null : AppGradients.primary,
+            color: widget.onPressed == null ? AppColors.border(context) : null,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: widget.onPressed == null
+                ? null
+                : [
+                    BoxShadow(
+                      color: AppColors.downloading.withValues(alpha: 0.28),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
           ),
-          textStyle: const TextStyle(
-            fontFamily: 'ShipporiMincho',
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
+          child: ElevatedButton(
+            onPressed: null, // handled by GestureDetector
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              disabledBackgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              disabledForegroundColor: Colors.white.withValues(alpha: 0.6),
+              padding: EdgeInsets.zero,
+              minimumSize: const Size.fromHeight(46),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              textStyle: const TextStyle(
+                fontFamily: 'ShipporiMincho',
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+            ),
+            child: widget.child,
           ),
         ),
-        child: child,
       ),
     );
   }
@@ -848,32 +980,77 @@ class _GradientButton extends StatelessWidget {
 // Secondary Button
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _SecondaryButton extends StatelessWidget {
+class _SecondaryButton extends StatefulWidget {
   const _SecondaryButton({required this.onPressed, required this.child});
   final VoidCallback? onPressed;
   final Widget child;
 
   @override
+  State<_SecondaryButton> createState() => _SecondaryButtonState();
+}
+
+class _SecondaryButtonState extends State<_SecondaryButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scale = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeIn),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 44,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.textSecondary(context),
-          side: BorderSide(color: AppColors.border(context)),
-          padding: EdgeInsets.zero,
-          minimumSize: const Size.fromHeight(44),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(13),
-          ),
-          textStyle: const TextStyle(
-            fontFamily: 'ShipporiMincho',
-            fontWeight: FontWeight.w400,
-            fontSize: 14,
+    return GestureDetector(
+      onTapDown: widget.onPressed != null ? (_) => unawaited(_ctrl.forward()) : null,
+      onTapUp: widget.onPressed != null
+          ? (_) {
+              unawaited(_ctrl.reverse());
+              widget.onPressed!();
+            }
+          : null,
+      onTapCancel: () => unawaited(_ctrl.reverse()),
+      child: AnimatedBuilder(
+        animation: _scale,
+        builder: (_, child) => Transform.scale(
+          scale: _scale.value,
+          child: child,
+        ),
+        child: SizedBox(
+          height: 46,
+          child: OutlinedButton(
+            onPressed: null, // handled by GestureDetector
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.textSecondary(context),
+              disabledForegroundColor: AppColors.textSecondary(context),
+              side: BorderSide(color: AppColors.border(context)),
+              padding: EdgeInsets.zero,
+              minimumSize: const Size.fromHeight(46),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              textStyle: const TextStyle(
+                fontFamily: 'ShipporiMincho',
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+            child: widget.child,
           ),
         ),
-        child: child,
       ),
     );
   }

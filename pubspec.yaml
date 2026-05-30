@@ -48,6 +48,8 @@ dependencies:
   device_info_plus: ^13.1.0
 
   # UI
+  flutter_animate: ^4.5.0
+  gap: ^3.0.1
 
   # Deep linking (magnet:// + .torrent files from browser)
   app_links: ^7.0.0
@@ -75,7 +77,6 @@ dev_dependencies:
 
   # Launcher icons
   flutter_launcher_icons: ^0.14.4
-
 flutter_launcher_icons:
   android: true
   image_path_android: "assets/images/icon_android.png"
@@ -99,4 +100,12 @@ flutter:
         - asset: assets/fonts/ShipporiMincho-Regular.ttf
           weight: 400
         - asset: assets/fonts/ShipporiMincho-Bold.ttf
+          weight: 700
+    - family: Outfit
+      fonts:
+        - asset: google_fonts/Outfit-Regular.ttf
+          weight: 400
+        - asset: google_fonts/Outfit-Medium.ttf
+          weight: 500
+        - asset: google_fonts/Outfit-Bold.ttf
           weight: 700

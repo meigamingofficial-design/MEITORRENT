@@ -120,11 +120,21 @@ class AppTheme {
       colorScheme: _scheme,
       scaffoldBackgroundColor: Colors.transparent,
 
-      // Shippori Mincho globally for all typography
+      // Outfit globally for readability and telemetry; ShipporiMincho selectively for headers
       textTheme: ThemeData.light().textTheme.apply(
-        fontFamily: 'ShipporiMincho',
+        fontFamily: 'Outfit',
         bodyColor: _sumizome,
         displayColor: _sumizome,
+      ).copyWith(
+        displayLarge: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
+        displayMedium: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
+        displaySmall: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
+        headlineLarge: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
+        headlineMedium: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
+        headlineSmall: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
+        titleLarge: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
+        titleMedium: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
+        titleSmall: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
       ),
 
       // ── Card (Handmade Paper Style) ───────────────────────────
@@ -157,7 +167,7 @@ class AppTheme {
         titleTextStyle: TextStyle(
           fontFamily: 'ShipporiMincho',
           fontSize: 26,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w800,
           color: _sumizome,
           letterSpacing: -0.2,
         ),
@@ -186,7 +196,7 @@ class AppTheme {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           textStyle: const TextStyle(
-            fontFamily: 'ShipporiMincho',
+            fontFamily: 'Outfit',
             fontWeight: FontWeight.w700,
           ),
           elevation: 0,
@@ -297,11 +307,21 @@ class AppTheme {
       colorScheme: _darkScheme,
       scaffoldBackgroundColor: _darkInk,
 
-      // Shippori Mincho globally for all typography
+      // Outfit globally for readability and telemetry; ShipporiMincho selectively for headers
       textTheme: ThemeData.dark().textTheme.apply(
-        fontFamily: 'ShipporiMincho',
+        fontFamily: 'Outfit',
         bodyColor: _riceWhite,
         displayColor: _riceWhite,
+      ).copyWith(
+        displayLarge: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
+        displayMedium: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
+        displaySmall: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
+        headlineLarge: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
+        headlineMedium: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
+        headlineSmall: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
+        titleLarge: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
+        titleMedium: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
+        titleSmall: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
       ),
 
       // ── Card (Dark Paper Style) ───────────────────────────────
@@ -332,7 +352,7 @@ class AppTheme {
         titleTextStyle: TextStyle(
           fontFamily: 'ShipporiMincho',
           fontSize: 26,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w800,
           color: _riceWhite,
           letterSpacing: -0.2,
         ),
@@ -359,7 +379,7 @@ class AppTheme {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           textStyle: const TextStyle(
-            fontFamily: 'ShipporiMincho',
+            fontFamily: 'Outfit',
             fontWeight: FontWeight.w700,
           ),
           elevation: 0,
@@ -486,7 +506,7 @@ class AppColors {
   static Color textSecondary(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
       ? charcoal
-      : const Color(0xFF8A8A8A); // Faded Ink
+      : const Color(0xFFB0B3B8); // Soft Rice Gray (increased contrast for readability)
 
   static Color border(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light

@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../native/libtorrent_flutter_base.dart' as lt;
 import '../native/models.dart' as lt;
@@ -49,8 +52,19 @@ class TorrentEngineService {
 
     for (int attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        await StorageService.instance.ensureDirectoryExists();
-        final defaultPath = await StorageService.instance.getDownloadPath();
+        final prefs = await SharedPreferences.getInstance();
+        final customPath = prefs.getString('meitorrent_default_save_path');
+        final defaultPath = (customPath != null && customPath.isNotEmpty)
+            ? customPath
+            : await StorageService.instance.getDownloadPath();
+
+        final dir = Directory(defaultPath);
+        if (!dir.existsSync()) {
+          try {
+            await dir.create(recursive: true);
+          } catch (_) {}
+        }
+
         _defaultDownloadPath = defaultPath;
         await lt.LibtorrentFlutter.init(
           pollInterval: const Duration(milliseconds: 200),
@@ -155,6 +169,11 @@ class TorrentEngineService {
     return _engine.getFiles(id);
   }
 
+  /// Sets download priorities per file (0 = skip, 1-7 = priority levels).
+  void setFilePriorities(int id, List<int> priorities) {
+    _engine.setFilePriorities(id, priorities);
+  }
+
   void remove(int id, {bool deleteFiles = false}) {
     _engine.removeTorrent(id, deleteFiles: deleteFiles);
     _idToMagnet.remove(id);
@@ -195,6 +214,10 @@ class TorrentEngineService {
     if (!_initialized) return;
     _engine.setDownloadLimit(config.downloadLimit);
     _engine.setUploadLimit(config.uploadLimit);
+    if (config.defaultSavePath != null && config.defaultSavePath!.isNotEmpty) {
+      _defaultDownloadPath = config.defaultSavePath;
+      AppLogger.i('[Engine] Updated default download path to: $_defaultDownloadPath');
+    }
   }
 
   // ─── Deep equality deduplication (Hardening #1) ───────────────────
@@ -289,7 +312,7 @@ class TorrentEngineService {
     // 2. Verified Completion: If we are 100% done, favor finished/seeding
     // This prevents "Allocating" or "Downloading" from flickering at 100%.
     if (isActuallyComplete) {
-      if (raw == lt.TorrentState.seeding && !isPaused) {
+      if (!isPaused) {
         return domain.TorrentState.seeding;
       }
       return domain.TorrentState.finished;

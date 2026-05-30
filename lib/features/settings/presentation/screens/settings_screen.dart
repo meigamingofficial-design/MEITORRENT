@@ -1,15 +1,18 @@
 import 'dart:async';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../core/services/logger_service.dart';
 import '../../../../core/services/package_info_provider.dart';
 import '../../../../core/services/oem_battery_guard.dart';
+import '../../../../core/services/storage_service.dart';
 
 import '../../../../core/utils/speed_formatter.dart';
 import '../controllers/settings_notifier.dart';
@@ -32,12 +35,14 @@ class SettingsScreen extends ConsumerWidget {
         title: Text(
           'Settings',
           style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
-            fontSize: 28,
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ),
       body: SafeArea(
         child: ListView(
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.symmetric(vertical: 8),
           children: [
             // ── Appearance ────────────────────────────────────────────
@@ -51,7 +56,14 @@ class SettingsScreen extends ConsumerWidget {
                   ref.read(themeServiceProvider.notifier).toggle(),
             ),
 
-            // ── Speed Limits ──────────────────────────────────────────
+            // ── Downloads ─────────────────────────────────────────────────
+            const _SectionHeader(title: 'Downloads'),
+            _SavePathTile(
+              currentPath: config.defaultSavePath,
+              onChanged: notifier.setSavePath,
+            ),
+
+            // ── Speed Limits ────────────────────────────────────────────────
             const _SectionHeader(title: 'Speed Limits'),
             _SpeedLimitTile(
               icon: Icons.arrow_downward_rounded,
@@ -120,41 +132,43 @@ class SettingsScreen extends ConsumerWidget {
                 value: true, // Always on for now
                 onChanged: (_) async {},
               ),
-              ListTile(
-                leading: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.paused.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.flash_on_rounded,
-                    color: AppColors.paused,
-                    size: 20,
-                  ),
-                ),
-                title: Text(
-                  'Test Crash',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.text(context),
-                  ),
-                ),
-                subtitle: Text(
-                  'Force a crash to test Firebase integration',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary(context),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+              _SpringSettingsTile(
                 onTap: () {
                   AppLogger.wtf('User triggered a manual test crash');
                   // This will crash the app immediately
                   throw Exception('Meitorrent Crash Test: ${DateTime.now()}');
                 },
+                child: ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.paused.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.flash_on_rounded,
+                      color: AppColors.paused,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    'Test Crash',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.text(context),
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Force a crash to test Firebase integration',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary(context),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ),
             ],
 
@@ -176,71 +190,75 @@ class SettingsScreen extends ConsumerWidget {
               label: 'Open Source Licenses',
               assetPath: 'LICENSES.md',
             ),
-            ListTile(
-              leading: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.border(context).withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.copyright_outlined,
-                  color: AppColors.textSecondary(context),
-                  size: 20,
-                ),
-              ),
-              title: Text(
-                'GNU GPL v3.0 License',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text(context),
-                ),
-              ),
-              trailing: Icon(
-                Icons.open_in_new_rounded,
-                color: AppColors.textSecondary(context),
-                size: 16,
-              ),
+            _SpringSettingsTile(
               onTap: () => _launchUrl('https://www.gnu.org/licenses/gpl-3.0.en.html'),
+              child: ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.border(context).withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.copyright_outlined,
+                    color: AppColors.textSecondary(context),
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  'GNU GPL v3.0 License',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.text(context),
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.open_in_new_rounded,
+                  color: AppColors.textSecondary(context),
+                  size: 16,
+                ),
+              ),
             ),
-            ListTile(
-              leading: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.border(context).withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.mail_outline_rounded,
-                  color: AppColors.textSecondary(context),
-                  size: 20,
-                ),
-              ),
-              title: Text(
-                'Contact Support',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text(context),
-                ),
-              ),
-              subtitle: Text(
-                'meigaming.official@gmail.com',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary(context),
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              trailing: Icon(
-                Icons.chevron_right,
-                color: AppColors.textSecondary(context),
-                size: 18,
-              ),
+            _SpringSettingsTile(
               onTap: () => _launchUrl('mailto:meigaming.official@gmail.com'),
+              child: ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.border(context).withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.mail_outline_rounded,
+                    color: AppColors.textSecondary(context),
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  'Contact Support',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.text(context),
+                  ),
+                ),
+                subtitle: Text(
+                  'meigaming.official@gmail.com',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary(context),
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: AppColors.textSecondary(context),
+                  size: 18,
+                ),
+              ),
             ),
             const SizedBox(height: 60),
           ],
@@ -259,17 +277,30 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: AppColors.downloading,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.2,
-        ),
+      padding: const EdgeInsets.fromLTRB(16, 22, 16, 8),
+      child: Row(
+        children: [
+          Container(
+            width: 3.5,
+            height: 14,
+            decoration: BoxDecoration(
+              color: AppColors.downloading,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title.toUpperCase(),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: AppColors.downloading,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.5,
+            ),
+          ),
+        ],
       ),
-    );
+    ).animate().fadeIn(duration: 250.ms).slideX(begin: -0.05, end: 0, curve: Curves.easeOutCubic);
   }
 }
 
@@ -307,45 +338,47 @@ class _SpeedLimitTile extends StatelessWidget {
         ? 'Unlimited'
         : SpeedFormatter.format(currentBps);
 
-    return ListTile(
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: iconColor.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: iconColor, size: 20),
-      ),
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.text(context),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            displayLabel,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.textSecondary(context),
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-      trailing: Icon(
-        Icons.chevron_right,
-        color: AppColors.textSecondary(context),
-        size: 18,
-      ),
+    return _SpringSettingsTile(
       onTap: () => _showPicker(context),
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: iconColor, size: 20),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text(context),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              displayLabel,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary(context),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: AppColors.textSecondary(context),
+          size: 18,
+        ),
+      ),
     );
   }
 
@@ -366,43 +399,56 @@ class _SpeedLimitTile extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const SizedBox(height: 8),
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.textSecondary(context).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
                 Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                   child: Text(
                     label,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: AppColors.text(context),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
                 ...List.generate(_presets.length, (i) {
                   final bps = _presets[i] * 1024;
                   final selected = currentBps == bps;
-                  return ListTile(
-                    title: Text(
-                      _presetLabels[i],
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: selected
-                            ? AppColors.downloading
-                            : AppColors.textSecondary(context),
-                        fontWeight: selected
-                            ? FontWeight.w600
-                            : FontWeight.normal,
-                      ),
-                    ),
-                    trailing: selected
-                        ? const Icon(
-                            Icons.check,
-                            color: AppColors.downloading,
-                            size: 18,
-                          )
-                        : null,
+                  return _SpringSettingsTile(
                     onTap: () {
                       unawaited(onChanged(bps));
                       Navigator.pop(context);
                     },
+                    child: ListTile(
+                      title: Text(
+                        _presetLabels[i],
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: selected
+                              ? AppColors.downloading
+                              : AppColors.textSecondary(context),
+                          fontWeight: selected
+                              ? FontWeight.w700
+                              : FontWeight.normal,
+                        ),
+                      ),
+                      trailing: selected
+                          ? const Icon(
+                              Icons.check_circle_rounded,
+                              color: AppColors.downloading,
+                              size: 20,
+                            )
+                          : null,
+                    ),
                   );
                 }),
                 const SizedBox(height: 12),
@@ -434,42 +480,45 @@ class _SwitchTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.border(context).withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(10),
+    return _SpringSettingsTile(
+      onTap: () => unawaited(onChanged(!value)),
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.border(context).withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: AppColors.textSecondary(context), size: 20),
         ),
-        child: Icon(icon, color: AppColors.textSecondary(context), size: 20),
-      ),
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.text(context),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text(context),
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.textSecondary(context),
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary(context),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-        ],
-      ),
-      trailing: Switch(
-        value: value,
-        onChanged: onChanged,
+          ],
+        ),
+        trailing: Switch(
+          value: value,
+          onChanged: onChanged,
+        ),
       ),
     );
   }
@@ -486,49 +535,57 @@ class _ConnectionsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.border(context).withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(10),
+    return _SpringSettingsTile(
+      onTap: () => _showPicker(context),
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.border(context).withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            Icons.people_outline,
+            color: AppColors.textSecondary(context),
+            size: 20,
+          ),
         ),
-        child: Icon(
-          Icons.people_outline,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Max Connections',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text(context),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '$current peers',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary(context),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        trailing: Icon(
+          Icons.chevron_right,
           color: AppColors.textSecondary(context),
-          size: 20,
+          size: 18,
         ),
       ),
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Max Connections',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.text(context),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '$current peers',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.textSecondary(context),
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-      trailing: Icon(
-        Icons.chevron_right,
-        color: AppColors.textSecondary(context),
-        size: 18,
-      ),
-      onTap: () => showModalBottomSheet<void>(
+    );
+  }
+
+  void _showPicker(BuildContext context) {
+    unawaited(
+      showModalBottomSheet<void>(
         context: context,
         backgroundColor: Colors.transparent,
         builder: (_) => SafeArea(
@@ -543,42 +600,55 @@ class _ConnectionsTile extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const SizedBox(height: 8),
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.textSecondary(context).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
                 Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                   child: Text(
                     'Max Global Connections',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: AppColors.text(context),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
                 ..._options.map((n) {
                   final selected = current == n;
-                  return ListTile(
-                    title: Text(
-                      '$n peers',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: selected
-                            ? AppColors.downloading
-                            : AppColors.textSecondary(context),
-                        fontWeight: selected
-                            ? FontWeight.w600
-                            : FontWeight.normal,
-                      ),
-                    ),
-                    trailing: selected
-                        ? const Icon(
-                            Icons.check,
-                            color: AppColors.downloading,
-                            size: 18,
-                          )
-                        : null,
+                  return _SpringSettingsTile(
                     onTap: () {
                       unawaited(onChanged(n));
                       Navigator.pop(context);
                     },
+                    child: ListTile(
+                      title: Text(
+                        '$n peers',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: selected
+                              ? AppColors.downloading
+                              : AppColors.textSecondary(context),
+                          fontWeight: selected
+                              ? FontWeight.w700
+                              : FontWeight.normal,
+                        ),
+                      ),
+                      trailing: selected
+                          ? const Icon(
+                              Icons.check_circle_rounded,
+                              color: AppColors.downloading,
+                              size: 20,
+                            )
+                          : null,
+                    ),
                   );
                 }),
                 const SizedBox(height: 12),
@@ -598,64 +668,80 @@ class _AboutTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final versionAsync = ref.watch(appVersionProvider);
 
-    return ListTile(
-      leading: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.border(context).withValues(alpha: 0.8),
-            width: 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(11),
-          child: Image.asset(
-            'assets/images/app_logo.png',
-            width: 40,
-            height: 40,
-            fit: BoxFit.cover,
-          ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface(context).withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.border(context).withValues(alpha: 0.6),
         ),
       ),
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         children: [
-          Text(
-            'Meitorrent',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppColors.text(context),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: AppColors.border(context).withValues(alpha: 0.8),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(13),
+              child: Image.asset(
+                'assets/images/app_logo.png',
+                width: 48,
+                height: 48,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            versionAsync.when(
-              data: (v) => 'v$v · Fast. Private. Reliable.',
-              loading: () => 'Loading... · Fast. Private. Reliable.',
-              error: (_, _) => 'v1.0.1+2 · Fast. Private. Reliable.',
-            ),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.textSecondary(context),
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            'Designed & Developed by MeiGamingOfficial',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppColors.downloading,
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Meitorrent',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.text(context),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  versionAsync.when(
+                    data: (v) => 'v$v · Fast. Private. Reliable.',
+                    loading: () => 'Loading... · Fast. Private. Reliable.',
+                    error: (_, _) => 'v1.0.1+2 · Fast. Private. Reliable.',
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary(context),
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Designed & Developed by MeiGamingOfficial',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppColors.downloading,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -673,9 +759,6 @@ Future<void> _launchUrl(String urlString) async {
   }
 }
 
-
-
-
 class _LegalTile extends StatelessWidget {
   const _LegalTile({
     required this.icon,
@@ -688,29 +771,7 @@ class _LegalTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.border(context).withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: AppColors.textSecondary(context), size: 20),
-      ),
-      title: Text(
-        label,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: AppColors.text(context),
-        ),
-      ),
-      trailing: Icon(
-        Icons.chevron_right,
-        color: AppColors.textSecondary(context),
-        size: 18,
-      ),
+    return _SpringSettingsTile(
       onTap: () async {
         try {
           final content = await DefaultAssetBundle.of(
@@ -743,6 +804,30 @@ class _LegalTile extends StatelessWidget {
           }
         }
       },
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.border(context).withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: AppColors.textSecondary(context), size: 20),
+        ),
+        title: Text(
+          label,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.text(context),
+          ),
+        ),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: AppColors.textSecondary(context),
+          size: 18,
+        ),
+      ),
     );
   }
 }
@@ -757,17 +842,40 @@ class _LegalDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background(context),
       appBar: AppBar(
+        leading: _SpringSettingsTile(
+          onTap: () => Navigator.maybePop(context),
+          child: Container(
+            margin: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.border(context).withValues(alpha: 0.5),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.chevron_left_rounded,
+              color: AppColors.text(context),
+              size: 24,
+            ),
+          ),
+        ),
         title: Text(
           title,
-          style: Theme.of(context).textTheme.displayMedium?.copyWith(
-            fontSize: 20,
+          style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
+            fontSize: 18,
             fontWeight: FontWeight.w800,
           ),
         ),
         centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            color: AppColors.border(context).withValues(alpha: 0.5),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
         child: SelectableText(
           content,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -777,7 +885,7 @@ class _LegalDetailScreen extends StatelessWidget {
             letterSpacing: 0.2,
           ),
         ),
-      ),
+      ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.05, end: 0, curve: Curves.easeOutCubic),
     );
   }
 }
@@ -803,8 +911,6 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Defer heavy async platform-channel calls to after the first frame
-    // so they never block the navigation transition animation.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_checkStatus());
       unawaited(_checkOem());
@@ -866,71 +972,85 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ListTile(
-          leading: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.border(context).withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              _isIgnored
-                  ? Icons.battery_charging_full_rounded
-                  : Icons.battery_alert_rounded,
-              color: _isIgnored ? AppColors.seeding : AppColors.paused,
-              size: 20,
-            ),
-          ),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Ignore Battery Optimizations',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text(context),
-                ),
+        _SpringSettingsTile(
+          onTap: () async {
+            setState(() => _isLoading = true);
+            if (!_isIgnored) {
+              await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+            } else {
+              await FlutterForegroundTask.openIgnoreBatteryOptimizationSettings();
+            }
+            await _checkStatus();
+            if (mounted) {
+              setState(() => _isLoading = false);
+            }
+          },
+          child: ListTile(
+            leading: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.border(context).withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(10),
               ),
-              const SizedBox(height: 4),
-              Text(
+              child: Icon(
                 _isIgnored
-                    ? 'Battery optimizations are disabled'
-                    : 'Helps keep torrent downloads active when the app is in the background or screen is off',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary(context),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
+                    ? Icons.battery_charging_full_rounded
+                    : Icons.battery_alert_rounded,
+                color: _isIgnored ? AppColors.seeding : AppColors.paused,
+                size: 20,
               ),
-            ],
-          ),
-          trailing: _isLoading
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.downloading,
+            ),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Ignore Battery Optimizations',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.text(context),
                   ),
-                )
-              : Switch(
-                  value: _isIgnored,
-                  onChanged: (value) async {
-                    setState(() => _isLoading = true);
-                    if (value) {
-                      await FlutterForegroundTask.requestIgnoreBatteryOptimization();
-                    } else {
-                      await FlutterForegroundTask.openIgnoreBatteryOptimizationSettings();
-                    }
-                    await _checkStatus();
-                    if (mounted) {
-                      setState(() => _isLoading = false);
-                    }
-                  },
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  _isIgnored
+                      ? 'Battery optimizations are disabled'
+                      : 'Helps keep torrent downloads active when the app is in the background or screen is off',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary(context),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            trailing: _isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.downloading,
+                    ),
+                  )
+                : Switch(
+                    value: _isIgnored,
+                    onChanged: (value) async {
+                      setState(() => _isLoading = true);
+                      if (value) {
+                        await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+                      } else {
+                        await FlutterForegroundTask.openIgnoreBatteryOptimizationSettings();
+                      }
+                      await _checkStatus();
+                      if (mounted) {
+                        setState(() => _isLoading = false);
+                      }
+                    },
+                  ),
+          ),
         ),
         if (_showOemPrompt)
           Padding(
@@ -1010,6 +1130,162 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
             ),
           ),
       ],
+    );
+  }
+}
+
+/// A spring-scale wrapper for settings list tiles.
+class _SpringSettingsTile extends StatefulWidget {
+  const _SpringSettingsTile({required this.child, this.onTap});
+  final Widget child;
+  final VoidCallback? onTap;
+
+  @override
+  State<_SpringSettingsTile> createState() => _SpringSettingsTileState();
+}
+
+class _SpringSettingsTileState extends State<_SpringSettingsTile>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scale = Tween<double>(begin: 1.0, end: 0.96).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: widget.onTap != null ? (_) => unawaited(_ctrl.forward()) : null,
+      onTapUp: widget.onTap != null
+          ? (_) {
+              unawaited(_ctrl.reverse());
+              widget.onTap?.call();
+            }
+          : null,
+      onTapCancel: widget.onTap != null ? () => unawaited(_ctrl.reverse()) : null,
+      child: AnimatedBuilder(
+        animation: _scale,
+        builder: (_, child) => Transform.scale(
+          scale: _scale.value,
+          child: child,
+        ),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+// ─── Save Path Tile ───────────────────────────────────────────────────────────
+
+class _SavePathTile extends ConsumerStatefulWidget {
+  const _SavePathTile({
+    required this.currentPath,
+    required this.onChanged,
+  });
+  final String? currentPath;
+  final Future<void> Function(String) onChanged;
+
+  @override
+  ConsumerState<_SavePathTile> createState() => _SavePathTileState();
+}
+
+class _SavePathTileState extends ConsumerState<_SavePathTile> {
+  String? _resolvedDefault;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_resolveDefault());
+  }
+
+  Future<void> _resolveDefault() async {
+    final path = await StorageService.instance.getDownloadPath();
+    if (mounted) setState(() => _resolvedDefault = path);
+  }
+
+  Future<void> _pick() async {
+    try {
+      final selected = await FilePicker.getDirectoryPath(
+        dialogTitle: 'Choose Download Folder',
+      );
+      if (selected != null && mounted) {
+        await widget.onChanged(selected);
+      }
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final displayPath =
+        widget.currentPath ?? _resolvedDefault ?? 'Default download path';
+    final isCustom = widget.currentPath != null;
+
+    return _SpringSettingsTile(
+      onTap: _pick,
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.downloading.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            Icons.folder_open_rounded,
+            color: isCustom
+                ? AppColors.downloading
+                : AppColors.textSecondary(context),
+            size: 20,
+          ),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Default Save Location',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text(context),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              displayPath,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: isCustom
+                    ? AppColors.downloading
+                    : AppColors.textSecondary(context),
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: AppColors.textSecondary(context),
+          size: 18,
+        ),
+      ),
     );
   }
 }

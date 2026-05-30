@@ -150,6 +150,17 @@ void _stubChannels() {
           },
         );
   }
+
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(
+        const MethodChannel('com.meigaming.meitorrent/storage'),
+        (call) async {
+          if (call.method == 'getDownloadDirectory') {
+            return '/storage/emulated/0/Download';
+          }
+          return null;
+        },
+      );
 }
 
 void _clearChannels() {
@@ -158,6 +169,7 @@ void _clearChannels() {
     'dev.fluttercommunity.plus/device_info',
     'com.pravera.flutter_foreground_task/methods',
     'flutter_foreground_task/methods',
+    'com.meigaming.meitorrent/storage',
   ]) {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(MethodChannel(ch), null);
