@@ -136,6 +136,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
         .isSelectionMode;
 
     return FadeTransition(
+      key: const Key('torrent_list_item'),
       opacity: _fadeAnim,
       child: SlideTransition(
         position: _slideAnim,
@@ -231,12 +232,13 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                 status.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: AppColors.text(context),
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                  letterSpacing: -0.1,
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: AppColors.text(context),
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 15,
+                                      letterSpacing: -0.1,
+                                    ),
                               ),
                               const SizedBox(height: 8),
                               // ── Progress bar + percent ───────────────
@@ -251,7 +253,9 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                             color: AppColors.border(
                                               context,
                                             ).withValues(alpha: 0.5),
-                                            borderRadius: BorderRadius.circular(4),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
                                           ),
                                         ),
                                         FractionallySizedBox(
@@ -263,13 +267,18 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                               ? Container(
                                                   height: progressHeight,
                                                   decoration: BoxDecoration(
-                                                    gradient: AppGradients.seeding,
+                                                    gradient:
+                                                        AppGradients.seeding,
                                                     borderRadius:
-                                                        BorderRadius.circular(4),
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
                                                     boxShadow: [
                                                       BoxShadow(
                                                         color: AppColors.seeding
-                                                            .withValues(alpha: 0.4),
+                                                            .withValues(
+                                                              alpha: 0.4,
+                                                            ),
                                                         blurRadius: 6,
                                                       ),
                                                     ],
@@ -287,20 +296,20 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                                         ? AppGradients.paused
                                                         : AppGradients.primary,
                                                     borderRadius:
-                                                        BorderRadius.circular(4),
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
                                                     boxShadow: isActive
                                                         ? [
                                                             BoxShadow(
                                                               color:
                                                                   (status.state ==
-                                                                              TorrentState
-                                                                                  .paused
-                                                                          ? AppColors
-                                                                                .paused
-                                                                          : AppColors
-                                                                                .downloading)
+                                                                              TorrentState.paused
+                                                                          ? AppColors.paused
+                                                                          : AppColors.downloading)
                                                                       .withValues(
-                                                                        alpha: 0.35,
+                                                                        alpha:
+                                                                            0.35,
                                                                       ),
                                                               blurRadius: 8,
                                                               spreadRadius: 1,
@@ -318,9 +327,12 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                     '${(status.progress * 100).toStringAsFixed(1)}%',
                                     style: TextStyle(
                                       fontFamily: 'Outfit',
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary.withValues(alpha: 0.8),
+                                      color:
+                                          Theme.of(
+                                            context,
+                                          ).colorScheme.primary.withValues(
+                                            alpha: 0.8,
+                                          ),
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -344,7 +356,11 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                       fontFamily: 'Outfit',
                                     ),
                                   ),
-                                  if ((isDownloading || status.state == TorrentState.downloadingMetadata) && status.downloadSpeed > 0) ...[
+                                  if ((isDownloading ||
+                                          status.state ==
+                                              TorrentState
+                                                  .downloadingMetadata) &&
+                                      status.downloadSpeed > 0) ...[
                                     Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
@@ -572,7 +588,8 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
 
     final config = ref.watch(settingsProvider);
 
-    final isPaused = status.isPaused ||
+    final isPaused =
+        status.isPaused ||
         status.isStopped ||
         status.state == TorrentState.paused ||
         status.state == TorrentState.stopped;
@@ -580,8 +597,10 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
     final isSeeding = status.state == TorrentState.seeding;
 
     // ── Dynamic Button Resolution ───────────────────────────────────────────
-    final bool showOpenFolder = isDone && config.stopSeedingWhenFinished && !isSeeding;
-    final bool showPause = !showOpenFolder &&
+    final bool showOpenFolder =
+        isDone && config.stopSeedingWhenFinished && !isSeeding;
+    final bool showPause =
+        !showOpenFolder &&
         (status.state == TorrentState.downloading ||
             status.state == TorrentState.downloadingMetadata ||
             isSeeding);
@@ -661,10 +680,13 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final sealColor = isDark ? const Color(0xFFE53935) : const Color(0xFFC82127);
-    
+    final sealColor = isDark
+        ? const Color(0xFFE53935)
+        : const Color(0xFFC82127);
+
     // Premium Bamboo Green for finished/seeding actions, traditional Crimson for downloading
-    final Color buttonColor = (showOpenFolder || showSeed || (showPause && isSeeding))
+    final Color buttonColor =
+        (showOpenFolder || showSeed || (showPause && isSeeding))
         ? AppColors.seeding
         : sealColor;
 
@@ -690,7 +712,10 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: buttonColor.withValues(alpha: 0.08),
-              border: Border.all(color: buttonColor.withValues(alpha: 0.15), width: 1.2),
+              border: Border.all(
+                color: buttonColor.withValues(alpha: 0.15),
+                width: 1.2,
+              ),
             ),
             child: Center(
               child: Icon(
@@ -715,5 +740,3 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
     );
   }
 }
-
-

@@ -121,21 +121,50 @@ class AppTheme {
       scaffoldBackgroundColor: Colors.transparent,
 
       // Outfit globally for readability and telemetry; ShipporiMincho selectively for headers
-      textTheme: ThemeData.light().textTheme.apply(
-        fontFamily: 'Outfit',
-        bodyColor: _sumizome,
-        displayColor: _sumizome,
-      ).copyWith(
-        displayLarge: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-        displayMedium: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-        displaySmall: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-        headlineLarge: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-        headlineMedium: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-        headlineSmall: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-        titleLarge: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-        titleMedium: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-        titleSmall: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-      ),
+      textTheme: ThemeData.light().textTheme
+          .apply(
+            fontFamily: 'Outfit',
+            bodyColor: _sumizome,
+            displayColor: _sumizome,
+          )
+          .copyWith(
+            displayLarge: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+            displayMedium: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+            displaySmall: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+            headlineLarge: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+            headlineMedium: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+            headlineSmall: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+            titleLarge: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+            titleMedium: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+            titleSmall: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+          ),
 
       // ── Card (Handmade Paper Style) ───────────────────────────
       cardTheme: CardThemeData(
@@ -308,21 +337,50 @@ class AppTheme {
       scaffoldBackgroundColor: _darkInk,
 
       // Outfit globally for readability and telemetry; ShipporiMincho selectively for headers
-      textTheme: ThemeData.dark().textTheme.apply(
-        fontFamily: 'Outfit',
-        bodyColor: _riceWhite,
-        displayColor: _riceWhite,
-      ).copyWith(
-        displayLarge: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-        displayMedium: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-        displaySmall: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-        headlineLarge: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-        headlineMedium: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-        headlineSmall: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-        titleLarge: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-        titleMedium: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-        titleSmall: const TextStyle(fontFamily: 'ShipporiMincho', fontWeight: FontWeight.bold),
-      ),
+      textTheme: ThemeData.dark().textTheme
+          .apply(
+            fontFamily: 'Outfit',
+            bodyColor: _riceWhite,
+            displayColor: _riceWhite,
+          )
+          .copyWith(
+            displayLarge: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+            displayMedium: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+            displaySmall: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+            headlineLarge: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+            headlineMedium: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+            headlineSmall: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+            titleLarge: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+            titleMedium: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+            titleSmall: const TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontWeight: FontWeight.bold,
+            ),
+          ),
 
       // ── Card (Dark Paper Style) ───────────────────────────────
       cardTheme: CardThemeData(
@@ -506,7 +564,9 @@ class AppColors {
   static Color textSecondary(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light
       ? charcoal
-      : const Color(0xFFB0B3B8); // Soft Rice Gray (increased contrast for readability)
+      : const Color(
+          0xFFB0B3B8,
+        ); // Soft Rice Gray (increased contrast for readability)
 
   static Color border(BuildContext context) =>
       Theme.of(context).brightness == Brightness.light

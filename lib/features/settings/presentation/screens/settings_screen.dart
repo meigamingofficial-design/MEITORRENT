@@ -191,7 +191,8 @@ class SettingsScreen extends ConsumerWidget {
               assetPath: 'LICENSES.md',
             ),
             _SpringSettingsTile(
-              onTap: () => _launchUrl('https://www.gnu.org/licenses/gpl-3.0.en.html'),
+              onTap: () =>
+                  _launchUrl('https://www.gnu.org/licenses/gpl-3.0.en.html'),
               child: ListTile(
                 leading: Container(
                   width: 40,
@@ -277,30 +278,33 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 22, 16, 8),
-      child: Row(
-        children: [
-          Container(
-            width: 3.5,
-            height: 14,
-            decoration: BoxDecoration(
-              color: AppColors.downloading,
-              borderRadius: BorderRadius.circular(2),
-            ),
+          padding: const EdgeInsets.fromLTRB(16, 22, 16, 8),
+          child: Row(
+            children: [
+              Container(
+                width: 3.5,
+                height: 14,
+                decoration: BoxDecoration(
+                  color: AppColors.downloading,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title.toUpperCase(),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppColors.downloading,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Text(
-            title.toUpperCase(),
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppColors.downloading,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.5,
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 250.ms).slideX(begin: -0.05, end: 0, curve: Curves.easeOutCubic);
+        )
+        .animate()
+        .fadeIn(duration: 250.ms)
+        .slideX(begin: -0.05, end: 0, curve: Curves.easeOutCubic);
   }
 }
 
@@ -405,7 +409,9 @@ class _SpeedLimitTile extends StatelessWidget {
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.textSecondary(context).withValues(alpha: 0.2),
+                      color: AppColors.textSecondary(
+                        context,
+                      ).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -606,7 +612,9 @@ class _ConnectionsTile extends StatelessWidget {
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.textSecondary(context).withValues(alpha: 0.2),
+                      color: AppColors.textSecondary(
+                        context,
+                      ).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -873,19 +881,26 @@ class _LegalDetailScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-        child: SelectableText(
-          content,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.text(context),
-            fontSize: 14,
-            height: 1.8,
-            letterSpacing: 0.2,
-          ),
-        ),
-      ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.05, end: 0, curve: Curves.easeOutCubic),
+      body:
+          SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 28,
+                ),
+                child: SelectableText(
+                  content,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.text(context),
+                    fontSize: 14,
+                    height: 1.8,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              )
+              .animate()
+              .fadeIn(duration: 350.ms)
+              .slideY(begin: 0.05, end: 0, curve: Curves.easeOutCubic),
     );
   }
 }
@@ -1103,17 +1118,21 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
                     ),
                     borderRadius: BorderRadius.circular(6),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 4,
+                        horizontal: 2,
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             'Configure OEM Settings',
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: AppColors.downloading,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: AppColors.downloading,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
                           ),
                           const SizedBox(width: 4),
                           const Icon(
@@ -1170,14 +1189,18 @@ class _SpringSettingsTileState extends State<_SpringSettingsTile>
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: widget.onTap != null ? (_) => unawaited(_ctrl.forward()) : null,
+      onTapDown: widget.onTap != null
+          ? (_) => unawaited(_ctrl.forward())
+          : null,
       onTapUp: widget.onTap != null
           ? (_) {
               unawaited(_ctrl.reverse());
               widget.onTap?.call();
             }
           : null,
-      onTapCancel: widget.onTap != null ? () => unawaited(_ctrl.reverse()) : null,
+      onTapCancel: widget.onTap != null
+          ? () => unawaited(_ctrl.reverse())
+          : null,
       child: AnimatedBuilder(
         animation: _scale,
         builder: (_, child) => Transform.scale(

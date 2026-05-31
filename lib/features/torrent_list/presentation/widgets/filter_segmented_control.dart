@@ -86,18 +86,19 @@ class FilterSegmentedControl extends StatelessWidget {
                       child: Center(
                         child: AnimatedDefaultTextStyle(
                           duration: const Duration(milliseconds: 220),
-                          style: (Theme.of(context).textTheme.labelLarge ??
-                                  const TextStyle())
-                              .copyWith(
-                            color: isActive
-                                ? Colors.white
-                                : AppColors.textSecondary(context),
-                            fontSize: 13,
-                            fontWeight: isActive
-                                ? FontWeight.w700
-                                : FontWeight.w600,
-                            letterSpacing: isActive ? -0.1 : 0,
-                          ),
+                          style:
+                              (Theme.of(context).textTheme.labelLarge ??
+                                      const TextStyle())
+                                  .copyWith(
+                                    color: isActive
+                                        ? Colors.white
+                                        : AppColors.textSecondary(context),
+                                    fontSize: 13,
+                                    fontWeight: isActive
+                                        ? FontWeight.w700
+                                        : FontWeight.w600,
+                                    letterSpacing: isActive ? -0.1 : 0,
+                                  ),
                           child: Text(_labels[i]),
                         ),
                       ),

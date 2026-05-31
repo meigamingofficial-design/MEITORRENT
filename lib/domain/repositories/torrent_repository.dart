@@ -119,7 +119,9 @@ class EngineConfig {
       wifiOnlyMode: wifiOnlyMode ?? this.wifiOnlyMode,
       stopSeedingWhenFinished:
           stopSeedingWhenFinished ?? this.stopSeedingWhenFinished,
-      defaultSavePath: clearSavePath ? null : (defaultSavePath ?? this.defaultSavePath),
+      defaultSavePath: clearSavePath
+          ? null
+          : (defaultSavePath ?? this.defaultSavePath),
     );
   }
 

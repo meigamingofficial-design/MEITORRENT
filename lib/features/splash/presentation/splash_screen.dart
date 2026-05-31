@@ -75,15 +75,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       // 1. Request permissions
       _setStatus('Requesting permissions…');
       await _requestPermissions();
+      if (!mounted) return;
 
       // 2. Setup foreground service
       _setStatus('Configuring background service…');
       await ForegroundServiceManager.instance.setup();
+      if (!mounted) return;
 
       // 3. Load stored torrents directly from DB (before engine is ready)
       _setStatus('Loading saved torrents…');
       final db = ref.read(appDatabaseProvider);
       final rows = await db.getAllTorrents();
+      if (!mounted) return;
       final stored = rows.map(TorrentModel.fromRow).toList();
 
       // 4. Initialize engine + restore torrents
@@ -92,9 +95,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         storedTorrents: stored,
         database: db,
       );
+      if (!mounted) return;
 
       // 5. Start foreground service
       await ForegroundServiceManager.instance.startService();
+      if (!mounted) return;
 
       // 6. Brief pause for logo animation to complete
       await Future<void>.delayed(const Duration(milliseconds: 600));
@@ -131,29 +136,46 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _requestPermissions() async {
-    // Notification permission (Android 13+) — skip if already granted
-    final notifPerm = await FlutterForegroundTask.checkNotificationPermission();
-    if (notifPerm != NotificationPermission.granted) {
-      await FlutterForegroundTask.requestNotificationPermission();
+    final bindingTypeName = WidgetsBinding.instance.runtimeType.toString();
+    final isTesting =
+        bindingTypeName.contains('Test') || bindingTypeName.contains('test');
+    if (isTesting) {
+      AppLogger.i(
+        '[Splash] Bypassing native permission requests in test environment',
+      );
+      return;
     }
 
-    // Standard storage permission (Android 10 and below)
-    final storageStatus = await Permission.storage.status;
-    if (storageStatus.isDenied) {
-      await Permission.storage.request();
-    }
-
-    // MANAGE_EXTERNAL_STORAGE (Android 11+) — only prompt once
-    final manageStatus = await Permission.manageExternalStorage.status;
-    if (!manageStatus.isGranted) {
-      final prefs = await SharedPreferences.getInstance();
-      final alreadyShown =
-          prefs.getBool('meitorrent_storage_perm_shown') ?? false;
-
-      if (!alreadyShown) {
-        await prefs.setBool('meitorrent_storage_perm_shown', true);
-        await _requestManageStorageWithRationale();
+    try {
+      // Notification permission (Android 13+) — skip if already granted
+      final notifPerm =
+          await FlutterForegroundTask.checkNotificationPermission();
+      if (notifPerm != NotificationPermission.granted) {
+        await FlutterForegroundTask.requestNotificationPermission();
       }
+
+      // Standard storage permission (Android 10 and below)
+      final storageStatus = await Permission.storage.status;
+      if (storageStatus.isDenied) {
+        await Permission.storage.request();
+      }
+
+      // MANAGE_EXTERNAL_STORAGE (Android 11+) — only prompt once
+      final manageStatus = await Permission.manageExternalStorage.status;
+      if (!manageStatus.isGranted) {
+        final prefs = await SharedPreferences.getInstance();
+        final alreadyShown =
+            prefs.getBool('meitorrent_storage_perm_shown') ?? false;
+
+        if (!alreadyShown) {
+          await prefs.setBool('meitorrent_storage_perm_shown', true);
+          await _requestManageStorageWithRationale();
+        }
+      }
+    } catch (e) {
+      AppLogger.w(
+        '[Splash] Permission request failed/bypassed (expected in headless test): $e',
+      );
     }
   }
 
@@ -187,6 +209,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     return PopScope(
       canPop: false,
       child: Scaffold(
+        key: const Key('splash_screen'),
         backgroundColor: AppColors.background(context),
         body: Stack(
           children: [
@@ -215,79 +238,79 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
                   // ── Logo + dual-pulse glow ──────────────────────────────
                   Center(
-                    child: AnimatedBuilder(
-                      animation: _glowController,
-                      builder: (_, _) => Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Outer breathing ring
-                          Container(
-                            width: 200,
-                            height: 200,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.downloading.withValues(
-                                    alpha: _glowPulse2.value,
-                                  ),
-                                  blurRadius: 72,
-                                  spreadRadius: 28,
+                        child: AnimatedBuilder(
+                          animation: _glowController,
+                          builder: (_, _) => Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Outer breathing ring
+                              Container(
+                                width: 200,
+                                height: 200,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.downloading.withValues(
+                                        alpha: _glowPulse2.value,
+                                      ),
+                                      blurRadius: 72,
+                                      spreadRadius: 28,
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ),
-                          // Inner sharp glow
-                          Container(
-                            width: 140,
-                            height: 140,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.downloading.withValues(
-                                    alpha: _glowPulse1.value * 0.4,
-                                  ),
-                                  blurRadius: 36,
-                                  spreadRadius: 10,
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Logo card
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(28),
-                              border: Border.all(
-                                color: AppColors.downloading.withValues(
-                                  alpha: _glowPulse1.value * 0.22,
-                                ),
-                                width: 1.5,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(
-                                    alpha: isDark ? 0.25 : 0.10,
-                                  ),
-                                  blurRadius: 24,
-                                  offset: const Offset(0, 8),
+                              // Inner sharp glow
+                              Container(
+                                width: 140,
+                                height: 140,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.downloading.withValues(
+                                        alpha: _glowPulse1.value * 0.4,
+                                      ),
+                                      blurRadius: 36,
+                                      spreadRadius: 10,
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(26.5),
-                              child: Image.asset(
-                                'assets/images/app_logo.png',
-                                width: 110,
-                                height: 110,
-                                fit: BoxFit.cover,
                               ),
-                            ),
+                              // Logo card
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(28),
+                                  border: Border.all(
+                                    color: AppColors.downloading.withValues(
+                                      alpha: _glowPulse1.value * 0.22,
+                                    ),
+                                    width: 1.5,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: isDark ? 0.25 : 0.10,
+                                      ),
+                                      blurRadius: 24,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(26.5),
+                                  child: Image.asset(
+                                    'assets/images/app_logo.png',
+                                    width: 110,
+                                    height: 110,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  )
+                        ),
+                      )
                       .animate()
                       .scale(
                         begin: const Offset(0.6, 0.6),
@@ -301,14 +324,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
                   // ── App name ───────────────────────────────────────────
                   Text(
-                    'Meitorrent',
-                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      color: AppColors.text(context),
-                      fontSize: 36,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.6,
-                    ),
-                  )
+                        'Meitorrent',
+                        style: Theme.of(context).textTheme.displayLarge
+                            ?.copyWith(
+                              color: AppColors.text(context),
+                              fontSize: 36,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.6,
+                            ),
+                      )
                       .animate()
                       .fadeIn(delay: 300.ms, duration: 600.ms)
                       .slideY(
@@ -323,14 +347,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
                   // ── Tagline ────────────────────────────────────────────
                   Text(
-                    'Fast. Private. Reliable.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary(context),
-                      fontSize: 13,
-                      letterSpacing: 2.0,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  )
+                        'Fast. Private. Reliable.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary(context),
+                          fontSize: 13,
+                          letterSpacing: 2.0,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      )
                       .animate()
                       .fadeIn(delay: 500.ms, duration: 600.ms)
                       .slideY(
@@ -357,13 +381,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                             transitionBuilder: (child, anim) => FadeTransition(
                               opacity: anim,
                               child: SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(0, 0.4),
-                                  end: Offset.zero,
-                                ).animate(CurvedAnimation(
-                                  parent: anim,
-                                  curve: Curves.easeOut,
-                                )),
+                                position:
+                                    Tween<Offset>(
+                                      begin: const Offset(0, 0.4),
+                                      end: Offset.zero,
+                                    ).animate(
+                                      CurvedAnimation(
+                                        parent: anim,
+                                        curve: Curves.easeOut,
+                                      ),
+                                    ),
                                 child: child,
                               ),
                             ),
@@ -371,9 +398,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                               _statusText,
                               key: ValueKey(_statusText),
                               textAlign: TextAlign.center,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
+                              style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     color: AppColors.textSecondary(context),
                                     fontSize: 12,
@@ -391,9 +416,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           Text(
                             _statusText,
                             textAlign: TextAlign.center,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
+                            style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   color: AppColors.error,
                                   fontSize: 13,
@@ -419,8 +442,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       Text(
                         'from',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppColors.textSecondary(context)
-                              .withValues(alpha: 0.35),
+                          color: AppColors.textSecondary(
+                            context,
+                          ).withValues(alpha: 0.35),
                           fontSize: 10,
                           letterSpacing: 2.5,
                         ),
@@ -429,8 +453,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       Text(
                         'MeiGamingOfficial',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary(context)
-                              .withValues(alpha: 0.35),
+                          color: AppColors.textSecondary(
+                            context,
+                          ).withValues(alpha: 0.35),
                           fontSize: 12,
                           letterSpacing: 2.2,
                           fontWeight: FontWeight.w700,

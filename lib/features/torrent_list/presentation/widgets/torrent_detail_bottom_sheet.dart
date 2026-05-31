@@ -13,10 +13,12 @@ class TorrentDetailBottomSheet extends ConsumerStatefulWidget {
   final String torrentId;
 
   @override
-  ConsumerState<TorrentDetailBottomSheet> createState() => _TorrentDetailBottomSheetState();
+  ConsumerState<TorrentDetailBottomSheet> createState() =>
+      _TorrentDetailBottomSheetState();
 }
 
-class _TorrentDetailBottomSheetState extends ConsumerState<TorrentDetailBottomSheet>
+class _TorrentDetailBottomSheetState
+    extends ConsumerState<TorrentDetailBottomSheet>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   bool _isTitleExpanded = false;
@@ -37,9 +39,14 @@ class _TorrentDetailBottomSheetState extends ConsumerState<TorrentDetailBottomSh
   Widget build(BuildContext context) {
     // Watch specific torrent details utilizing Riverpod select.
     // Rebuilds only when the states or speeds change, isolating rebuild storms.
-    final torrent = ref.watch(torrentProvider.select(
-      (s) => s.value?.firstWhere((t) => t.id == widget.torrentId, orElse: () => _placeholder(widget.torrentId)),
-    ));
+    final torrent = ref.watch(
+      torrentProvider.select(
+        (s) => s.value?.firstWhere(
+          (t) => t.id == widget.torrentId,
+          orElse: () => _placeholder(widget.torrentId),
+        ),
+      ),
+    );
 
     if (torrent == null || torrent.state == TorrentState.unknown) {
       return const SizedBox.shrink();
@@ -47,9 +54,15 @@ class _TorrentDetailBottomSheetState extends ConsumerState<TorrentDetailBottomSh
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final themeBg = isDark ? const Color(0xFF161719) : const Color(0xFFFAF6EE);
-    final themeSurface = isDark ? const Color(0xFF1E2023) : const Color(0xFFFFFDF9);
-    final themeOutline = isDark ? const Color(0xFF2C2D33) : const Color(0xFFE5DDD0);
-    final primaryColor = isDark ? const Color(0xFFE53935) : const Color(0xFFC82127);
+    final themeSurface = isDark
+        ? const Color(0xFF1E2023)
+        : const Color(0xFFFFFDF9);
+    final themeOutline = isDark
+        ? const Color(0xFF2C2D33)
+        : const Color(0xFFE5DDD0);
+    final primaryColor = isDark
+        ? const Color(0xFFE53935)
+        : const Color(0xFFC82127);
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.78,
@@ -94,7 +107,9 @@ class _TorrentDetailBottomSheetState extends ConsumerState<TorrentDetailBottomSh
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         InkWell(
-                          onTap: () => setState(() => _isTitleExpanded = !_isTitleExpanded),
+                          onTap: () => setState(
+                            () => _isTitleExpanded = !_isTitleExpanded,
+                          ),
                           borderRadius: BorderRadius.circular(4),
                           child: Text(
                             torrent.name,
@@ -105,7 +120,9 @@ class _TorrentDetailBottomSheetState extends ConsumerState<TorrentDetailBottomSh
                               height: 1.3,
                             ),
                             maxLines: _isTitleExpanded ? null : 2,
-                            overflow: _isTitleExpanded ? null : TextOverflow.ellipsis,
+                            overflow: _isTitleExpanded
+                                ? null
+                                : TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -125,7 +142,7 @@ class _TorrentDetailBottomSheetState extends ConsumerState<TorrentDetailBottomSh
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 16),
 
             // ── Tab Bar Navigation (Segmented M3 Styling - Flat Washi Layout) ────
@@ -145,7 +162,9 @@ class _TorrentDetailBottomSheetState extends ConsumerState<TorrentDetailBottomSh
                 indicatorSize: TabBarIndicatorSize.tab,
                 dividerColor: Colors.transparent,
                 labelColor: Colors.white,
-                unselectedLabelColor: isDark ? const Color(0xFFA39F97) : const Color(0xFF5C5850),
+                unselectedLabelColor: isDark
+                    ? const Color(0xFFA39F97)
+                    : const Color(0xFF5C5850),
                 labelStyle: const TextStyle(
                   fontFamily: 'Outfit',
                   fontWeight: FontWeight.bold,
@@ -224,7 +243,7 @@ class _InfoTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     final labelStyle = TextStyle(
       fontFamily: 'Outfit',
       fontSize: 11,
@@ -242,14 +261,62 @@ class _InfoTab extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         children: [
-          _buildInfoRow('TORRENT NAME', torrent.name, labelStyle, valueStyle, isDark),
-          _buildInfoRow('TOTAL SIZE', SizeFormatter.format(torrent.totalSize), labelStyle, valueStyle, isDark),
-          _buildInfoRow('DOWNLOADED', SizeFormatter.format(torrent.downloadedBytes), labelStyle, valueStyle, isDark),
-          _buildInfoRow('UPLOADED', SizeFormatter.format(torrent.uploadedBytes), labelStyle, valueStyle, isDark),
-          _buildInfoRow('SHARE RATIO', torrent.ratio.toStringAsFixed(2), labelStyle, valueStyle, isDark),
-          _buildInfoRow('HASH KEY', torrent.id.toUpperCase(), labelStyle, valueStyle, isDark),
-          _buildInfoRow('CREATION DATE', torrent.addedAt.toLocal().toString().split('.').first, labelStyle, valueStyle, isDark),
-          _buildInfoRow('STATE', torrent.state.displayName, labelStyle, valueStyle, isDark),
+          _buildInfoRow(
+            'TORRENT NAME',
+            torrent.name,
+            labelStyle,
+            valueStyle,
+            isDark,
+          ),
+          _buildInfoRow(
+            'TOTAL SIZE',
+            SizeFormatter.format(torrent.totalSize),
+            labelStyle,
+            valueStyle,
+            isDark,
+          ),
+          _buildInfoRow(
+            'DOWNLOADED',
+            SizeFormatter.format(torrent.downloadedBytes),
+            labelStyle,
+            valueStyle,
+            isDark,
+          ),
+          _buildInfoRow(
+            'UPLOADED',
+            SizeFormatter.format(torrent.uploadedBytes),
+            labelStyle,
+            valueStyle,
+            isDark,
+          ),
+          _buildInfoRow(
+            'SHARE RATIO',
+            torrent.ratio.toStringAsFixed(2),
+            labelStyle,
+            valueStyle,
+            isDark,
+          ),
+          _buildInfoRow(
+            'HASH KEY',
+            torrent.id.toUpperCase(),
+            labelStyle,
+            valueStyle,
+            isDark,
+          ),
+          _buildInfoRow(
+            'CREATION DATE',
+            torrent.addedAt.toLocal().toString().split('.').first,
+            labelStyle,
+            valueStyle,
+            isDark,
+          ),
+          _buildInfoRow(
+            'STATE',
+            torrent.state.displayName,
+            labelStyle,
+            valueStyle,
+            isDark,
+          ),
         ],
       ),
     );
@@ -301,7 +368,10 @@ class _InfoTab extends StatelessWidget {
               onTap: onTap,
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 4,
+                ),
                 child: rowContent,
               ),
             )
@@ -332,7 +402,8 @@ class _FilesTab extends ConsumerStatefulWidget {
   ConsumerState<_FilesTab> createState() => _FilesTabState();
 }
 
-class _FilesTabState extends ConsumerState<_FilesTab> with AutomaticKeepAliveClientMixin {
+class _FilesTabState extends ConsumerState<_FilesTab>
+    with AutomaticKeepAliveClientMixin {
   List<lt.FileInfo> _files = [];
   bool _loading = true;
   final Set<int> _selectedIndices = {};
@@ -388,13 +459,16 @@ class _FilesTabState extends ConsumerState<_FilesTab> with AutomaticKeepAliveCli
       try {
         final subDir = Directory('${widget.savePath}/${widget.torrentName}');
         if (subDir.existsSync()) {
-          final entities = subDir.listSync(recursive: true)
-            .whereType<File>()
-            .toList();
+          final entities = subDir
+              .listSync(recursive: true)
+              .whereType<File>()
+              .toList();
           fileList = entities.asMap().entries.map((entry) {
             final file = entry.value;
-            final relativeName = file.path
-                .replaceFirst('${widget.savePath}/', '');
+            final relativeName = file.path.replaceFirst(
+              '${widget.savePath}/',
+              '',
+            );
             return lt.FileInfo(
               index: entry.key,
               name: relativeName,
@@ -460,13 +534,16 @@ class _FilesTabState extends ConsumerState<_FilesTab> with AutomaticKeepAliveCli
     if (selected.isEmpty) return;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor =
-        isDark ? const Color(0xFFE53935) : const Color(0xFFC82127);
+    final primaryColor = isDark
+        ? const Color(0xFFE53935)
+        : const Color(0xFFC82127);
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E2023) : const Color(0xFFFFFDF9),
+        backgroundColor: isDark
+            ? const Color(0xFF1E2023)
+            : const Color(0xFFFFFDF9),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(
@@ -507,7 +584,9 @@ class _FilesTabState extends ConsumerState<_FilesTab> with AutomaticKeepAliveCli
               style: TextStyle(
                 fontFamily: 'Outfit',
                 fontWeight: FontWeight.w600,
-                color: isDark ? const Color(0xFFA39F97) : const Color(0xFF5C5850),
+                color: isDark
+                    ? const Color(0xFFA39F97)
+                    : const Color(0xFF5C5850),
               ),
             ),
           ),
@@ -515,7 +594,8 @@ class _FilesTabState extends ConsumerState<_FilesTab> with AutomaticKeepAliveCli
             style: FilledButton.styleFrom(
               backgroundColor: primaryColor,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text(
@@ -576,7 +656,10 @@ class _FilesTabState extends ConsumerState<_FilesTab> with AutomaticKeepAliveCli
       SnackBar(
         content: Text(
           '$deleted file${deleted == 1 ? '' : 's'} deleted from disk',
-          style: const TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            fontFamily: 'Outfit',
+            fontWeight: FontWeight.w600,
+          ),
         ),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -594,8 +677,9 @@ class _FilesTabState extends ConsumerState<_FilesTab> with AutomaticKeepAliveCli
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor =
-        isDark ? const Color(0xFFE53935) : const Color(0xFFC82127);
+    final primaryColor = isDark
+        ? const Color(0xFFE53935)
+        : const Color(0xFFC82127);
 
     if (_files.isEmpty) {
       return Center(
@@ -614,7 +698,9 @@ class _FilesTabState extends ConsumerState<_FilesTab> with AutomaticKeepAliveCli
                 fontFamily: 'ShipporiMincho',
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: isDark ? const Color(0xFFA39F97) : const Color(0xFF5C5850),
+                color: isDark
+                    ? const Color(0xFFA39F97)
+                    : const Color(0xFF5C5850),
               ),
             ),
             const SizedBox(height: 6),
@@ -624,7 +710,9 @@ class _FilesTabState extends ConsumerState<_FilesTab> with AutomaticKeepAliveCli
               style: TextStyle(
                 fontFamily: 'Outfit',
                 fontSize: 12,
-                color: isDark ? const Color(0xFF6B6862) : const Color(0xFF9E9588),
+                color: isDark
+                    ? const Color(0xFF6B6862)
+                    : const Color(0xFF9E9588),
               ),
             ),
             const SizedBox(height: 20),
@@ -636,7 +724,10 @@ class _FilesTabState extends ConsumerState<_FilesTab> with AutomaticKeepAliveCli
               icon: const Icon(Icons.refresh_rounded, size: 16),
               label: const Text(
                 'Retry',
-                style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -785,11 +876,11 @@ class _FilesTabState extends ConsumerState<_FilesTab> with AutomaticKeepAliveCli
                         fontWeight: FontWeight.w600,
                         color: exists
                             ? (isDark
-                                ? const Color(0xFFECE9E2)
-                                : const Color(0xFF1C1C1C))
+                                  ? const Color(0xFFECE9E2)
+                                  : const Color(0xFF1C1C1C))
                             : (isDark
-                                ? const Color(0xFF6B6862)
-                                : const Color(0xFF9E9588)),
+                                  ? const Color(0xFF6B6862)
+                                  : const Color(0xFF9E9588)),
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -881,7 +972,9 @@ class _TrackersTab extends StatelessWidget {
               color: isDark ? const Color(0xFF1E2023) : const Color(0xFFFFF7E6),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: isDark ? const Color(0xFF2C2D33) : const Color(0xFFFFD591),
+                color: isDark
+                    ? const Color(0xFF2C2D33)
+                    : const Color(0xFFFFD591),
                 width: 1,
               ),
             ),
@@ -891,7 +984,9 @@ class _TrackersTab extends StatelessWidget {
                 fontFamily: 'Outfit',
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: isDark ? const Color(0xFFDDA531) : const Color(0xFFC48E19),
+                color: isDark
+                    ? const Color(0xFFDDA531)
+                    : const Color(0xFFC48E19),
                 height: 1.45,
               ),
             ),
@@ -906,7 +1001,10 @@ class _TrackersTab extends StatelessWidget {
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     itemCount: trackers.length,
                     itemBuilder: (context, index) {
                       final url = trackers[index];
@@ -914,10 +1012,14 @@ class _TrackersTab extends StatelessWidget {
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E2023) : const Color(0xFFFFFDF9),
+                          color: isDark
+                              ? const Color(0xFF1E2023)
+                              : const Color(0xFFFFFDF9),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isDark ? const Color(0xFF2C2D33) : const Color(0xFFE5DDD0),
+                            color: isDark
+                                ? const Color(0xFF2C2D33)
+                                : const Color(0xFFE5DDD0),
                             width: 1,
                           ),
                         ),
@@ -944,4 +1046,3 @@ class _TrackersTab extends StatelessWidget {
     );
   }
 }
-

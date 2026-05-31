@@ -1,4 +1,9 @@
+import 'dart:io';
+import 'package:flutter/widgets.dart' show WidgetsBinding;
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import 'tables/torrents_table.dart';
@@ -60,8 +65,27 @@ class AppDatabase extends _$AppDatabase {
       }
     });
   }
+
+  /// Remove every torrent row. Used exclusively by integration tests to ensure
+  /// a clean slate between test cases without going through the full UI flow.
+  Future<int> clearAllTorrents() => delete(torrentsTable).go();
 }
 
 DatabaseConnection _openConnection() {
+  final bindingTypeName = WidgetsBinding.instance.runtimeType.toString();
+  final isTesting =
+      bindingTypeName.contains('Test') || bindingTypeName.contains('test');
+
+  if (isTesting) {
+    // Return a direct NativeDatabase connection without background isolates to prevent test runner hangs
+    return DatabaseConnection(
+      LazyDatabase(() async {
+        final dbFolder = await getApplicationDocumentsDirectory();
+        final file = File(p.join(dbFolder.path, 'meitorrent.db'));
+        return NativeDatabase(file);
+      }),
+    );
+  }
+
   return DatabaseConnection(driftDatabase(name: 'meitorrent.db'));
 }

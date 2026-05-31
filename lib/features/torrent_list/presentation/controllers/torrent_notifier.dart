@@ -32,7 +32,11 @@ TorrentRepository torrentRepository(Ref ref) {
   final db = ref.watch(appDatabaseProvider);
   final engine = TorrentEngineService.instance;
   final prefs = ref.watch(sharedPreferencesProvider);
-  final repo = TorrentRepositoryImpl(database: db, engine: engine, sharedPreferences: prefs);
+  final repo = TorrentRepositoryImpl(
+    database: db,
+    engine: engine,
+    sharedPreferences: prefs,
+  );
   ref.onDispose(repo.dispose);
   return repo;
 }
@@ -131,11 +135,13 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
       <String, bool>{}; // Map of torrentId -> was seeding
   final _pendingStopTimers = <String, Timer>{};
   StreamSubscription<NotificationActionEvent>? _actionSub;
+  bool _isDisposed = false;
 
   /// Optimistic state overrides applied immediately on user action.
   /// These shield the UI from reverting during the DB-write race window.
   /// Cleared once the live stream confirms the new state for each torrent.
-  final _optimisticOverrides = <String, ({bool isPaused, bool isStopped, DateTime timestamp})>{};
+  final _optimisticOverrides =
+      <String, ({bool isPaused, bool isStopped, DateTime timestamp})>{};
 
   @override
   Future<List<TorrentStatus>> build() async {
@@ -144,12 +150,14 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     // Initialize current connectivity
     unawaited(
       Connectivity().checkConnectivity().then((results) {
+        if (_isDisposed) return;
         _currentConnectivity = results;
         unawaited(_enforceWifiOnly(results));
       }),
     );
 
     _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
+      if (_isDisposed) return;
       _currentConnectivity = results;
       unawaited(_enforceWifiOnly(results));
     });
@@ -157,12 +165,14 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     ref.listen(settingsProvider, (previous, next) async {
       if (previous?.wifiOnlyMode != next.wifiOnlyMode) {
         final results = await Connectivity().checkConnectivity();
+        if (_isDisposed) return;
         _currentConnectivity = results;
         await _enforceWifiOnly(results);
       }
     });
 
     _actionSub = NotificationService.instance.actionStream.listen((event) {
+      if (_isDisposed) return;
       if (event.actionId == NotificationActions.pause) {
         unawaited(pauseTorrent(event.torrentId));
       } else if (event.actionId == NotificationActions.resume) {
@@ -180,6 +190,7 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     });
 
     ref.onDispose(() {
+      _isDisposed = true;
       WidgetsBinding.instance.removeObserver(this);
       unawaited(_sub?.cancel());
       unawaited(_connectivitySub?.cancel());
@@ -195,6 +206,7 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     // Subscribe to live stream; rebuild state on each emission
     _sub = repo.statusStream.listen(
       (statuses) {
+        if (_isDisposed) return;
         List<TorrentStatus> resolved = statuses;
         if (_optimisticOverrides.isNotEmpty) {
           final now = DateTime.now();
@@ -320,6 +332,7 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   }
 
   Future<void> _enforceWifiOnly(List<ConnectivityResult> results) async {
+    if (_isDisposed) return;
     final settings = ref.read(settingsProvider);
     if (!settings.wifiOnlyMode) {
       // If Wifi-only mode is turned OFF, resume any torrents we previously auto-paused
@@ -410,7 +423,11 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   }
 
   Future<void> pauseTorrent(String id) async {
-    _optimisticOverrides[id] = (isPaused: true, isStopped: false, timestamp: DateTime.now());
+    _optimisticOverrides[id] = (
+      isPaused: true,
+      isStopped: false,
+      timestamp: DateTime.now(),
+    );
     _updateOptimisticStatus(id, isPaused: true);
     try {
       final repo = ref.read(torrentRepositoryProvider);
@@ -430,7 +447,11 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
 
   Future<void> pauseMultiple(List<String> ids) async {
     for (final id in ids) {
-      _optimisticOverrides[id] = (isPaused: true, isStopped: false, timestamp: DateTime.now());
+      _optimisticOverrides[id] = (
+        isPaused: true,
+        isStopped: false,
+        timestamp: DateTime.now(),
+      );
     }
     _updateOptimisticStatusMultiple(ids, isPaused: true);
     try {
@@ -452,7 +473,11 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   }
 
   Future<void> stopTorrent(String id) async {
-    _optimisticOverrides[id] = (isPaused: true, isStopped: true, timestamp: DateTime.now());
+    _optimisticOverrides[id] = (
+      isPaused: true,
+      isStopped: true,
+      timestamp: DateTime.now(),
+    );
     _updateOptimisticStatus(id, isPaused: true, isStopped: true);
     try {
       final repo = ref.read(torrentRepositoryProvider);
@@ -471,7 +496,11 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
 
   Future<void> stopMultiple(List<String> ids) async {
     for (final id in ids) {
-      _optimisticOverrides[id] = (isPaused: true, isStopped: true, timestamp: DateTime.now());
+      _optimisticOverrides[id] = (
+        isPaused: true,
+        isStopped: true,
+        timestamp: DateTime.now(),
+      );
     }
     _updateOptimisticStatusMultiple(ids, isPaused: true, isStopped: true);
     try {
@@ -492,7 +521,11 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
   }
 
   Future<void> resumeTorrent(String id) async {
-    _optimisticOverrides[id] = (isPaused: false, isStopped: false, timestamp: DateTime.now());
+    _optimisticOverrides[id] = (
+      isPaused: false,
+      isStopped: false,
+      timestamp: DateTime.now(),
+    );
     _updateOptimisticStatus(id, isPaused: false, isStopped: false);
     try {
       final repo = ref.read(torrentRepositoryProvider);
@@ -511,7 +544,11 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
 
   Future<void> resumeMultiple(List<String> ids) async {
     for (final id in ids) {
-      _optimisticOverrides[id] = (isPaused: false, isStopped: false, timestamp: DateTime.now());
+      _optimisticOverrides[id] = (
+        isPaused: false,
+        isStopped: false,
+        timestamp: DateTime.now(),
+      );
     }
     _updateOptimisticStatusMultiple(ids, isPaused: false, isStopped: false);
     try {
@@ -630,7 +667,9 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
     final intId = int.tryParse(id);
     if (intId != null) {
       TorrentEngineService.instance.setFilePriorities(intId, priorities);
-      AppLogger.i('[Notifier] Successfully updated file priorities for torrent: $id');
+      AppLogger.i(
+        '[Notifier] Successfully updated file priorities for torrent: $id',
+      );
     }
   }
 

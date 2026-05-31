@@ -32,7 +32,8 @@ class TorrentRepositoryImpl implements TorrentRepository {
     required AppDatabase database,
     required this._engine,
     required SharedPreferences sharedPreferences,
-  }) : _db = database, _prefs = sharedPreferences;
+  }) : _db = database,
+       _prefs = sharedPreferences;
 
   final AppDatabase _db;
   final TorrentEngineService _engine;
@@ -139,11 +140,15 @@ class TorrentRepositoryImpl implements TorrentRepository {
             }
 
             // C. Fingerprint (Name + Size) comparison
-            final dbNorm = t.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+            final dbNorm = t.name.toLowerCase().replaceAll(
+              RegExp(r'[^a-z0-9]'),
+              '',
+            );
             final dbFingerprint = '${dbNorm}_${t.totalSize}';
-            
+
             // Only compare fingerprints if name is not a placeholder
-            final isRealDbName = t.name.isNotEmpty &&
+            final isRealDbName =
+                t.name.isNotEmpty &&
                 !t.name.startsWith('Torrent #') &&
                 t.name != '…';
             if (isRealDbName && liveFingerprints.contains(dbFingerprint)) {
@@ -433,7 +438,9 @@ class TorrentRepositoryImpl implements TorrentRepository {
     // engine and the persisted snapshot while the engine is still warming up.
     // This prevents the "Jump to 0%" effect on cold starts.
 
-    final savePath = persisted.savePath.isNotEmpty ? persisted.savePath : live.savePath;
+    final savePath = persisted.savePath.isNotEmpty
+        ? persisted.savePath
+        : live.savePath;
 
     // 🧱 HARD LOCK: Completed torrents should NEVER go backwards to 0% or Checking.
     if (persisted.isCompleted) {
@@ -877,7 +884,11 @@ class TorrentRepositoryImpl implements TorrentRepository {
       final stored = await _db.getTorrentById(id);
       if (stored != null) {
         try {
-          final deletionPaths = _resolveFilesToDelete(intId, stored.savePath, stored.name);
+          final deletionPaths = _resolveFilesToDelete(
+            intId,
+            stored.savePath,
+            stored.name,
+          );
 
           String? parentPath;
           for (final targetPath in deletionPaths) {
@@ -909,13 +920,37 @@ class TorrentRepositoryImpl implements TorrentRepository {
       }
     }
 
-    // 2. Remove from engine if it's registered there
-    if (intId != null && _isLiveInEngine(intId)) {
-      _engine.remove(intId, deleteFiles: deleteFiles);
+    // 2. Remove from engine — try live-set first, then search by source URI/path
+    //    The live-set (_engineActiveIds) may be stale when a new ProviderContainer
+    //    is created (e.g. each call to app.main() in integration tests) because
+    //    EngineProcessManager.initialize() short-circuits on the second call and
+    //    never repopulates _engineActiveIds.  Falling back to findIdByMagnet /
+    //    findIdByFile mirrors the same pattern used in resumeTorrent().
+    int? engineId = (intId != null && _isLiveInEngine(intId)) ? intId : null;
+    if (engineId == null) {
+      final stored = await _db.getTorrentById(id);
+      if (stored != null) {
+        if (stored.magnetUri != null) {
+          engineId = _engine.findIdByMagnet(stored.magnetUri!);
+        } else if (stored.torrentFilePath != null) {
+          engineId = _engine.findIdByFile(stored.torrentFilePath!);
+        }
+        if (engineId != null) {
+          AppLogger.i(
+            '[Repo] deleteTorrent: found engine ID $engineId via source lookup for $id',
+          );
+        }
+      }
+    }
+    if (engineId != null) {
+      _engine.remove(engineId, deleteFiles: deleteFiles);
     }
 
     // 3. Remove from engine live-set — prevent ghost state
     if (intId != null) _engineActiveIds.remove(intId);
+    if (engineId != null && engineId != intId) {
+      _engineActiveIds.remove(engineId);
+    }
 
     // 4. Cancel the per-torrent notification
     await NotificationService.instance.cancelNotification(id);
@@ -1412,17 +1447,23 @@ class TorrentRepositoryImpl implements TorrentRepository {
           }
         }
         if (paths.isNotEmpty) {
-          AppLogger.d('[Repo] Resolved ${paths.length} deletion path(s) via engine');
+          AppLogger.d(
+            '[Repo] Resolved ${paths.length} deletion path(s) via engine',
+          );
         }
       } catch (e) {
-        AppLogger.w('[Repo] Engine getFiles() failed for deletion, will use fallback: $e');
+        AppLogger.w(
+          '[Repo] Engine getFiles() failed for deletion, will use fallback: $e',
+        );
       }
     }
 
     // ── Tier 2: Stored name ───────────────────────────────────────────────────
     if (paths.isEmpty) {
       paths.add('$savePath/$storedName');
-      AppLogger.d('[Repo] Using stored name fallback for deletion: $storedName');
+      AppLogger.d(
+        '[Repo] Using stored name fallback for deletion: $storedName',
+      );
     }
 
     // ── Tier 3: Disk scan if no candidate exists yet ──────────────────────────
@@ -1437,14 +1478,18 @@ class TorrentRepositoryImpl implements TorrentRepository {
         if (saveDir.existsSync()) {
           final normName = storedName.toLowerCase();
           for (final entry in saveDir.listSync()) {
-            final entryName = entry.uri.pathSegments
-                .lastWhere((s) => s.isNotEmpty, orElse: () => '');
+            final entryName = entry.uri.pathSegments.lastWhere(
+              (s) => s.isNotEmpty,
+              orElse: () => '',
+            );
             final normEntry = entryName.toLowerCase();
             // Match if names contain each other (handles truncation / OS sanitization)
             if (normEntry.contains(normName) || normName.contains(normEntry)) {
               final candidate = '$savePath/$entryName';
               if (!paths.contains(candidate)) {
-                AppLogger.d('[Repo] Disk-scan found deletion candidate: $candidate');
+                AppLogger.d(
+                  '[Repo] Disk-scan found deletion candidate: $candidate',
+                );
                 paths.add(candidate);
               }
             }

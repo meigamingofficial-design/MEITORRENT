@@ -95,7 +95,9 @@ class SettingsNotifier extends _$SettingsNotifier {
     );
     if (state.defaultSavePath != null) {
       await prefs.setString(
-          'meitorrent_default_save_path', state.defaultSavePath!);
+        'meitorrent_default_save_path',
+        state.defaultSavePath!,
+      );
     }
 
     await ref.read(torrentRepositoryProvider).applyEngineConfig(state);

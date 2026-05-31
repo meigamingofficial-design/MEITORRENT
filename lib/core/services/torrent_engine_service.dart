@@ -216,7 +216,9 @@ class TorrentEngineService {
     _engine.setUploadLimit(config.uploadLimit);
     if (config.defaultSavePath != null && config.defaultSavePath!.isNotEmpty) {
       _defaultDownloadPath = config.defaultSavePath;
-      AppLogger.i('[Engine] Updated default download path to: $_defaultDownloadPath');
+      AppLogger.i(
+        '[Engine] Updated default download path to: $_defaultDownloadPath',
+      );
     }
   }
 
@@ -376,5 +378,11 @@ class TorrentEngineService {
     final remaining = info.totalWanted - info.totalDone;
     if (remaining <= 0) return 0;
     return (remaining / info.downloadRate).round();
+  }
+
+  void clearAll() {
+    _idToMagnet.clear();
+    _idToFile.clear();
+    _lastEmitted.clear();
   }
 }

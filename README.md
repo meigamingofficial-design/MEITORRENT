@@ -90,10 +90,146 @@ dart format .
 
 # Check for code quality, analyzer warnings, and lints
 dart analyze
-
-# Run the complete unit and widget test suite
-flutter test
 ```
+
+---
+
+## 🧪 Testing
+
+### ⚡ Quick Pre-Commit Check
+Run this before every commit — no device needed, completes in ~10 seconds:
+```bash
+flutter test test/unit/ test/widget/
+```
+
+---
+
+### 🔬 Unit Tests (no device required)
+
+```bash
+# ── Run everything ────────────────────────────────────────────────
+flutter test test/unit/
+
+# ── By category ──────────────────────────────────────────────────
+
+# Domain logic (state machines, magnet validation, sort order)
+flutter test test/unit/domain/
+
+# Presentation logic (optimistic updates, filter predicates)
+flutter test test/unit/presentation/
+
+# Use-case layer (add magnet, delete torrent)
+flutter test test/unit/usecases/
+
+# ── Individual test files ─────────────────────────────────────────
+
+# TorrentState / isActive / isEffectivelyComplete
+flutter test test/unit/domain/torrent_state_test.dart
+
+# Torrent sort priority order
+flutter test test/unit/domain/torrent_sort_test.dart
+
+# Magnet URI validation
+flutter test test/unit/domain/add_magnet_usecase_test.dart
+
+# Process-kill recovery (progress merge, lifecycle triggers, DB guarantee)
+flutter test test/unit/domain/process_kill_recovery_test.dart
+
+# Existing-file recheck (HARD LOCK, fingerprint dedup, metadata waiter)
+flutter test test/unit/domain/existing_file_recheck_test.dart
+
+# Optimistic state transformations (pause / resume / stop / delete)
+flutter test test/unit/presentation/torrent_notifier_test.dart
+
+# Filter predicates (all / downloading / completed)
+flutter test test/unit/presentation/torrent_filter_test.dart
+```
+
+---
+
+### 🖼️ Widget Tests (no device required)
+
+```bash
+# ── Run all widget tests ──────────────────────────────────────────
+flutter test test/widget/
+
+# ── Individual test files ─────────────────────────────────────────
+
+# Torrent list item (display, progress, state labels, selection)
+flutter test test/widget/torrent_list_item_test.dart
+
+# Filter segmented control (tab switching, state updates)
+flutter test test/widget/filter_segmented_control_test.dart
+```
+
+---
+
+### 📱 Integration Tests (requires connected Android device or emulator)
+
+> **Setup:** Connect a device or start an emulator, then run:
+> ```bash
+> flutter devices          # list available devices
+> adb devices              # verify ADB connection
+> ```
+
+```bash
+# ── Run a specific integration test ──────────────────────────────
+flutter test integration_test/<file>.dart -d <device-id>
+
+# ── Individual test files ─────────────────────────────────────────
+
+# Cold start time, splash → dashboard, perf timeline
+flutter test integration_test/app_launch_test.dart -d <device-id>
+
+# Add magnet / torrent file, invalid inputs, dialog dismiss
+flutter test integration_test/torrent_creation_test.dart -d <device-id>
+
+# Pause / resume / stop / delete, optimistic UI timing
+flutter test integration_test/torrent_lifecycle_test.dart -d <device-id>
+
+# 🔴 CRITICAL: Process-kill recovery (kill → reopen → progress restored → resume works)
+flutter test integration_test/process_kill_recovery_test.dart -d <device-id>
+
+# 🔴 CRITICAL: Existing file recheck (download → delete keep files → re-add → checking → 100%)
+flutter test integration_test/existing_file_recheck_test.dart -d <device-id>
+
+# Startup time, FPS, dialog latency, filter switch benchmarks
+flutter test integration_test/performance_benchmark_test.dart -d <device-id>
+
+# Rapid add/delete cycles, bulk operations, stress stability
+flutter test integration_test/stress_test.dart -d <device-id>
+```
+
+---
+
+### 📊 Performance Targets
+
+| Metric | Target |
+| :--- | :--- |
+| Cold start | < 1.5 s |
+| Dialog open | < 150 ms |
+| Pause / Resume action | < 100 ms |
+| Scrolling | ≥ 60 FPS |
+| Emergency save on kill | < 1 s |
+
+---
+
+### 🗂️ Test Output Options
+
+```bash
+# Default compact output
+flutter test test/unit/
+
+# Expanded output (shows every test name)
+flutter test test/unit/ --reporter=expanded
+
+# Machine-readable JSON (useful for CI parsing)
+flutter test test/unit/ --reporter=json
+
+# Run a single test by name
+flutter test test/unit/domain/torrent_state_test.dart --name "isEffectivelyComplete"
+```
+
 
 #### 🧹 Maintenance & Cleaning
 If you run into compilation caches, stale assets, or want to reclaim disk space from unused package versions, perform a clean sweep:
