@@ -911,7 +911,7 @@ class _FilesTabState extends ConsumerState<_FilesTab>
                                   : const Color(0xFFB00020),
                             ),
                           )
-                        else if (widget.isTorrentFinished || exists)
+                        else if (widget.isTorrentFinished)
                           Text(
                             '✓ COMPLETE',
                             style: TextStyle(
@@ -921,6 +921,16 @@ class _FilesTabState extends ConsumerState<_FilesTab>
                               color: isDark
                                   ? const Color(0xFF387F50)
                                   : const Color(0xFF275E3B),
+                            ),
+                          )
+                        else if (exists)
+                          Text(
+                            'DOWNLOADING',
+                            style: TextStyle(
+                              fontFamily: 'Outfit',
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: primaryColor,
                             ),
                           ),
                       ],

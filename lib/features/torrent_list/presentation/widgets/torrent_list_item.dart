@@ -147,6 +147,7 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
             hasError: hasError,
             isNew: widget.isNew,
             isSelected: isSelected,
+            isFinished: isFinished,
             child: InkWell(
               onTap: () {
                 if (isSelectionMode) {
@@ -327,12 +328,15 @@ class _TorrentListItemState extends ConsumerState<TorrentListItem>
                                     '${(status.progress * 100).toStringAsFixed(1)}%',
                                     style: TextStyle(
                                       fontFamily: 'Outfit',
-                                      color:
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.primary.withValues(
-                                            alpha: 0.8,
-                                          ),
+                                      color: isFinished
+                                          ? AppColors.finished.withValues(
+                                              alpha: 0.8,
+                                            )
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.primary.withValues(
+                                              alpha: 0.8,
+                                            ),
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -475,6 +479,7 @@ class _GlassCard extends StatelessWidget {
     required this.hasError,
     required this.isNew,
     required this.isSelected,
+    this.isFinished = false,
   });
 
   final Widget child;
@@ -482,6 +487,7 @@ class _GlassCard extends StatelessWidget {
   final bool hasError;
   final bool isNew;
   final bool isSelected;
+  final bool isFinished;
 
   @override
   Widget build(BuildContext context) {
@@ -490,6 +496,8 @@ class _GlassCard extends StatelessWidget {
         ? primaryColor
         : hasError
         ? AppColors.error.withValues(alpha: 0.5)
+        : isFinished
+        ? AppColors.finished.withValues(alpha: 0.45)
         : isActive
         ? primaryColor.withValues(alpha: 0.45)
         : AppColors.inkFaded;
@@ -520,7 +528,8 @@ class _GlassCard extends StatelessWidget {
         boxShadow: isActive
             ? [
                 BoxShadow(
-                  color: primaryColor.withValues(alpha: 0.18),
+                  color: (isFinished ? AppColors.finished : primaryColor)
+                      .withValues(alpha: 0.18),
                   blurRadius: 18,
                   spreadRadius: 0,
                   offset: const Offset(0, 4),

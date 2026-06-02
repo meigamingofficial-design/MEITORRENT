@@ -58,227 +58,230 @@ class QuickActionSheet extends ConsumerWidget {
     final bool canResume = isPaused || isStopped;
     final bool canPause = isActive || isSeeding;
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: border, width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // ── Drag handle ──────────────────────────────────────────────────
-          const SizedBox(height: 10),
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: textSecondary.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(2),
+    return SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: border, width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Drag handle ──────────────────────────────────────────────────
+            const SizedBox(height: 10),
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: textSecondary.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
 
-          // ── Header: name + state chip ────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    torrent.name,
-                    style: TextStyle(
-                      fontFamily: 'ShipporiMincho',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: textPrimary,
-                      height: 1.3,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: stateColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: stateColor.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    stateLabel,
-                    style: TextStyle(
-                      fontFamily: 'Outfit',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      color: stateColor,
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ── Progress bar (if downloading / partial) ──────────────────────
-          if (isActive || (torrent.progress > 0 && torrent.progress < 1))
+            // ── Header: name + state chip ────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
-              child: Column(
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: torrent.progress,
-                      minHeight: 5,
-                      backgroundColor: border,
-                      valueColor: AlwaysStoppedAnimation<Color>(stateColor),
+                  Expanded(
+                    child: Text(
+                      torrent.name,
+                      style: TextStyle(
+                        fontFamily: 'ShipporiMincho',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: textPrimary,
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${(torrent.progress * 100).toStringAsFixed(1)}% complete',
-                    style: TextStyle(
-                      fontFamily: 'Outfit',
-                      fontSize: 11,
-                      color: textSecondary,
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: stateColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: stateColor.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      stateLabel,
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: stateColor,
+                        letterSpacing: 0.6,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
 
-          const SizedBox(height: 12),
-
-          // ── Divider ──────────────────────────────────────────────────────
-          Divider(height: 1, color: border),
-
-          // ── Actions ──────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Resume / Start Seeding
-                if (canResume)
-                  _ActionTile(
-                    key: const Key('quick_action_resume'),
-                    icon: isDone
-                        ? Icons.upload_rounded
-                        : Icons.play_arrow_rounded,
-                    label: isDone ? 'Start Seeding' : 'Resume',
-                    color: AppColors.seeding,
-                    onTap: () {
-                      final notifier = ref.read(torrentProvider.notifier);
-                      Navigator.pop(context);
-                      unawaited(HapticFeedback.lightImpact());
-                      unawaited(
-                        notifier.resumeTorrent(torrentId),
-                      );
-                    },
-                  ),
-                // Pause / Stop Seeding
-                if (canPause)
-                  _ActionTile(
-                    key: const Key('quick_action_pause'),
-                    icon: Icons.pause_rounded,
-                    label: isDone ? 'Stop Seeding' : 'Pause',
-                    color: AppColors.paused,
-                    onTap: () {
-                      final notifier = ref.read(torrentProvider.notifier);
-                      Navigator.pop(context);
-                      unawaited(HapticFeedback.lightImpact());
-                      unawaited(
-                        notifier.pauseTorrent(torrentId),
-                      );
-                    },
-                  ),
-
-                // Open Folder
-                _ActionTile(
-                  icon: Icons.folder_open_rounded,
-                  label: 'Open Folder',
-                  color: textSecondary,
-                  onTap: () async {
-                    Navigator.pop(context);
-                    try {
-                      await FolderService.instance.openDownloadTarget(
-                        savePath: torrent.savePath,
-                        name: torrent.name,
-                      );
-                    } catch (_) {}
-                  },
-                ),
-
-                // More Info →
-                _ActionTile(
-                  icon: Icons.info_outline_rounded,
-                  label: 'More Info',
-                  color: AppColors.downloading,
-                  trailing: Icon(
-                    Icons.chevron_right_rounded,
-                    size: 18,
-                    color: textSecondary,
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    unawaited(
-                      showModalBottomSheet<void>(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (_) =>
-                            TorrentDetailBottomSheet(torrentId: torrentId),
+            // ── Progress bar (if downloading / partial) ──────────────────────
+            if (isActive || (torrent.progress > 0 && torrent.progress < 1))
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: torrent.progress,
+                        minHeight: 5,
+                        backgroundColor: border,
+                        valueColor: AlwaysStoppedAnimation<Color>(stateColor),
                       ),
-                    );
-                  },
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${(torrent.progress * 100).toStringAsFixed(1)}% complete',
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        fontSize: 11,
+                        color: textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
+              ),
 
-                Divider(height: 8, color: border),
+            const SizedBox(height: 12),
 
-                // Delete
-                _ActionTile(
-                  key: const Key('quick_action_delete'),
-                  icon: Icons.delete_outline_rounded,
-                  label: 'Remove Torrent',
-                  color: primaryRed,
-                  onTap: () async {
-                    final notifier = ref.read(torrentProvider.notifier);
-                    Navigator.pop(context);
-                    await _confirmDelete(
-                      context,
-                      notifier,
-                      torrent.name,
-                      isDark,
-                      primaryRed,
-                      border,
-                    );
-                  },
-                ),
-              ],
+            // ── Divider ──────────────────────────────────────────────────────
+            Divider(height: 1, color: border),
+
+            // ── Actions ──────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Resume / Start Seeding
+                  if (canResume)
+                    _ActionTile(
+                      key: const Key('quick_action_resume'),
+                      icon: isDone
+                          ? Icons.upload_rounded
+                          : Icons.play_arrow_rounded,
+                      label: isDone ? 'Start Seeding' : 'Resume',
+                      color: AppColors.seeding,
+                      onTap: () {
+                        final notifier = ref.read(torrentProvider.notifier);
+                        Navigator.pop(context);
+                        unawaited(HapticFeedback.lightImpact());
+                        unawaited(
+                          notifier.resumeTorrent(torrentId),
+                        );
+                      },
+                    ),
+                  // Pause / Stop Seeding
+                  if (canPause)
+                    _ActionTile(
+                      key: const Key('quick_action_pause'),
+                      icon: Icons.pause_rounded,
+                      label: isDone ? 'Stop Seeding' : 'Pause',
+                      color: AppColors.paused,
+                      onTap: () {
+                        final notifier = ref.read(torrentProvider.notifier);
+                        Navigator.pop(context);
+                        unawaited(HapticFeedback.lightImpact());
+                        unawaited(
+                          notifier.pauseTorrent(torrentId),
+                        );
+                      },
+                    ),
+
+                  // Open Folder
+                  _ActionTile(
+                    icon: Icons.folder_open_rounded,
+                    label: 'Open Folder',
+                    color: textSecondary,
+                    onTap: () async {
+                      Navigator.pop(context);
+                      try {
+                        await FolderService.instance.openDownloadTarget(
+                          savePath: torrent.savePath,
+                          name: torrent.name,
+                        );
+                      } catch (_) {}
+                    },
+                  ),
+
+                  // More Info →
+                  _ActionTile(
+                    icon: Icons.info_outline_rounded,
+                    label: 'More Info',
+                    color: textSecondary,
+                    trailing: Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: textSecondary,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      unawaited(
+                        showModalBottomSheet<void>(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) =>
+                              TorrentDetailBottomSheet(torrentId: torrentId),
+                        ),
+                      );
+                    },
+                  ),
+
+                  Divider(height: 8, color: border),
+
+                  // Delete
+                  _ActionTile(
+                    key: const Key('quick_action_delete'),
+                    icon: Icons.delete_outline_rounded,
+                    label: 'Remove Torrent',
+                    color: primaryRed,
+                    onTap: () async {
+                      final notifier = ref.read(torrentProvider.notifier);
+                      Navigator.pop(context);
+                      await _confirmDelete(
+                        context,
+                        notifier,
+                        torrent.name,
+                        isDark,
+                        primaryRed,
+                        border,
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-        ],
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }

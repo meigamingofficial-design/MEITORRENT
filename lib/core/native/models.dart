@@ -277,7 +277,32 @@ String formatEta(TorrentInfo t) {
   final secs = remaining ~/ t.downloadRate;
   if (secs < 60) return '${secs}s';
   if (secs < 3600) return '${secs ~/ 60}m ${secs % 60}s';
-  return '${secs ~/ 3600}h ${(secs % 3600) ~/ 60}m';
+  if (secs < 86400) {
+    final h = secs ~/ 3600;
+    final m = (secs % 3600) ~/ 60;
+    return '${h}h ${m}m';
+  }
+  final days = secs ~/ 86400;
+  final remainingSecs = secs % 86400;
+  final h = remainingSecs ~/ 3600;
+
+  if (days < 30) {
+    return '${days}d ${h}h';
+  }
+
+  final months = days ~/ 30;
+  final remainingDays = days % 30;
+  if (months < 12) {
+    return '${months}mo ${remainingDays}d';
+  }
+
+  final years = days ~/ 365;
+  final daysInYear = days % 365;
+  if (daysInYear >= 30) {
+    final remainingMonths = daysInYear ~/ 30;
+    return '${years}y ${remainingMonths}mo';
+  }
+  return '${years}y ${daysInYear}d';
 }
 
 // ─── Engine Configuration — port of settings/btsets.go BTSets ────────────────

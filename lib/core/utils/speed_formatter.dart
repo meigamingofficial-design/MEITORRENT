@@ -17,8 +17,31 @@ class SpeedFormatter {
     if (seconds == 0) return 'Done';
     if (seconds < 60) return '${seconds}s';
     if (seconds < 3600) return '${seconds ~/ 60}m ${seconds % 60}s';
-    final h = seconds ~/ 3600;
-    final m = (seconds % 3600) ~/ 60;
-    return '${h}h ${m}m';
+    if (seconds < 86400) {
+      final h = seconds ~/ 3600;
+      final m = (seconds % 3600) ~/ 60;
+      return '${h}h ${m}m';
+    }
+    final days = seconds ~/ 86400;
+    final remainingSecs = seconds % 86400;
+    final h = remainingSecs ~/ 3600;
+
+    if (days < 30) {
+      return '${days}d ${h}h';
+    }
+
+    final months = days ~/ 30;
+    final remainingDays = days % 30;
+    if (months < 12) {
+      return '${months}mo ${remainingDays}d';
+    }
+
+    final years = days ~/ 365;
+    final daysInYear = days % 365;
+    if (daysInYear >= 30) {
+      final remainingMonths = daysInYear ~/ 30;
+      return '${years}y ${remainingMonths}mo';
+    }
+    return '${years}y ${daysInYear}d';
   }
 }
