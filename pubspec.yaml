@@ -29,12 +29,9 @@ dependencies:
   # State management
   flutter_riverpod: ^3.3.1
   riverpod_annotation: ^4.0.2
-  hooks_riverpod: ^3.3.1
-  flutter_hooks: ^0.21.3+1
 
   # File + storage
   file_picker: ^12.0.0-beta.3
-  open_filex: ^4.7.0
   path_provider: ^2.1.4
   path: ^1.9.0
 
@@ -49,7 +46,6 @@ dependencies:
 
   # UI
   flutter_animate: ^4.5.0
-  gap: ^3.0.1
 
   # Deep linking (magnet:// + .torrent files from browser)
   app_links: ^7.0.0
