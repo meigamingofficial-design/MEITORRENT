@@ -605,18 +605,39 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
     final isDone = status.progress >= 1.0;
     final isSeeding = status.state == TorrentState.seeding;
 
-    // ── Dynamic Button Resolution ───────────────────────────────────────────
-    // When Stop Seeding is ON: show folder icon as soon as download is 100%
-    // complete, even if the engine is briefly still in the seeding state
-    // (before our auto-pause fires). This prevents the pause icon flash.
-    final bool showOpenFolder = isDone && config.stopSeedingWhenFinished;
+    // ── Dynamic Button Resolution ────────────────────────────────────────────
+    //
+    // Priority rules (Stop Seeding is top priority):
+    //
+    // ┌─────────────────────────────┬──────────────────┬────────────────────┐
+    // │ Condition                   │ Stop Seeding ON  │ Stop Seeding OFF   │
+    // ├─────────────────────────────┼──────────────────┼────────────────────┤
+    // │ Downloading                 │ pause icon        │ pause icon         │
+    // │ Actively seeding            │ folder icon*      │ pause icon         │
+    // │ Done + seeding paused       │ folder icon       │ folder icon        │
+    // │ Not done + paused           │ play icon         │ play icon          │
+    // └─────────────────────────────┴──────────────────┴────────────────────┘
+    // * auto-pause fires immediately, so user sees folder as soon as done.
+    //
+    // Folder icon = open download folder (tap to browse files)
+    // There is NO "Start Seeding" button — seeding is engine-controlled.
+
+    // Show folder whenever download is 100% AND either:
+    //   • Stop Seeding setting is ON (always stop seeding when done), OR
+    //   • The torrent is paused/stopped (seeding already ended)
+    final bool showOpenFolder = isDone && (config.stopSeedingWhenFinished || isPaused);
+
+    // Show pause only while actively downloading or seeding (and not overridden by folder)
     final bool showPause =
         !showOpenFolder &&
         (status.state == TorrentState.downloading ||
             status.state == TorrentState.downloadingMetadata ||
             isSeeding);
+
+    // Show play only when not done and currently paused
     final bool showPlay = !showOpenFolder && isPaused && !isDone;
-    final bool showSeed = !showOpenFolder && isPaused && isDone;
+
+    // (showSeed removed — folder icon covers the done+paused case)
 
     final IconData iconData;
     final String tooltipMessage;
@@ -635,7 +656,7 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
       };
     } else if (showPause) {
       iconData = Icons.pause_rounded;
-      tooltipMessage = isDone ? 'Stop Seeding' : 'Pause';
+      tooltipMessage = isSeeding ? 'Stop Seeding' : 'Pause';
       onTapAction = () async {
         final messenger = ScaffoldMessenger.of(context);
         try {
@@ -643,7 +664,7 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
         } catch (e) {
           _showErrorSnackBar(
             messenger,
-            isDone ? 'Failed to stop seeding: $e' : 'Failed to pause: $e',
+            isSeeding ? 'Failed to stop seeding: $e' : 'Failed to pause: $e',
           );
         }
       };
@@ -668,25 +689,16 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
         }
       };
     } else {
-      // showSeed
-      iconData = Icons.upload_rounded;
-      tooltipMessage = 'Start Seeding';
+      // Fallback: nothing matched — show folder (safe default for any done state)
+      iconData = Icons.folder_open_rounded;
+      tooltipMessage = 'Open Folder';
       onTapAction = () async {
-        final messenger = ScaffoldMessenger.of(context);
-        final granted = await PermissionService.isStorageGranted();
-        if (!context.mounted) return;
-        if (!granted) {
-          final retry = await PermissionService.showStorageRationale(context);
-          if (retry && mounted) {
-            await Permission.manageExternalStorage.request();
-          }
-          return;
-        }
         try {
-          await ref.read(torrentProvider.notifier).resumeTorrent(status.id);
-        } catch (e) {
-          _showErrorSnackBar(messenger, 'Failed to start seeding: $e');
-        }
+          await FolderService.instance.openDownloadTarget(
+            savePath: status.savePath,
+            name: status.name,
+          );
+        } catch (_) {}
       };
     }
 
@@ -695,9 +707,9 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
         ? const Color(0xFFE53935)
         : const Color(0xFFC82127);
 
-    // Premium Bamboo Green for finished/seeding actions, traditional Crimson for downloading
+    // Green for folder/seeding actions, Crimson for downloading pause
     final Color buttonColor =
-        (showOpenFolder || showSeed || (showPause && isSeeding))
+        (showOpenFolder || (showPause && isSeeding))
         ? AppColors.seeding
         : sealColor;
 
