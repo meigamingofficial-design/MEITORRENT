@@ -14,7 +14,6 @@ The following packages are also used in this project:
 - flutter_foreground_task (MIT)
 - drift (MIT)
 - flutter_riverpod (MIT)
-- google_fonts (Apache 2.0)
 - path_provider (BSD 3-clause)
 - permission_handler (MIT)
 - connectivity_plus (BSD 3-clause)

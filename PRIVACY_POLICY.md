@@ -1,39 +1,216 @@
 # Privacy Policy – Meitorrent
 
-**Last Updated:** May 23, 2026
+**Last Updated:** June 2026
 
-Meitorrent is built, published, and maintained by **MeiGamingOfficial** ("we", "our", or "us"). Meitorrent is designed with privacy as a fundamental priority. We do not collect, transmit, store, or share any personal information, usage data, or download logs. All torrent metadata and downloads are stored purely locally on your own device.
+Meitorrent is developed, published, and maintained by **MeiGamingOfficial** ("we", "our", or "us").
 
----
-
-### 1. Zero Data Collection & Safety Compliance
-- **No Personal Data:** We do not collect names, email addresses, phone numbers, location data, or device identifiers. No user account registration is required to use Meitorrent.
-- **No Tracking or Analytics:** We do not track your app usage, search history, file lists, or download logs. We do not use any third-party analytics or behavioral tracking SDKs.
-- **Data Deletion:** Since we do not collect any user data on any central servers, we have no user data to delete or manage. All your downloaded content and app state are managed locally on your device and can be removed at any time by clearing the app data or uninstalling the app.
-
-### 2. Networking and Peer-to-Peer (P2P) Communication
-Meitorrent is a BitTorrent file-transfer client. To function, it facilitates direct peer-to-peer (P2P) connections between your device and other users (peers) in the network.
-- **IP Address Visibility:** When actively downloading or uploading a torrent, your public IP address is visible to other participants (peers) in the same torrent swarm. This is an immutable technical requirement of the BitTorrent protocol itself.
-- **Direct Data Transfer:** All payload bytes are transferred directly between your device and other peers. We do not host, broker, facilitate, or witness these file transfers.
-
-### 3. Third-Party Services
-- **Local Assets & Offline Operation:** To guarantee absolute privacy and offline capability, all UI assets—including our Shippori Mincho typography—are bundled and loaded locally from your device. The app makes zero external network requests to online font servers (such as Google Fonts) during runtime.
-- **Firebase Crashlytics:** To actively monitor and improve app stability, Meitorrent uses Firebase Crashlytics (a service provided by Google). When a crash or a non-fatal error occurs, basic diagnostic information (such as stack traces, device model, operating system version, and custom debug logs) is collected and transmitted. This diagnostic data contains no personally identifiable information and is used solely to identify and fix technical issues, in compliance with Google's Privacy Policy (https://policies.google.com/privacy).
-
-
-### 4. Android Device Permissions & Usage Disclosures
-To provide a reliable file-transfer utility, Meitorrent requires the following system permissions, which are strictly limited to technical functionality:
-- **INTERNET & Network State (`android.permission.INTERNET`, `ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE`):** Required to connect to trackers, DHT, peer exchanges, and peers over the BitTorrent network.
-- **Storage/Media Access:** Used strictly to save downloaded torrent files to your chosen local directory and to read `.torrent` files you open with the app.
-- **Foreground Service (`android.permission.FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_DATA_SYNC`):** Used to run a background data-synchronization service. This keeps your active torrent downloads running reliably when the app is placed in the background or when your screen is locked. A persistent status notification is shown to you during this activity.
-- **Notifications (`android.permission.POST_NOTIFICATIONS`):** Used on Android 13+ to display the real-time download progress bar in your device’s status notification tray.
-- **Battery Optimization Settings:** Used to prompt you to exclude Meitorrent from aggressive system battery savers, preventing your downloads from being terminated prematurely when the device goes to sleep.
+Meitorrent is designed with privacy as a core principle. The application does not require user accounts and does not collect personal information such as names, email addresses, phone numbers, contacts, payment information, or download history. All torrent-related data and downloaded files are stored locally on your device.
 
 ---
 
-### 5. Legal & Contact Information
-For any privacy questions, license inquiries, or support requests regarding Meitorrent, please contact us at:
+## 1. Information We Collect
 
-**MeiGamingOfficial**  
-Email: **meigaming.official@gmail.com**  
-GitHub: https://github.com/meigamingofficial-design
+### Personal Information
+
+Meitorrent does not collect, store, sell, or share personal information, including:
+
+* Names
+* Email addresses
+* Phone numbers
+* Physical addresses
+* Contacts
+* Messages
+* Photos
+* Payment information
+* Download history
+* Torrent history
+
+No user registration or account creation is required.
+
+### Diagnostic Information
+
+To improve application stability and reliability, Meitorrent uses **Firebase Crashlytics**, a crash reporting service provided by Google.
+
+When a crash or application error occurs, Crashlytics may collect limited technical information, including:
+
+* Device model
+* Android version
+* App version
+* Crash stack traces
+* Technical diagnostic logs
+
+This information is used solely to identify, investigate, and fix software issues.
+
+For more information, please review Google's Privacy Policy:
+
+https://policies.google.com/privacy
+
+---
+
+## 2. Peer-to-Peer (P2P) Networking
+
+Meitorrent is a peer-to-peer (P2P) file transfer application that supports torrent files and magnet links.
+
+When actively participating in a torrent transfer:
+
+* Your public IP address may be visible to other peers participating in the same transfer.
+* Your device communicates directly with other participating peers.
+* File transfers occur directly between participating devices.
+
+This behavior is an inherent technical requirement of peer-to-peer networking and is not controlled by MeiGamingOfficial.
+
+We do not operate trackers, host content, proxy file transfers, or monitor file transfers.
+
+---
+
+## 3. Local Data Storage
+
+All torrent-related information is stored locally on your device, including:
+
+* Torrent metadata
+* Download progress
+* Download locations
+* Downloaded files
+* App preferences
+
+This information is not uploaded to our servers.
+
+You may remove this information at any time by:
+
+* Deleting torrents
+* Clearing application data
+* Uninstalling the application
+
+---
+
+## 4. Third-Party Services
+
+### Firebase Crashlytics
+
+Meitorrent uses Firebase Crashlytics to collect crash diagnostics and improve application stability.
+
+Firebase Crashlytics is operated by Google.
+
+Google Privacy Policy:
+
+https://policies.google.com/privacy
+
+### No Analytics or Advertising Tracking
+
+Meitorrent does not use:
+
+* Behavioral analytics
+* User tracking
+* Advertising identifiers
+* Marketing SDKs
+* Usage profiling
+
+---
+
+## 5. Android Permissions
+
+Meitorrent requires certain Android permissions to provide its functionality.
+
+### Internet & Network Access
+
+Permissions:
+
+* android.permission.INTERNET
+* android.permission.ACCESS_NETWORK_STATE
+* android.permission.ACCESS_WIFI_STATE
+
+Purpose:
+
+* Connect to peers
+* Connect to trackers
+* Participate in peer discovery and distributed networking
+
+### Storage and File Management
+
+Permissions may include storage and file-management permissions, including MANAGE_EXTERNAL_STORAGE where supported by Android.
+
+Purpose:
+
+* Read .torrent files selected by the user
+* Save downloaded files to user-selected locations
+* Manage torrent download data and downloaded content
+* Detect and reuse previously downloaded files to prevent unnecessary re-downloads
+* Allow users to access, verify, resume, move, and remove torrent-related files stored on their device
+
+### Foreground Service
+
+Permissions:
+
+* android.permission.FOREGROUND_SERVICE
+* android.permission.FOREGROUND_SERVICE_DATA_SYNC
+
+Purpose:
+
+* Keep active transfers running while the app is in the background
+* Display ongoing transfer notifications
+
+### Notifications
+
+Permission:
+
+* android.permission.POST_NOTIFICATIONS
+
+Purpose:
+
+* Display transfer progress
+* Display completion notifications
+* Display foreground service notifications
+
+### Battery Optimization Settings
+
+Purpose:
+
+* Allow uninterrupted transfers while the device is idle
+
+### Device Startup
+
+Permission:
+
+* android.permission.RECEIVE_BOOT_COMPLETED
+
+Purpose:
+
+* Restart active download services after device reboot
+* Restore ongoing transfers that were active before the device restarted
+* Reduce the need for users to manually reopen the application after a reboot
+
+---
+
+## 6. Children's Privacy
+
+Meitorrent is not directed toward children under the age of 13.
+
+We do not knowingly collect personal information from children.
+
+---
+
+## 7. Data Security
+
+Meitorrent stores torrent-related data locally on your device.
+
+While reasonable measures are taken to improve security, no method of storage or transmission can be guaranteed to be completely secure.
+
+---
+
+## 8. Changes to This Privacy Policy
+
+We may update this Privacy Policy from time to time.
+
+Any updates will be reflected by revising the "Last Updated" date at the top of this document.
+
+Continued use of Meitorrent after changes become effective constitutes acceptance of the updated Privacy Policy.
+
+---
+
+## 9. Contact Information
+
+For privacy questions, support requests, or legal inquiries:
+
+**MeiGamingOfficial**
+
+Email: [meigaming.official@gmail.com](mailto:meigaming.official@gmail.com)
