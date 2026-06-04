@@ -281,18 +281,27 @@ class TorrentNotifier extends _$TorrentNotifier with WidgetsBindingObserver {
         // ── Auto-pause seeding if setting enabled ─────────────────────
         if (config.stopSeedingWhenFinished) {
           for (final torrent in statuses) {
-            if (torrent.state == TorrentState.finished && !torrent.isPaused) {
+            // Trigger when state is seeding OR finished and not yet paused.
+            // NOTE: A freshly-completed torrent maps to TorrentState.seeding
+            // (not finished) in the engine, so we must check both states.
+            final shouldStop =
+                (torrent.state == TorrentState.seeding ||
+                    torrent.state == TorrentState.finished) &&
+                !torrent.isPaused;
+
+            if (shouldStop) {
               if (!_pendingStopTimers.containsKey(torrent.id)) {
-                _pendingStopTimers[torrent
-                    .id] = Timer(const Duration(seconds: 15), () {
+                // Pause immediately — no delay so the user never sees the
+                // pause icon while seeding is still running.
+                _pendingStopTimers[torrent.id] = Timer(Duration.zero, () {
                   _pendingStopTimers.remove(torrent.id);
                   unawaited(pauseTorrent(torrent.id));
                   AppLogger.i(
-                    '[Notifier] Auto-paused finished torrent after 15s delay: ${torrent.id}',
+                    '[Notifier] Auto-paused seeding/finished torrent: ${torrent.id}',
                   );
                 });
                 AppLogger.i(
-                  '[Notifier] Scheduled 15s stop-seeding delay for torrent: ${torrent.id}',
+                  '[Notifier] Scheduled immediate stop-seeding for torrent: ${torrent.id}',
                 );
               }
             } else {

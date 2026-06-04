@@ -606,8 +606,10 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
     final isSeeding = status.state == TorrentState.seeding;
 
     // ── Dynamic Button Resolution ───────────────────────────────────────────
-    final bool showOpenFolder =
-        isDone && config.stopSeedingWhenFinished && !isSeeding;
+    // When Stop Seeding is ON: show folder icon as soon as download is 100%
+    // complete, even if the engine is briefly still in the seeding state
+    // (before our auto-pause fires). This prevents the pause icon flash.
+    final bool showOpenFolder = isDone && config.stopSeedingWhenFinished;
     final bool showPause =
         !showOpenFolder &&
         (status.state == TorrentState.downloading ||
