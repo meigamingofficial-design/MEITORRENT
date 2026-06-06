@@ -10,6 +10,7 @@ import '../../../../core/utils/speed_formatter.dart';
 import '../../../../domain/entities/torrent_status.dart';
 import '../controllers/torrent_notifier.dart';
 import 'quick_action_sheet.dart';
+import '../../../settings/presentation/controllers/settings_notifier.dart';
 import '../../../../core/services/folder_service.dart';
 
 /// Shared placeholder used by both the list item and action buttons
@@ -609,45 +610,48 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
     if (status == null) return const SizedBox.shrink();
 
 
+    final config = ref.watch(settingsProvider);
+
     final isPaused =
         status.isPaused ||
         status.isStopped ||
         status.state == TorrentState.paused ||
         status.state == TorrentState.stopped;
-    final isDone = status.progress >= 1.0;
-    final isSeeding = status.state == TorrentState.seeding;
+    final isDone = status.isCompleted;
+    final isSeeding = status.state == TorrentState.seeding || (isDone && !isPaused);
 
     // ── Dynamic Button Resolution ────────────────────────────────────────────
-    //
-    // Priority rules (Stop Seeding is top priority):
-    //
-    // ┌─────────────────────────────┬──────────────────┬────────────────────┐
-    // │ Condition                   │ Stop Seeding ON  │ Stop Seeding OFF   │
-    // ├─────────────────────────────┼──────────────────┼────────────────────┤
-    // │ Downloading                 │ pause icon        │ pause icon         │
-    // │ Actively seeding            │ folder icon*      │ pause icon         │
-    // │ Done + seeding paused       │ folder icon       │ folder icon        │
-    // │ Not done + paused           │ play icon         │ play icon          │
-    // └─────────────────────────────┴──────────────────┴────────────────────┘
-    // * auto-pause fires immediately, so user sees folder as soon as done.
-    //
-    // Folder icon = open download folder (tap to browse files)
-    // There is NO "Start Seeding" button — seeding is engine-controlled.
+    final bool showOpenFolder;
+    final bool showPause;
+    final bool showPlay;
 
-    // Show folder whenever download is 100% AND the torrent is NOT actively seeding
-    // (i.e. it's paused/stopped). If it's still seeding, show pause button regardless
-    // of the Stop Seeding setting — the engine may not have fired yet.
-    final bool showOpenFolder = isDone && isPaused && !isSeeding;
-
-    // Show pause only while actively downloading or seeding (and not overridden by folder)
-    final bool showPause =
-        !showOpenFolder &&
-        (status.state == TorrentState.downloading ||
-            status.state == TorrentState.downloadingMetadata ||
-            isSeeding);
-
-    // Show play only when not done and currently paused
-    final bool showPlay = !showOpenFolder && isPaused && !isDone;
+    if (isDone) {
+      if (isSeeding) {
+        showOpenFolder = false;
+        showPause = true;
+        showPlay = false;
+      } else {
+        if (config.stopSeedingWhenFinished) {
+          showOpenFolder = true;
+          showPause = false;
+          showPlay = false;
+        } else {
+          showOpenFolder = false;
+          showPause = false;
+          showPlay = true;
+        }
+      }
+    } else {
+      if (isPaused) {
+        showOpenFolder = false;
+        showPause = false;
+        showPlay = true;
+      } else {
+        showOpenFolder = false;
+        showPause = true;
+        showPlay = false;
+      }
+    }
 
     // (showSeed removed — folder icon covers the done+paused case)
 
@@ -682,7 +686,7 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
       };
     } else if (showPlay) {
       iconData = Icons.play_arrow_rounded;
-      tooltipMessage = 'Resume';
+      tooltipMessage = isDone ? 'Start Seeding' : 'Resume';
       onTapAction = () async {
         final messenger = ScaffoldMessenger.of(context);
         final granted = await PermissionService.isStorageGranted();
@@ -721,7 +725,7 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
 
     // Green for folder/seeding actions (completed/seeding), Crimson for downloading/resuming
     final bool isFolderAction = showOpenFolder || (!showPause && !showPlay);
-    final Color buttonColor = (isFolderAction || (showPause && isSeeding))
+    final Color buttonColor = (isFolderAction || (showPause && isSeeding) || (showPlay && isDone))
         ? AppColors.seeding
         : sealColor;
 
