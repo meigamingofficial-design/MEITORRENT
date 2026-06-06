@@ -719,9 +719,9 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
         ? const Color(0xFFE53935)
         : const Color(0xFFC82127);
 
-    // Green for folder/seeding actions, Crimson for downloading pause
-    final Color buttonColor =
-        (showOpenFolder || (showPause && isSeeding))
+    // Green for folder/seeding actions (completed/seeding), Crimson for downloading/resuming
+    final bool isFolderAction = showOpenFolder || (!showPause && !showPlay);
+    final Color buttonColor = (isFolderAction || (showPause && isSeeding))
         ? AppColors.seeding
         : sealColor;
 
