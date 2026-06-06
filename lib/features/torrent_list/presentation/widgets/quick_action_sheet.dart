@@ -7,6 +7,7 @@ import '../../../../core/services/folder_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../domain/entities/torrent_status.dart';
 import '../controllers/torrent_notifier.dart';
+import '../../../settings/presentation/controllers/settings_notifier.dart';
 import 'torrent_detail_bottom_sheet.dart';
 
 /// Lightweight quick-action sheet that appears on single card tap.
@@ -57,6 +58,11 @@ class QuickActionSheet extends ConsumerWidget {
 
     final bool canResume = isPaused || isStopped;
     final bool canPause = isActive || isSeeding;
+
+    final bool stopSeedingEnabled = ref
+        .watch(settingsProvider.select((c) => c.stopSeedingWhenFinished));
+    // Hide "Start Seeding" when stop-seeding is on — the engine would pause it anyway.
+    final bool showStartSeeding = canResume && isDone && !stopSeedingEnabled;
 
     return SafeArea(
       top: false,
@@ -180,14 +186,28 @@ class QuickActionSheet extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Resume / Start Seeding
-                  if (canResume)
+                  // Resume (not done) — always show when paused/stopped mid-download
+                  if (canResume && !isDone)
                     _ActionTile(
                       key: const Key('quick_action_resume'),
-                      icon: isDone
-                          ? Icons.upload_rounded
-                          : Icons.play_arrow_rounded,
-                      label: isDone ? 'Start Seeding' : 'Resume',
+                      icon: Icons.play_arrow_rounded,
+                      label: 'Resume',
+                      color: AppColors.seeding,
+                      onTap: () {
+                        final notifier = ref.read(torrentProvider.notifier);
+                        Navigator.pop(context);
+                        unawaited(HapticFeedback.lightImpact());
+                        unawaited(
+                          notifier.resumeTorrent(torrentId),
+                        );
+                      },
+                    ),
+                  // Start Seeding — only show when stop-seeding setting is OFF
+                  if (showStartSeeding)
+                    _ActionTile(
+                      key: const Key('quick_action_start_seeding'),
+                      icon: Icons.upload_rounded,
+                      label: 'Start Seeding',
                       color: AppColors.seeding,
                       onTap: () {
                         final notifier = ref.read(torrentProvider.notifier);

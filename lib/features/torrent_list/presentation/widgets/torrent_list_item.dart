@@ -10,7 +10,6 @@ import '../../../../core/utils/speed_formatter.dart';
 import '../../../../domain/entities/torrent_status.dart';
 import '../controllers/torrent_notifier.dart';
 import 'quick_action_sheet.dart';
-import '../../../settings/presentation/controllers/settings_notifier.dart';
 import '../../../../core/services/folder_service.dart';
 
 /// Shared placeholder used by both the list item and action buttons
@@ -561,25 +560,39 @@ class _HankoActionButton extends ConsumerStatefulWidget {
 }
 
 class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+    with TickerProviderStateMixin {
+  late final AnimationController _tapController;
   late final Animation<double> _scale;
+
+  // Pulse ring for seeding state
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseAnim;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _tapController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 100),
     );
     _scale = Tween<double>(begin: 1.0, end: 0.85).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+      CurvedAnimation(parent: _tapController, curve: Curves.easeIn),
+    );
+
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true); // ignore: discarded_futures
+    _pulseAnim = CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
     );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _tapController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -595,7 +608,6 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
     );
     if (status == null) return const SizedBox.shrink();
 
-    final config = ref.watch(settingsProvider);
 
     final isPaused =
         status.isPaused ||
@@ -622,10 +634,10 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
     // Folder icon = open download folder (tap to browse files)
     // There is NO "Start Seeding" button — seeding is engine-controlled.
 
-    // Show folder whenever download is 100% AND either:
-    //   • Stop Seeding setting is ON (always stop seeding when done), OR
-    //   • The torrent is paused/stopped (seeding already ended)
-    final bool showOpenFolder = isDone && (config.stopSeedingWhenFinished || isPaused);
+    // Show folder whenever download is 100% AND the torrent is NOT actively seeding
+    // (i.e. it's paused/stopped). If it's still seeding, show pause button regardless
+    // of the Stop Seeding setting — the engine may not have fired yet.
+    final bool showOpenFolder = isDone && isPaused && !isSeeding;
 
     // Show pause only while actively downloading or seeding (and not overridden by folder)
     final bool showPause =
@@ -718,26 +730,50 @@ class _HankoActionButtonState extends ConsumerState<_HankoActionButton>
       child: GestureDetector(
         onTap: () async {
           unawaited(HapticFeedback.lightImpact());
-          await _controller.forward();
-          await _controller.reverse();
+          await _tapController.forward();
+          await _tapController.reverse();
           if (!mounted) return;
           onTapAction();
         },
         child: AnimatedBuilder(
-          animation: _scale,
+          animation: Listenable.merge([_scale, _pulseAnim]),
           builder: (_, child) => Transform.scale(
             scale: _scale.value,
-            child: child,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Pulsing ring — only visible when actively seeding
+                if (showPause && isSeeding)
+                  Container(
+                    width: 48 + (_pulseAnim.value * 14),
+                    height: 48 + (_pulseAnim.value * 14),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.seeding.withValues(
+                          alpha: (0.45 * (1 - _pulseAnim.value)),
+                        ),
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                child!,
+              ],
+            ),
           ),
           child: Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: buttonColor.withValues(alpha: 0.08),
+              color: buttonColor.withValues(alpha: 0.10),
               border: Border.all(
-                color: buttonColor.withValues(alpha: 0.15),
-                width: 1.2,
+                color: buttonColor.withValues(
+                  alpha: (showPause && isSeeding)
+                      ? 0.25 + (_pulseAnim.value * 0.20)
+                      : 0.15,
+                ),
+                width: 1.4,
               ),
             ),
             child: Center(
