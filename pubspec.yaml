@@ -1,7 +1,7 @@
 name: meitorrent
 description: "Production-grade Android torrent client powered by libtorrent 2.0"
 publish_to: "none"
-version: 1.0.5+6
+version: 1.0.6+7
 
 environment:
   sdk: ^3.12.0
