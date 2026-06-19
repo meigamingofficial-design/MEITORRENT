@@ -146,6 +146,7 @@ void _stubChannels() {
           MethodChannel(ch),
           (call) async {
             if (call.method == 'isIgnoringBatteryOptimizations') return false;
+            if (call.method == 'checkNotificationPermission') return 0;
             return null;
           },
         );

@@ -109,6 +109,7 @@ class SettingsScreen extends ConsumerWidget {
             // ── Performance ───────────────────────────────────────────
             const _SectionHeader(title: 'Performance'),
             const _BatteryOptimizationTile(),
+            const _NotificationSettingsTile(),
 
             // ── Maintenance ──────────────────────────────────────────
             if (kDebugMode) ...[
@@ -895,10 +896,7 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                _isIgnored
-                    ? 'Battery optimizations are disabled'
-                    : 'Helps keep torrent downloads active when the app is in the background or screen is off',
+              Text('Helps keep torrent downloads active when the app is in the background or screen is off',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppColors.textSecondary(context),
                   fontSize: 12,
@@ -916,21 +914,37 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
                     color: AppColors.downloading,
                   ),
                 )
-              : Switch(
-                  value: _isIgnored,
-                  onChanged: (value) async {
-                    setState(() => _isLoading = true);
-                    if (value) {
-                      await FlutterForegroundTask.requestIgnoreBatteryOptimization();
-                    } else {
-                      await FlutterForegroundTask.openIgnoreBatteryOptimizationSettings();
+              : _isIgnored
+                  ? const Icon(
+                      Icons.check_rounded,
+                      color: AppColors.seeding,
+                      size: 20,
+                    )
+                  : Icon(
+                      Icons.chevron_right,
+                      color: AppColors.textSecondary(context),
+                      size: 18,
+                    ),
+          onTap: _isLoading || _isIgnored
+              ? null
+              : () async {
+                  setState(() => _isLoading = true);
+                  try {
+                    final ignored = await FlutterForegroundTask.isIgnoringBatteryOptimizations;
+                    if (!ignored) {
+                      final success = await FlutterForegroundTask.requestIgnoreBatteryOptimization();
+                      if (!success) {
+                        await FlutterForegroundTask.openIgnoreBatteryOptimizationSettings();
+                      }
                     }
-                    await _checkStatus();
-                    if (mounted) {
-                      setState(() => _isLoading = false);
-                    }
-                  },
-                ),
+                  } catch (_) {
+                    await FlutterForegroundTask.openIgnoreBatteryOptimizationSettings();
+                  }
+                  await _checkStatus();
+                  if (mounted) {
+                    setState(() => _isLoading = false);
+                  }
+                },
         ),
         if (_showOemPrompt)
           Padding(
@@ -1010,6 +1024,102 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
             ),
           ),
       ],
+    );
+  }
+}
+
+// ─── Notification Settings Tile ──────────────────────────────────────────────
+
+class _NotificationSettingsTile extends StatefulWidget {
+  const _NotificationSettingsTile();
+
+  @override
+  State<_NotificationSettingsTile> createState() =>
+      _NotificationSettingsTileState();
+}
+
+class _NotificationSettingsTileState extends State<_NotificationSettingsTile>
+    with WidgetsBindingObserver {
+  bool _isGranted = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(_checkStatus());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_checkStatus());
+    }
+  }
+
+  Future<void> _checkStatus() async {
+    final status = await FlutterForegroundTask.checkNotificationPermission();
+    if (mounted) {
+      setState(() {
+        _isGranted = status == NotificationPermission.granted;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: AppColors.border(context).withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(
+          _isGranted ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
+          color: _isGranted ? AppColors.seeding : AppColors.paused,
+          size: 20,
+        ),
+      ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Download Notifications',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.text(context),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _isGranted
+                ? 'Show progress and transfer speeds in status bar'
+                : 'Notifications are disabled. Tap to enable in settings.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary(context),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+      trailing: Icon(
+        Icons.chevron_right,
+        color: AppColors.textSecondary(context),
+        size: 18,
+      ),
+      onTap: () async {
+        await OemBatteryGuard.openNotificationSettings();
+      },
     );
   }
 }

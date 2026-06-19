@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -119,40 +120,69 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       if (mounted) {
         setState(() {
           _hasError = true;
-          _statusText = 'Failed to start: ${e.toString().split('\n').first}';
+          _statusText = _getFriendlyErrorMessage(e);
         });
       }
     }
   }
 
+  String _getFriendlyErrorMessage(Object e) {
+    final errorStr = e.toString();
+    if (errorStr.contains('permission request dialog was closed') ||
+        errorStr.contains('request was cancelled') ||
+        errorStr.contains('NotificationPermission')) {
+      return 'Please allow notifications to start the app so we can display active torrent downloads.';
+    }
+    if (e is PlatformException && e.message != null) {
+      return 'Failed to start: ${e.message}';
+    }
+    var cleanMsg = errorStr;
+    if (cleanMsg.startsWith('Exception: ')) {
+      cleanMsg = cleanMsg.substring('Exception: '.length);
+    }
+    return 'Failed to start: ${cleanMsg.split('\n').first}';
+  }
+
   Future<void> _requestPermissions() async {
-    // Notification permission (Android 13+) — skip if already granted
-    final notifPerm = await FlutterForegroundTask.checkNotificationPermission();
-    if (notifPerm != NotificationPermission.granted) {
-      await FlutterForegroundTask.requestNotificationPermission();
-    }
-
-    // Standard storage permission (Android 10 and below) — check once, request only if needed
-    final storageStatus = await Permission.storage.status;
-    if (storageStatus.isDenied) {
-      await Permission.storage.request();
-    }
-
-    // MANAGE_EXTERNAL_STORAGE (Android 11+)
-    // Only show the rationale dialog ONCE (first install). On subsequent launches where
-    // permission is still denied/skipped, we silently skip — no nagging.
-    final manageStatus = await Permission.manageExternalStorage.status;
-    if (!manageStatus.isGranted) {
-      final prefs = await SharedPreferences.getInstance();
-      final alreadyShown =
-          prefs.getBool('meitorrent_storage_perm_shown') ?? false;
-
-      if (!alreadyShown) {
-        // Mark as shown so we never prompt again (unless user explicitly triggers it)
-        await prefs.setBool('meitorrent_storage_perm_shown', true);
-        await _requestManageStorageWithRationale();
+    try {
+      // Notification permission (Android 13+) — skip if already granted
+      final notifPerm = await FlutterForegroundTask.checkNotificationPermission();
+      if (notifPerm != NotificationPermission.granted) {
+        await FlutterForegroundTask.requestNotificationPermission();
       }
-      // If already shown and still not granted — silently continue, app still works
+    } catch (e) {
+      AppLogger.w('[Splash] Notification permission request failed/cancelled: $e');
+    }
+
+    try {
+      // Standard storage permission (Android 10 and below) — check once, request only if needed
+      final storageStatus = await Permission.storage.status;
+      if (storageStatus.isDenied) {
+        await Permission.storage.request();
+      }
+    } catch (e) {
+      AppLogger.w('[Splash] Storage permission request failed: $e');
+    }
+
+    try {
+      // MANAGE_EXTERNAL_STORAGE (Android 11+)
+      // Only show the rationale dialog ONCE (first install). On subsequent launches where
+      // permission is still denied/skipped, we silently skip — no nagging.
+      final manageStatus = await Permission.manageExternalStorage.status;
+      if (!manageStatus.isGranted) {
+        final prefs = await SharedPreferences.getInstance();
+        final alreadyShown =
+            prefs.getBool('meitorrent_storage_perm_shown') ?? false;
+
+        if (!alreadyShown) {
+          // Mark as shown so we never prompt again (unless user explicitly triggers it)
+          await prefs.setBool('meitorrent_storage_perm_shown', true);
+          await _requestManageStorageWithRationale();
+        }
+        // If already shown and still not granted — silently continue, app still works
+      }
+    } catch (e) {
+      AppLogger.w('[Splash] Manage storage permission request failed: $e');
     }
   }
 

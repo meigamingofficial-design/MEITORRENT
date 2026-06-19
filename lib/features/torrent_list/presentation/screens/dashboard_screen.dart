@@ -34,6 +34,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   int _zeroSpeedTicks = 0;
   bool _hasPromptedSpeedWarning = false;
   bool _isStorageGranted = true;
+  bool _isNotificationGranted = true;
 
   @override
   void initState() {
@@ -64,9 +65,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   }
 
   Future<void> _checkPermission() async {
-    final granted = await PermissionService.isStorageGranted();
-    if (mounted && _isStorageGranted != granted) {
-      setState(() => _isStorageGranted = granted);
+    final storageGranted = await PermissionService.isStorageGranted();
+    final notifStatus = await FlutterForegroundTask.checkNotificationPermission();
+    final notifGranted = notifStatus == NotificationPermission.granted;
+
+    if (mounted) {
+      setState(() {
+        _isStorageGranted = storageGranted;
+        _isNotificationGranted = notifGranted;
+      });
     }
   }
 
@@ -274,6 +281,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     SliverToBoxAdapter(
                       child: _PermissionBanner(
                         onTap: () => _showAddTorrentDialog(context),
+                      ),
+                    ),
+                  if (_isStorageGranted && !_isNotificationGranted)
+                    SliverToBoxAdapter(
+                      child: _NotificationWarningBanner(
+                        onTap: () => OemBatteryGuard.openNotificationSettings(),
                       ),
                     ),
                   if (torrents.isEmpty)
@@ -1306,6 +1319,52 @@ class _PermissionBanner extends StatelessWidget {
               Icons.chevron_right_rounded,
               color: AppColors.textSecondary(context),
               size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NotificationWarningBanner extends StatelessWidget {
+  const _NotificationWarningBanner({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.paused.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.paused.withValues(alpha: 0.15)),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.notifications_paused_rounded,
+              color: AppColors.paused,
+              size: 18,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Please enable notifications to track downloads and keep them active in the background.',
+                style: TextStyle(
+                  color: AppColors.text(context),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textSecondary(context),
+              size: 18,
             ),
           ],
         ),

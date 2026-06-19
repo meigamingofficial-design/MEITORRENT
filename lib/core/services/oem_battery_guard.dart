@@ -4,6 +4,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:app_settings/app_settings.dart';
 
 import 'logger_service.dart';
 
@@ -101,6 +102,15 @@ class OemBatteryGuard {
       });
     } on PlatformException catch (e) {
       AppLogger.w('[OemGuard] Failed to launch OEM settings', error: e);
+    }
+  }
+
+  /// Opens the app's native notification settings page directly.
+  static Future<void> openNotificationSettings() async {
+    try {
+      await AppSettings.openAppSettings(type: AppSettingsType.notification);
+    } catch (e) {
+      AppLogger.w('[OemGuard] Failed to open notification settings via AppSettings', error: e);
     }
   }
 }
