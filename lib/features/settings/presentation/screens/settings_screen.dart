@@ -42,307 +42,368 @@ class SettingsScreen extends ConsumerWidget {
           children: [
             // ── Appearance ────────────────────────────────────────────
             const _SectionHeader(title: 'Appearance'),
-            _SwitchTile(
-              icon: Icons.dark_mode_outlined,
-              label: 'Dark Mode',
-              subtitle: 'Use a darker sumi-e aesthetic',
-              value: isDark,
-              onChanged: (_) async =>
-                  ref.read(themeServiceProvider.notifier).toggle(),
+            _SettingsGroupCard(
+              children: [
+                _SwitchTile(
+                  icon: Icons.dark_mode_outlined,
+                  label: 'Dark Mode',
+                  subtitle: 'Use a darker sumi-e aesthetic',
+                  value: isDark,
+                  onChanged: (_) async =>
+                      ref.read(themeServiceProvider.notifier).toggle(),
+                ),
+              ],
             ),
 
             // ── Speed Limits ──────────────────────────────────────────
             const _SectionHeader(title: 'Speed Limits'),
-            _SpeedLimitTile(
-              icon: Icons.arrow_downward_rounded,
-              iconColor: AppColors.downloading,
-              label: 'Download Limit',
-              currentBps: config.downloadLimit,
-              onChanged: notifier.setDownloadLimit,
-            ),
-            _SpeedLimitTile(
-              icon: Icons.arrow_upward_rounded,
-              iconColor: AppColors.seeding,
-              label: 'Upload Limit',
-              currentBps: config.uploadLimit,
-              onChanged: notifier.setUploadLimit,
+            _SettingsGroupCard(
+              children: [
+                _SpeedLimitTile(
+                  icon: Icons.arrow_downward_rounded,
+                  iconColor: AppColors.downloading,
+                  label: 'Download Limit',
+                  currentBps: config.downloadLimit,
+                  onChanged: notifier.setDownloadLimit,
+                ),
+                _SpeedLimitTile(
+                  icon: Icons.arrow_upward_rounded,
+                  iconColor: AppColors.seeding,
+                  label: 'Upload Limit',
+                  currentBps: config.uploadLimit,
+                  onChanged: notifier.setUploadLimit,
+                ),
+              ],
             ),
 
             // ── Network ───────────────────────────────────────────────
             const _SectionHeader(title: 'Network'),
-            _SwitchTile(
-              icon: Icons.wifi,
-              label: 'Wi-Fi Only Mode',
-              subtitle: 'Pause downloads on mobile data',
-              value: config.wifiOnlyMode,
-              onChanged: notifier.setWifiOnly,
-            ),
-            _SwitchTile(
-              icon: Icons.cloud_off_rounded,
-              label: 'Stop Seeding',
-              subtitle: 'Pause torrent when 100% complete',
-              value: config.stopSeedingWhenFinished,
-              onChanged: notifier.setStopSeeding,
-            ),
-            _SwitchTile(
-              icon: Icons.hub_outlined,
-              label: 'DHT',
-              subtitle: 'Distributed peer discovery',
-              value: config.dhtEnabled,
-              onChanged: notifier.setDht,
-            ),
-            _SwitchTile(
-              icon: Icons.swap_horiz_rounded,
-              label: 'PEX',
-              subtitle: 'Peer exchange protocol',
-              value: config.pexEnabled,
-              onChanged: notifier.setPex,
+            _SettingsGroupCard(
+              children: [
+                _SwitchTile(
+                  icon: Icons.wifi,
+                  label: 'Wi-Fi Only Mode',
+                  subtitle: 'Pause downloads on mobile data',
+                  value: config.wifiOnlyMode,
+                  onChanged: notifier.setWifiOnly,
+                ),
+                _SwitchTile(
+                  icon: Icons.cloud_off_rounded,
+                  label: 'Stop Seeding',
+                  subtitle: 'Pause torrent when 100% complete',
+                  value: config.stopSeedingWhenFinished,
+                  onChanged: notifier.setStopSeeding,
+                ),
+                _SwitchTile(
+                  icon: Icons.hub_outlined,
+                  label: 'DHT',
+                  subtitle: 'Distributed peer discovery',
+                  value: config.dhtEnabled,
+                  onChanged: notifier.setDht,
+                ),
+                _SwitchTile(
+                  icon: Icons.swap_horiz_rounded,
+                  label: 'PEX',
+                  subtitle: 'Peer exchange protocol',
+                  value: config.pexEnabled,
+                  onChanged: notifier.setPex,
+                ),
+              ],
             ),
 
             // ── Connections ───────────────────────────────────────────
             const _SectionHeader(title: 'Connections'),
-            _ConnectionsTile(
-              current: config.maxGlobalConnections,
-              onChanged: notifier.setMaxConnections,
+            _SettingsGroupCard(
+              children: [
+                _ConnectionsTile(
+                  current: config.maxGlobalConnections,
+                  onChanged: notifier.setMaxConnections,
+                ),
+              ],
             ),
 
             // ── Performance ───────────────────────────────────────────
             const _SectionHeader(title: 'Performance'),
-            const _BatteryOptimizationTile(),
-            const _NotificationSettingsTile(),
+            _SettingsGroupCard(
+              children: [
+                const _BatteryOptimizationTile(),
+                const _NotificationSettingsTile(),
+              ],
+            ),
 
             // ── Maintenance ──────────────────────────────────────────
             if (kDebugMode) ...[
               const _SectionHeader(title: 'Maintenance'),
-              _SwitchTile(
-                icon: Icons.bug_report_outlined,
-                label: 'Detailed Logging',
-                subtitle: 'Send non-fatal errors to Crashlytics',
-                value: true, // Always on for now
-                onChanged: (_) async {},
-              ),
-              ListTile(
-                leading: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.paused.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+              _SettingsGroupCard(
+                children: [
+                  _SwitchTile(
+                    icon: Icons.bug_report_outlined,
+                    label: 'Detailed Logging',
+                    subtitle: 'Send non-fatal errors to Crashlytics',
+                    value: true, // Always on for now
+                    onChanged: (_) async {},
                   ),
-                  child: const Icon(
-                    Icons.flash_on_rounded,
-                    color: AppColors.paused,
-                    size: 20,
+                  ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.paused.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.paused.withValues(alpha: 0.15),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.flash_on_rounded,
+                        color: AppColors.paused,
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(
+                      'Test Crash',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.text(context),
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Force a crash to test Firebase integration',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary(context),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    onTap: () {
+                      AppLogger.wtf('User triggered a manual test crash');
+                      throw Exception('Meitorrent Crash Test: ${DateTime.now()}');
+                    },
                   ),
-                ),
-                title: Text(
-                  'Test Crash',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.text(context),
-                  ),
-                ),
-                subtitle: Text(
-                  'Force a crash to test Firebase integration',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary(context),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                onTap: () {
-                  AppLogger.wtf('User triggered a manual test crash');
-                  // This will crash the app immediately
-                  throw Exception('Meitorrent Crash Test: ${DateTime.now()}');
-                },
+                ],
               ),
             ],
 
             // ── About ─────────────────────────────────────────────────
             const _SectionHeader(title: 'About'),
-            _AboutTile(),
-            ListTile(
-              leading: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.border(context).withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(10),
+            const _AboutCard(),
+            _SettingsGroupCard(
+              children: [
+                ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.downloading.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.downloading.withValues(alpha: 0.15),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.privacy_tip_outlined,
+                      color: AppColors.downloading,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    'Privacy Policy',
+                    style: TextStyle(
+                      fontFamily: 'ShipporiMincho',
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.text(context),
+                    ),
+                  ),
+                  trailing: Icon(
+                    Icons.open_in_new_rounded,
+                    color: AppColors.textSecondary(context).withValues(alpha: 0.7),
+                    size: 16,
+                  ),
+                  onTap: () => _launchUrl('https://meigamingofficial-design.github.io/MEITORRENT/privacy-policy.html'),
                 ),
-                child: Icon(
-                  Icons.privacy_tip_outlined,
-                  color: AppColors.textSecondary(context),
-                  size: 20,
+                ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.downloading.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.downloading.withValues(alpha: 0.15),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.description_outlined,
+                      color: AppColors.downloading,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    'Terms & Conditions',
+                    style: TextStyle(
+                      fontFamily: 'ShipporiMincho',
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.text(context),
+                    ),
+                  ),
+                  trailing: Icon(
+                    Icons.open_in_new_rounded,
+                    color: AppColors.textSecondary(context).withValues(alpha: 0.7),
+                    size: 16,
+                  ),
+                  onTap: () => _launchUrl('https://meigamingofficial-design.github.io/MEITORRENT/terms.html'),
                 ),
-              ),
-              title: Text(
-                'Privacy Policy',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text(context),
+                ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.downloading.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.downloading.withValues(alpha: 0.15),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.gavel_outlined,
+                      color: AppColors.downloading,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    'Open Source Licenses',
+                    style: TextStyle(
+                      fontFamily: 'ShipporiMincho',
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.text(context),
+                    ),
+                  ),
+                  trailing: Icon(
+                    Icons.chevron_right,
+                    color: AppColors.textSecondary(context).withValues(alpha: 0.7),
+                    size: 18,
+                  ),
+                  onTap: () => showLicensePage(context: context),
                 ),
-              ),
-              trailing: Icon(
-                Icons.open_in_new_rounded,
-                color: AppColors.textSecondary(context),
-                size: 16,
-              ),
-              onTap: () => _launchUrl('https://meigamingofficial-design.github.io/MEITORRENT/privacy-policy.html'),
-            ),
-            ListTile(
-              leading: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.border(context).withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(10),
+                ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.downloading.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.downloading.withValues(alpha: 0.15),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.language_outlined,
+                      color: AppColors.downloading,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    'Official Website',
+                    style: TextStyle(
+                      fontFamily: 'ShipporiMincho',
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.text(context),
+                    ),
+                  ),
+                  trailing: Icon(
+                    Icons.open_in_new_rounded,
+                    color: AppColors.textSecondary(context).withValues(alpha: 0.7),
+                    size: 16,
+                  ),
+                  onTap: () => _launchUrl('https://meigamingofficial-design.github.io/MEITORRENT/'),
                 ),
-                child: Icon(
-                  Icons.description_outlined,
-                  color: AppColors.textSecondary(context),
-                  size: 20,
+                ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.downloading.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.downloading.withValues(alpha: 0.15),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.copyright_outlined,
+                      color: AppColors.downloading,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    'GNU GPL v3.0 License',
+                    style: TextStyle(
+                      fontFamily: 'ShipporiMincho',
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.text(context),
+                    ),
+                  ),
+                  trailing: Icon(
+                    Icons.open_in_new_rounded,
+                    color: AppColors.textSecondary(context).withValues(alpha: 0.7),
+                    size: 16,
+                  ),
+                  onTap: () => _launchUrl('https://www.gnu.org/licenses/gpl-3.0.en.html'),
                 ),
-              ),
-              title: Text(
-                'Terms & Conditions',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text(context),
+                ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.downloading.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.downloading.withValues(alpha: 0.15),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.mail_outline_rounded,
+                      color: AppColors.downloading,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    'Contact Support',
+                    style: TextStyle(
+                      fontFamily: 'ShipporiMincho',
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.text(context),
+                    ),
+                  ),
+                  subtitle: Text(
+                    'meigaming.official@gmail.com',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary(context),
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  trailing: Icon(
+                    Icons.chevron_right,
+                    color: AppColors.textSecondary(context).withValues(alpha: 0.7),
+                    size: 18,
+                  ),
+                  onTap: () => _launchUrl('mailto:meigaming.official@gmail.com'),
                 ),
-              ),
-              trailing: Icon(
-                Icons.open_in_new_rounded,
-                color: AppColors.textSecondary(context),
-                size: 16,
-              ),
-              onTap: () => _launchUrl('https://meigamingofficial-design.github.io/MEITORRENT/terms.html'),
-            ),
-            ListTile(
-              leading: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.border(context).withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.gavel_outlined,
-                  color: AppColors.textSecondary(context),
-                  size: 20,
-                ),
-              ),
-              title: Text(
-                'Open Source Licenses',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text(context),
-                ),
-              ),
-              trailing: Icon(
-                Icons.chevron_right,
-                color: AppColors.textSecondary(context),
-                size: 18,
-              ),
-              onTap: () => showLicensePage(context: context),
-            ),
-            ListTile(
-              leading: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.border(context).withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.language_outlined,
-                  color: AppColors.textSecondary(context),
-                  size: 20,
-                ),
-              ),
-              title: Text(
-                'Official Website',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text(context),
-                ),
-              ),
-              trailing: Icon(
-                Icons.open_in_new_rounded,
-                color: AppColors.textSecondary(context),
-                size: 16,
-              ),
-              onTap: () => _launchUrl('https://meigamingofficial-design.github.io/MEITORRENT/'),
-            ),
-            ListTile(
-              leading: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.border(context).withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.copyright_outlined,
-                  color: AppColors.textSecondary(context),
-                  size: 20,
-                ),
-              ),
-              title: Text(
-                'GNU GPL v3.0 License',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text(context),
-                ),
-              ),
-              trailing: Icon(
-                Icons.open_in_new_rounded,
-                color: AppColors.textSecondary(context),
-                size: 16,
-              ),
-              onTap: () => _launchUrl('https://www.gnu.org/licenses/gpl-3.0.en.html'),
-            ),
-            ListTile(
-              leading: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.border(context).withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.mail_outline_rounded,
-                  color: AppColors.textSecondary(context),
-                  size: 20,
-                ),
-              ),
-              title: Text(
-                'Contact Support',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text(context),
-                ),
-              ),
-              subtitle: Text(
-                'meigaming.official@gmail.com',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary(context),
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              trailing: Icon(
-                Icons.chevron_right,
-                color: AppColors.textSecondary(context),
-                size: 18,
-              ),
-              onTap: () => _launchUrl('mailto:meigaming.official@gmail.com'),
+              ],
             ),
             const SizedBox(height: 60),
           ],
@@ -414,8 +475,12 @@ class _SpeedLimitTile extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: iconColor.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(10),
+          color: iconColor.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: iconColor.withValues(alpha: 0.15),
+            width: 1,
+          ),
         ),
         child: Icon(icon, color: iconColor, size: 20),
       ),
@@ -536,15 +601,21 @@ class _SwitchTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconBgColor = AppColors.textSecondary(context).withValues(alpha: 0.08);
+    final iconColor = AppColors.textSecondary(context).withValues(alpha: 0.8);
     return ListTile(
       leading: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.border(context).withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(10),
+          color: iconBgColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: iconBgColor.withValues(alpha: 0.15),
+            width: 1,
+          ),
         ),
-        child: Icon(icon, color: AppColors.textSecondary(context), size: 20),
+        child: Icon(icon, color: iconColor, size: 20),
       ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -588,17 +659,23 @@ class _ConnectionsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconBgColor = AppColors.textSecondary(context).withValues(alpha: 0.08);
+    final iconColor = AppColors.textSecondary(context).withValues(alpha: 0.8);
     return ListTile(
       leading: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.border(context).withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(10),
+          color: iconBgColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: iconBgColor.withValues(alpha: 0.15),
+            width: 1,
+          ),
         ),
         child: Icon(
           Icons.people_outline,
-          color: AppColors.textSecondary(context),
+          color: iconColor,
           size: 20,
         ),
       ),
@@ -693,70 +770,157 @@ class _ConnectionsTile extends StatelessWidget {
   }
 }
 
-// ─── About Tile ───────────────────────────────────────────────────────────────
+// ─── Settings Group Card ─────────────────────────────────────────────────────
 
-class _AboutTile extends ConsumerWidget {
+class _SettingsGroupCard extends StatelessWidget {
+  const _SettingsGroupCard({required this.children});
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.border(context).withValues(alpha: 0.8),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(19),
+        child: Material(
+          color: AppColors.surface(context),
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: children.length,
+            separatorBuilder: (context, index) => Divider(
+              color: AppColors.border(context).withValues(alpha: 0.6),
+              height: 1,
+              indent: 72,
+              endIndent: 16,
+            ),
+            itemBuilder: (context, index) => children[index],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── About Card ──────────────────────────────────────────────────────────────
+
+class _AboutCard extends ConsumerWidget {
+  const _AboutCard();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final versionAsync = ref.watch(appVersionProvider);
 
-    return ListTile(
-      leading: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.border(context).withValues(alpha: 0.8),
-            width: 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.surface(context),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.border(context).withValues(alpha: 0.8),
+          width: 1.5,
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(11),
-          child: Image.asset(
-            'assets/images/app_logo.png',
-            width: 40,
-            height: 40,
-            fit: BoxFit.cover,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-        ),
+        ],
       ),
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      child: Column(
         children: [
+          Center(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.border(context),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Image.asset(
+                  'assets/images/app_logo.png',
+                  width: 64,
+                  height: 64,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           Text(
             'Meitorrent',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
+            style: TextStyle(
+              fontFamily: 'ShipporiMincho',
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
               color: AppColors.text(context),
+              letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             versionAsync.when(
-              data: (v) => 'v$v · Fast. Private. Reliable.',
-              loading: () => 'Loading... · Fast. Private. Reliable.',
-              error: (_, _) => 'v1.0.1+2 · Fast. Private. Reliable.',
+              data: (v) => 'Version $v',
+              loading: () => 'Version Loading...',
+              error: (_, _) => 'Version 1.0.7+8',
             ),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondary(context),
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+            decoration: BoxDecoration(
+              color: AppColors.downloading.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              'Designed & Developed by MeiGamingOfficial',
+              style: TextStyle(
+                color: AppColors.downloading,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           Text(
-            'Designed & Developed by MeiGamingOfficial',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppColors.downloading,
-              fontSize: 10,
+            'A premium, hand-crafted Android torrent client powered by a native C++ Core, styled with a traditional Sumi-e Parchment aesthetic.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary(context),
+              fontSize: 12.5,
+              height: 1.5,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -862,6 +1026,9 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
 
   @override
   Widget build(BuildContext context) {
+    final statusColor = _isIgnored ? AppColors.seeding : AppColors.paused;
+    final iconBgColor = statusColor.withValues(alpha: 0.08);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -870,14 +1037,18 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.border(context).withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(10),
+              color: iconBgColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: iconBgColor.withValues(alpha: 0.15),
+                width: 1,
+              ),
             ),
             child: Icon(
               _isIgnored
                   ? Icons.battery_charging_full_rounded
                   : Icons.battery_alert_rounded,
-              color: _isIgnored ? AppColors.seeding : AppColors.paused,
+              color: statusColor,
               size: 20,
             ),
           ),
@@ -894,7 +1065,8 @@ class _BatteryOptimizationTileState extends State<_BatteryOptimizationTile>
                 ),
               ),
               const SizedBox(height: 4),
-              Text('Helps keep torrent downloads active when the app is in the background or screen is off',
+              Text(
+                'Helps keep torrent downloads active when the app is in the background or screen is off',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppColors.textSecondary(context),
                   fontSize: 12,
@@ -1071,17 +1243,23 @@ class _NotificationSettingsTileState extends State<_NotificationSettingsTile>
 
   @override
   Widget build(BuildContext context) {
+    final statusColor = _isGranted ? AppColors.seeding : AppColors.paused;
+    final iconBgColor = statusColor.withValues(alpha: 0.08);
     return ListTile(
       leading: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.border(context).withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(10),
+          color: iconBgColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: iconBgColor.withValues(alpha: 0.15),
+            width: 1,
+          ),
         ),
         child: Icon(
           _isGranted ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
-          color: _isGranted ? AppColors.seeding : AppColors.paused,
+          color: statusColor,
           size: 20,
         ),
       ),
