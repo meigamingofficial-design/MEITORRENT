@@ -972,8 +972,8 @@ class _AboutCard extends ConsumerWidget {
                       child: Text(
                         versionAsync.when(
                           data: (v) => 'v$v',
-                          loading: () => 'v1.0.7+8',
-                          error: (_, _) => 'v1.0.7+8',
+                          loading: () => 'v1.0.8+9',
+                          error: (_, _) => 'v1.0.8+9',
                         ),
                         style: const TextStyle(
                           color: AppColors.downloading,
