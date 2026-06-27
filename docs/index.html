@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meitorrent — Premium Android Torrent Client</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Beautiful calligraphic and readable fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-parchment: #FAF6EE;
+      --card-white: #FFFDF9;
+      --primary-crimson: #D63031;
+      --primary-dark: #B71C1C;
+      --secondary-bamboo: #316745;
+      --border-washi: #E2D7C7;
+      --text-sumi: #1C1C1C;
+      --text-charcoal: #5D5D5D;
+      --shadow-ink: rgba(28, 28, 28, 0.06);
+      --shadow-ink-hover: rgba(214, 48, 49, 0.08);
+      --transition-smooth: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background-color: var(--bg-parchment);
+      background-image: url('sakura_bg_light.png');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      color: var(--text-sumi);
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Traditional Header / Navigation */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(250, 246, 238, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1.5px solid var(--border-washi);
+      padding: 20px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(28, 28, 28, 0.02);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-family: 'Shippori Mincho', serif;
+      font-weight: 800;
+      font-size: 24px;
+      color: var(--text-sumi);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-img {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--border-washi);
+      box-shadow: 0 4px 10px var(--shadow-ink);
+      object-fit: cover;
+    }
+
+    .nav-logo span {
+      color: var(--primary-crimson);
+      margin-left: 2px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 36px;
+    }
+
+    .nav-links a {
+      color: var(--text-charcoal);
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 600;
+      transition: var(--transition-smooth);
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -4px;
+      left: 0;
+      background-color: var(--primary-crimson);
+      transition: var(--transition-smooth);
+    }
+
+    .nav-links a:hover {
+      color: var(--primary-crimson);
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 100px 24px 80px;
+      text-align: center;
+      position: relative;
+      background: rgba(255, 253, 249, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-bottom: 1.5px solid var(--border-washi);
+      overflow: hidden;
+    }
+
+    .hero-hanko {
+      display: inline-flex;
+      align-items: center;
+      background: var(--card-white);
+      color: var(--primary-crimson);
+      padding: 8px 24px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      margin-bottom: 28px;
+      border: 2px solid var(--primary-crimson);
+      box-shadow: 4px 4px 0 var(--border-washi);
+      transform: rotate(-1deg);
+      font-family: 'Shippori Mincho', serif;
+    }
+
+    .hero h1 {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 56px;
+      font-weight: 800;
+      color: var(--text-sumi);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 24px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-desc {
+      font-size: 19px;
+      color: var(--text-charcoal);
+      max-width: 680px;
+      margin: 0 auto 40px;
+      font-weight: 400;
+      line-height: 1.8;
+    }
+
+    /* Hanko Stamp Button Style */
+    .hanko-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--primary-crimson);
+      color: white;
+      font-family: 'Shippori Mincho', serif;
+      font-weight: 700;
+      font-size: 16px;
+      text-decoration: none;
+      padding: 16px 36px;
+      border-radius: 12px;
+      border: 2px solid var(--primary-dark);
+      box-shadow: 0 6px 20px rgba(214, 48, 49, 0.25);
+      transition: var(--transition-smooth);
+      letter-spacing: 0.05em;
+      cursor: pointer;
+    }
+
+    .hanko-btn:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 10px 25px rgba(214, 48, 49, 0.35);
+    }
+
+    .hanko-btn:active {
+      transform: translateY(-1px);
+    }
+
+    /* Main Container & Features Grid */
+    .container {
+      max-width: 1100px;
+      margin: 60px auto 100px;
+      padding: 60px 48px;
+      background: rgba(255, 253, 249, 0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1.5px solid var(--border-washi);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(28, 28, 28, 0.04);
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .section-title h2 {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-sumi);
+    }
+
+    .section-title::after {
+      content: '◆';
+      display: block;
+      color: var(--primary-crimson);
+      font-size: 14px;
+      margin-top: 10px;
+      letter-spacing: 0.5em;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 32px;
+    }
+
+    .card {
+      background: var(--card-white);
+      border: 1.2px solid var(--border-washi);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 24px var(--shadow-ink);
+      transition: var(--transition-smooth);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background-color: var(--border-washi);
+      transition: var(--transition-smooth);
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 16px 40px var(--shadow-ink-hover);
+      border-color: var(--primary-crimson);
+    }
+
+    .card:hover::before {
+      background-color: var(--primary-crimson);
+    }
+
+    .card-icon {
+      font-size: 36px;
+      margin-bottom: 24px;
+      display: inline-flex;
+      color: var(--primary-crimson);
+    }
+
+    .card h3 {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text-sumi);
+    }
+
+    .card p {
+      font-size: 15px;
+      color: var(--text-charcoal);
+      line-height: 1.7;
+    }
+
+    /* Traditional Footer */
+    .footer {
+      background: rgba(250, 246, 238, 0.9);
+      backdrop-filter: blur(10px);
+      border-top: 1.5px solid var(--border-washi);
+      padding: 60px 24px;
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-charcoal);
+      margin-top: auto;
+    }
+
+    .footer-logo {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-sumi);
+      margin-bottom: 16px;
+    }
+
+    .footer-logo span {
+      color: var(--primary-crimson);
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .footer-links a {
+      color: var(--text-charcoal);
+      text-decoration: none;
+      font-weight: 600;
+      transition: var(--transition-smooth);
+    }
+
+    .footer-links a:hover {
+      color: var(--primary-crimson);
+      text-decoration: underline;
+    }
+
+    .footer p {
+      margin-top: 8px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .navbar {
+        padding: 16px 24px;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .nav-links {
+        gap: 20px;
+      }
+      .hero {
+        padding: 60px 16px 50px;
+      }
+      .hero h1 {
+        font-size: 36px;
+      }
+      .hero-desc {
+        font-size: 16px;
+      }
+      .container {
+        margin: 30px 16px 60px;
+        padding: 40px 24px;
+      }
+      .card {
+        padding: 30px 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <a href="index.html" class="nav-logo">
+      <img src="logo.png" alt="Meitorrent Logo" class="logo-img">
+      Meitorrent<span>.</span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="privacy-policy.html">Privacy Policy</a>
+      <a href="terms.html">Terms &amp; Conditions</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <span class="hero-hanko">🔒 100% PRIVATE</span>
+    <h1>Hand-Crafted P2P Engine<br>Wrapped in Calligraphic Art</h1>
+    <p class="hero-desc">Meitorrent is a production-grade, highly optimized Android torrent client powered by a native C++ core and designed with a premium Japanese Sumi-e &amp; Sakura theme.</p>
+    <a href="#" class="hanko-btn">Get Meitorrent</a>
+  </section>
+
+  <main class="container">
+    <div class="section-title">
+      <h2>Crafted for Stability &amp; Aesthetics</h2>
+    </div>
+
+    <div class="features-grid">
+      <div class="card">
+        <span class="card-icon">🚀</span>
+        <h3>Libtorrent 2.0 Core</h3>
+        <p>Utilizes native C++ core bindings (via Dart FFI) for high-performance, memory-safe, and blazing-fast download speeds.</p>
+      </div>
+
+      <div class="card">
+        <span class="card-icon">🛡️</span>
+        <h3>Intelligent Safety Guards</h3>
+        <p>Includes a Disk Space Guard to prevent storage depletion, a Bandwidth Guard for smart data usage, and background service protection.</p>
+      </div>
+
+      <div class="card">
+        <span class="card-icon">🎨</span>
+        <h3>Sumi-e Parchment Style</h3>
+        <p>An immersive Japanese aesthetic using soft ivory textures, charcoal ink layouts, and cherry blossom backgrounds.</p>
+      </div>
+
+      <div class="card">
+        <span class="card-icon">🔋</span>
+        <h3>OEM Battery Guard</h3>
+        <p>Alerts users about aggressive background process management and provides step-by-step optimization settings for uninterrupted transfers.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-logo">
+      Meitorrent<span>.</span>
+    </div>
+    <div class="footer-links">
+      <a href="privacy-policy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Service</a>
+    </div>
+    <p>© 2026 MeiGamingOfficial. All rights reserved.</p>
+    <p>For support, reach out to <a href="mailto:meigaming.official@gmail.com" style="color: var(--primary-crimson); text-decoration: none;">meigaming.official@gmail.com</a></p>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms &amp; Conditions — Meitorrent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-parchment: #FAF6EE;
+      --card-white: #FFFDF9;
+      --primary-crimson: #D63031;
+      --primary-dark: #B71C1C;
+      --border-washi: #E2D7C7;
+      --text-sumi: #1C1C1C;
+      --text-charcoal: #5D5D5D;
+      --shadow-ink: rgba(28, 28, 28, 0.04);
+      --transition-smooth: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background-color: var(--bg-parchment);
+      background-image: url('sakura_bg_light.png');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      color: var(--text-sumi);
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(250, 246, 238, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1.5px solid var(--border-washi);
+      padding: 20px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-family: 'Shippori Mincho', serif;
+      font-weight: 800;
+      font-size: 24px;
+      color: var(--text-sumi);
+      text-decoration: none;
+    }
+
+    .logo-img {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--border-washi);
+      object-fit: cover;
+    }
+
+    .nav-logo span {
+      color: var(--primary-crimson);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 36px;
+    }
+
+    .nav-links a {
+      color: var(--text-charcoal);
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 600;
+      transition: var(--transition-smooth);
+      position: relative;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary-crimson);
+    }
+
+    /* Container for content */
+    .container {
+      max-width: 850px;
+      margin: 60px auto 100px;
+      padding: 60px 48px;
+      background: rgba(255, 253, 249, 0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1.5px solid var(--border-washi);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(28, 28, 28, 0.04);
+    }
+
+    .terms-header {
+      margin-bottom: 40px;
+      border-bottom: 2px solid var(--border-washi);
+      padding-bottom: 24px;
+      text-align: center;
+    }
+
+    .terms-header h1 {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 40px;
+      font-weight: 800;
+      color: var(--text-sumi);
+      margin-bottom: 12px;
+    }
+
+    .last-updated {
+      font-size: 14px;
+      color: var(--text-charcoal);
+      font-weight: 600;
+    }
+
+    .terms-section {
+      margin-top: 40px;
+    }
+
+    .terms-section h2 {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-sumi);
+      margin-bottom: 18px;
+      border-bottom: 1.5px solid var(--border-washi);
+      padding-bottom: 8px;
+    }
+
+    .terms-section p {
+      font-size: 15px;
+      color: var(--text-charcoal);
+      margin-bottom: 16px;
+    }
+
+    .terms-section ul {
+      list-style-type: none;
+      margin: 0 0 24px 8px;
+    }
+
+    .terms-section li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 12px;
+      font-size: 15px;
+      color: var(--text-charcoal);
+    }
+
+    .terms-section li::before {
+      content: '▪';
+      position: absolute;
+      left: 0;
+      color: var(--primary-crimson);
+      font-size: 12px;
+    }
+
+    .footer {
+      background: rgba(250, 246, 238, 0.9);
+      backdrop-filter: blur(10px);
+      border-top: 1.5px solid var(--border-washi);
+      padding: 60px 24px;
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-charcoal);
+      margin-top: auto;
+    }
+
+    .footer-logo {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-sumi);
+      margin-bottom: 16px;
+    }
+
+    .footer-logo span {
+      color: var(--primary-crimson);
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .footer-links a {
+      color: var(--text-charcoal);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .footer-links a:hover {
+      color: var(--primary-crimson);
+      text-decoration: underline;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .navbar {
+        padding: 16px 24px;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .nav-links {
+        gap: 20px;
+      }
+      .container {
+        margin: 30px 16px 60px;
+        padding: 40px 24px;
+      }
+      .terms-header h1 {
+        font-size: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <a href="index.html" class="nav-logo">
+      <img src="logo.png" alt="Meitorrent Logo" class="logo-img">
+      Meitorrent<span>.</span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="privacy-policy.html">Privacy Policy</a>
+      <a href="terms.html">Terms &amp; Conditions</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="terms-header">
+      <h1>Terms &amp; Conditions</h1>
+      <div class="last-updated">Last Updated: June 2026</div>
+    </div>
+
+    <p>By downloading, installing, or using Meitorrent, you agree to be bound by these Terms and Conditions. If you do not agree to these Terms, please do not use the application.</p>
+    <p>Meitorrent is developed, published, and maintained by <strong>MeiGamingOfficial</strong> ("we", "our", or "us").</p>
+
+    <section class="terms-section">
+      <h2>1. Proper Use and Copyright Compliance</h2>
+      <ul>
+        <li><strong>User Responsibility:</strong> You are solely responsible for the files, content, and data that you download, upload, transfer, or share using Meitorrent.</li>
+        <li><strong>Copyright Compliance:</strong> You must not use Meitorrent to download, upload, transfer, or distribute copyrighted material unless you have the legal right, authorization, license, or permission to do so.</li>
+        <li><strong>Legal Compliance:</strong> You agree to use Meitorrent in accordance with all applicable local, national, and international laws and regulations.</li>
+      </ul>
+    </section>
+
+    <section class="terms-section">
+      <h2>2. Nature of the Application</h2>
+      <ul>
+        <li><strong>Software Tool Only:</strong> Meitorrent is a peer-to-peer (P2P) file transfer application that supports torrent files and magnet links.</li>
+        <li><strong>No Content Provided:</strong> Meitorrent does not host, publish, distribute, provide, or index any content, media, files, or torrent catalogs.</li>
+        <li><strong>User-Controlled Activity:</strong> All transfers are initiated and controlled solely by users of the application.</li>
+        <li><strong>No Monitoring:</strong> MeiGamingOfficial does not monitor, inspect, or control the content transferred through the application.</li>
+      </ul>
+    </section>
+
+    <section class="terms-section">
+      <h2>3. Third-Party Software</h2>
+      <p>Meitorrent may incorporate third-party open-source libraries and software components. Such components remain subject to their respective licenses and copyright notices. Nothing in these Terms modifies or replaces the rights and obligations granted by those third-party licenses.</p>
+    </section>
+
+    <section class="terms-section">
+      <h2>4. Disclaimer of Warranties</h2>
+      <p>Meitorrent is provided on an "AS IS" and "AS AVAILABLE" basis without warranties of any kind, whether express or implied. To the maximum extent permitted by applicable law, MeiGamingOfficial disclaims all warranties, including but not limited to:</p>
+      <ul>
+        <li>Merchantability and fitness for a particular purpose</li>
+        <li>Non-infringement</li>
+        <li>Availability, reliability, or accuracy</li>
+      </ul>
+      <p>We do not guarantee that the application will operate without interruption, error, malfunction, security issues, or data loss.</p>
+    </section>
+
+    <section class="terms-section">
+      <h2>5. Limitation of Liability</h2>
+      <p>To the maximum extent permitted by law, MeiGamingOfficial, its developers, contributors, and affiliates shall not be liable for any direct, indirect, incidental, consequential, special, exemplary, or punitive damages arising from or related to:</p>
+      <ul>
+        <li>Use or inability to use the application</li>
+        <li>Data loss or device issues</li>
+        <li>Business interruption or loss of profits</li>
+        <li>Legal claims resulting from user activity</li>
+      </ul>
+      <p>This limitation applies even if MeiGamingOfficial has been advised of the possibility of such damages.</p>
+    </section>
+
+    <section class="terms-section">
+      <h2>6. Changes to These Terms</h2>
+      <p>We may update these Terms and Conditions from time to time. Any updates will become effective upon publication of the revised Terms. Continued use of Meitorrent after changes become effective constitutes acceptance of the updated Terms.</p>
+    </section>
+
+    <section class="terms-section">
+      <h2>7. Contact Information</h2>
+      <p>For support requests, legal notices, or questions regarding these Terms:</p>
+      <p><strong>MeiGamingOfficial</strong><br>
+      Email: <a href="mailto:meigaming.official@gmail.com" style="color: var(--primary-crimson); text-decoration: none; font-weight: 600;">meigaming.official@gmail.com</a></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-logo">
+      Meitorrent<span>.</span>
+    </div>
+    <div class="footer-links">
+      <a href="privacy-policy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Service</a>
+    </div>
+    <p>© 2026 MeiGamingOfficial. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>

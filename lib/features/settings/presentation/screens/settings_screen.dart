@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -760,26 +761,264 @@ class _LegalDetailScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           title,
-          style: Theme.of(context).textTheme.displayMedium?.copyWith(
-            fontSize: 20,
+          style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
+            fontSize: 22,
             fontWeight: FontWeight.w800,
           ),
         ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: SelectableText(
-          content,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.text(context),
-            fontSize: 14,
-            height: 1.8,
-            letterSpacing: 0.2,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: ParchmentMarkdownRenderer(content: content),
+      ),
+    );
+  }
+}
+
+/// Custom markdown renderer that splits policy text by '##' sections,
+/// rendering each in a washi-style paper Card with calligraphic styling.
+class ParchmentMarkdownRenderer extends StatelessWidget {
+  final String content;
+
+  const ParchmentMarkdownRenderer({super.key, required this.content});
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = content.split('##');
+    final children = <Widget>[];
+
+    // The first part is the introduction / title section
+    if (parts.isNotEmpty) {
+      final introContent = parts[0].trim();
+      if (introContent.isNotEmpty) {
+        children.add(_buildIntroCard(context, introContent));
+      }
+    }
+
+    // Subsequent parts represent the parsed sections
+    for (int i = 1; i < parts.length; i++) {
+      final sectionContent = parts[i].trim();
+      if (sectionContent.isNotEmpty) {
+        children.add(_buildSectionCard(context, sectionContent));
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: children,
+    );
+  }
+
+  Widget _buildIntroCard(BuildContext context, String rawText) {
+    final lines = rawText.split('\n');
+    final parsedWidgets = <Widget>[];
+    String? title;
+
+    for (final line in lines) {
+      final trimmed = line.trim();
+      if (trimmed.isEmpty) continue;
+
+      if (trimmed.startsWith('# ')) {
+        title = trimmed.substring(2).trim();
+      } else if (trimmed.startsWith('---')) {
+        parsedWidgets.add(const Divider(height: 24));
+      } else {
+        parsedWidgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: RichText(
+              text: TextSpan(
+                style: TextStyle(
+                  fontFamily: 'sans-serif',
+                  color: AppColors.text(context),
+                  fontSize: 14,
+                  height: 1.6,
+                ),
+                children: _parseInlineText(context, trimmed),
+              ),
+            ),
           ),
+        );
+      }
+    }
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (title != null) ...[
+              Text(
+                title,
+                style: const TextStyle(
+                  fontFamily: 'ShipporiMincho',
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.downloading,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Divider(height: 16),
+              const SizedBox(height: 8),
+            ],
+            ...parsedWidgets,
+          ],
         ),
       ),
     );
+  }
+
+  Widget _buildSectionCard(BuildContext context, String rawText) {
+    final lines = rawText.split('\n');
+    if (lines.isEmpty) return const SizedBox.shrink();
+
+    final header = lines[0].trim();
+    final parsedWidgets = <Widget>[];
+
+    for (int i = 1; i < lines.length; i++) {
+      final trimmed = lines[i].trim();
+      if (trimmed.isEmpty) continue;
+
+      if (trimmed.startsWith('### ')) {
+        parsedWidgets.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 8),
+            child: Text(
+              trimmed.substring(4).trim(),
+              style: TextStyle(
+                fontFamily: 'ShipporiMincho',
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+                color: AppColors.text(context),
+              ),
+            ),
+          ),
+        );
+      } else if (trimmed.startsWith('---')) {
+        parsedWidgets.add(const Divider(height: 24));
+      } else if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+        parsedWidgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8, left: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '• ',
+                  style: TextStyle(
+                    color: AppColors.downloading,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      style: TextStyle(
+                        fontFamily: 'sans-serif',
+                        color: AppColors.textSecondary(context),
+                        fontSize: 13.5,
+                        height: 1.6,
+                      ),
+                      children: _parseInlineText(context, trimmed.substring(2).trim()),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      } else {
+        parsedWidgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: RichText(
+              text: TextSpan(
+                style: TextStyle(
+                  fontFamily: 'sans-serif',
+                  color: AppColors.textSecondary(context),
+                  fontSize: 13.5,
+                  height: 1.6,
+                ),
+                children: _parseInlineText(context, trimmed),
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              header,
+              style: const TextStyle(
+                fontFamily: 'ShipporiMincho',
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.downloading,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Divider(height: 16),
+            const SizedBox(height: 8),
+            ...parsedWidgets,
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<InlineSpan> _parseInlineText(BuildContext context, String input) {
+    final spans = <InlineSpan>[];
+    final regex = RegExp(r'\*\*(.*?)\*\*|\[(.*?)\]\((.*?)\)');
+    int start = 0;
+
+    for (final match in regex.allMatches(input)) {
+      if (match.start > start) {
+        spans.add(TextSpan(text: input.substring(start, match.start)));
+      }
+
+      final boldText = match.group(1);
+      final linkText = match.group(2);
+      final linkUrl = match.group(3);
+
+      if (boldText != null) {
+        spans.add(TextSpan(
+          text: boldText,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'sans-serif'),
+        ));
+      } else if (linkText != null && linkUrl != null) {
+        spans.add(
+          TextSpan(
+            text: linkText,
+            style: const TextStyle(
+              fontFamily: 'sans-serif',
+              color: AppColors.downloading,
+              fontWeight: FontWeight.w600,
+              decoration: TextDecoration.underline,
+            ),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () => _launchUrl(linkUrl),
+          ),
+        );
+      }
+      start = match.end;
+    }
+
+    if (start < input.length) {
+      spans.add(TextSpan(text: input.substring(start)));
+    }
+
+    return spans;
   }
 }
 
