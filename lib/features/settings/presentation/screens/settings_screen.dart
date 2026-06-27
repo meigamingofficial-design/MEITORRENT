@@ -163,20 +163,92 @@ class SettingsScreen extends ConsumerWidget {
             // ── About ─────────────────────────────────────────────────
             const _SectionHeader(title: 'About'),
             _AboutTile(),
-            const _LegalTile(
-              icon: Icons.privacy_tip_outlined,
-              label: 'Privacy Policy',
-              assetPath: 'PRIVACY_POLICY.md',
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.border(context).withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.privacy_tip_outlined,
+                  color: AppColors.textSecondary(context),
+                  size: 20,
+                ),
+              ),
+              title: Text(
+                'Privacy Policy',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.text(context),
+                ),
+              ),
+              trailing: Icon(
+                Icons.open_in_new_rounded,
+                color: AppColors.textSecondary(context),
+                size: 16,
+              ),
+              onTap: () => _launchUrl('https://meigamingofficial-design.github.io/MEITORRENT/privacy-policy.html'),
             ),
-            const _LegalTile(
-              icon: Icons.description_outlined,
-              label: 'Terms & Conditions',
-              assetPath: 'TERMS.md',
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.border(context).withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.description_outlined,
+                  color: AppColors.textSecondary(context),
+                  size: 20,
+                ),
+              ),
+              title: Text(
+                'Terms & Conditions',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.text(context),
+                ),
+              ),
+              trailing: Icon(
+                Icons.open_in_new_rounded,
+                color: AppColors.textSecondary(context),
+                size: 16,
+              ),
+              onTap: () => _launchUrl('https://meigamingofficial-design.github.io/MEITORRENT/terms.html'),
             ),
-            const _LegalTile(
-              icon: Icons.gavel_outlined,
-              label: 'Open Source Licenses',
-              assetPath: 'LICENSES.md',
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.border(context).withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.gavel_outlined,
+                  color: AppColors.textSecondary(context),
+                  size: 20,
+                ),
+              ),
+              title: Text(
+                'Open Source Licenses',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.text(context),
+                ),
+              ),
+              trailing: Icon(
+                Icons.chevron_right,
+                color: AppColors.textSecondary(context),
+                size: 18,
+              ),
+              onTap: () => showLicensePage(context: context),
             ),
             ListTile(
               leading: Container(
@@ -707,349 +779,8 @@ Future<void> _launchUrl(String urlString) async {
 
 
 
-class _LegalTile extends StatelessWidget {
-  const _LegalTile({
-    required this.icon,
-    required this.label,
-    required this.assetPath,
-  });
-  final IconData icon;
-  final String label;
-  final String assetPath;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.border(context).withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, color: AppColors.textSecondary(context), size: 20),
-      ),
-      title: Text(
-        label,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: AppColors.text(context),
-        ),
-      ),
-      trailing: Icon(
-        Icons.chevron_right,
-        color: AppColors.textSecondary(context),
-        size: 18,
-      ),
-      onTap: () async {
-        try {
-          final content = await DefaultAssetBundle.of(
-            context,
-          ).loadString(assetPath);
-          if (context.mounted) {
-            unawaited(
-              Navigator.of(context).push(
-                PageRouteBuilder<void>(
-                  pageBuilder: (_, _, _) =>
-                      _LegalDetailScreen(title: label, content: content),
-                  transitionsBuilder: (_, animation, _, child) =>
-                      FadeTransition(
-                        opacity: CurvedAnimation(
-                          parent: animation,
-                          curve: Curves.easeOut,
-                        ),
-                        child: child,
-                      ),
-                  transitionDuration: const Duration(milliseconds: 220),
-                ),
-              ),
-            );
-          }
-        } catch (e) {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error loading $label: $e')),
-            );
-          }
-        }
-      },
-    );
-  }
-}
-
-class _LegalDetailScreen extends StatelessWidget {
-  const _LegalDetailScreen({required this.title, required this.content});
-  final String title;
-  final String content;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background(context),
-      appBar: AppBar(
-        title: Text(
-          title,
-          style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: ParchmentMarkdownRenderer(content: content),
-      ),
-    );
-  }
-}
-
-/// Custom markdown renderer that splits policy text by '##' sections,
-/// rendering each in a washi-style paper Card with calligraphic styling.
-class ParchmentMarkdownRenderer extends StatelessWidget {
-  final String content;
-
-  const ParchmentMarkdownRenderer({super.key, required this.content});
-
-  @override
-  Widget build(BuildContext context) {
-    final parts = content.split('##');
-    final children = <Widget>[];
-
-    // The first part is the introduction / title section
-    if (parts.isNotEmpty) {
-      final introContent = parts[0].trim();
-      if (introContent.isNotEmpty) {
-        children.add(_buildIntroCard(context, introContent));
-      }
-    }
-
-    // Subsequent parts represent the parsed sections
-    for (int i = 1; i < parts.length; i++) {
-      final sectionContent = parts[i].trim();
-      if (sectionContent.isNotEmpty) {
-        children.add(_buildSectionCard(context, sectionContent));
-      }
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: children,
-    );
-  }
-
-  Widget _buildIntroCard(BuildContext context, String rawText) {
-    final lines = rawText.split('\n');
-    final parsedWidgets = <Widget>[];
-    String? title;
-
-    for (final line in lines) {
-      final trimmed = line.trim();
-      if (trimmed.isEmpty) continue;
-
-      if (trimmed.startsWith('# ')) {
-        title = trimmed.substring(2).trim();
-      } else if (trimmed.startsWith('---')) {
-        parsedWidgets.add(const Divider(height: 24));
-      } else {
-        parsedWidgets.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: RichText(
-              text: TextSpan(
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
-                  color: AppColors.text(context),
-                  fontSize: 14,
-                  height: 1.6,
-                ),
-                children: _parseInlineText(context, trimmed),
-              ),
-            ),
-          ),
-        );
-      }
-    }
-
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (title != null) ...[
-              Text(
-                title,
-                style: const TextStyle(
-                  fontFamily: 'ShipporiMincho',
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.downloading,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Divider(height: 16),
-              const SizedBox(height: 8),
-            ],
-            ...parsedWidgets,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionCard(BuildContext context, String rawText) {
-    final lines = rawText.split('\n');
-    if (lines.isEmpty) return const SizedBox.shrink();
-
-    final header = lines[0].trim();
-    final parsedWidgets = <Widget>[];
-
-    for (int i = 1; i < lines.length; i++) {
-      final trimmed = lines[i].trim();
-      if (trimmed.isEmpty) continue;
-
-      if (trimmed.startsWith('### ')) {
-        parsedWidgets.add(
-          Padding(
-            padding: const EdgeInsets.only(top: 12, bottom: 8),
-            child: Text(
-              trimmed.substring(4).trim(),
-              style: TextStyle(
-                fontFamily: 'ShipporiMincho',
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-                color: AppColors.text(context),
-              ),
-            ),
-          ),
-        );
-      } else if (trimmed.startsWith('---')) {
-        parsedWidgets.add(const Divider(height: 24));
-      } else if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
-        parsedWidgets.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8, left: 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '• ',
-                  style: TextStyle(
-                    color: AppColors.downloading,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                Expanded(
-                  child: RichText(
-                    text: TextSpan(
-                      style: TextStyle(
-                        fontFamily: 'sans-serif',
-                        color: AppColors.textSecondary(context),
-                        fontSize: 13.5,
-                        height: 1.6,
-                      ),
-                      children: _parseInlineText(context, trimmed.substring(2).trim()),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      } else {
-        parsedWidgets.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: RichText(
-              text: TextSpan(
-                style: TextStyle(
-                  fontFamily: 'sans-serif',
-                  color: AppColors.textSecondary(context),
-                  fontSize: 13.5,
-                  height: 1.6,
-                ),
-                children: _parseInlineText(context, trimmed),
-              ),
-            ),
-          ),
-        );
-      }
-    }
-
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              header,
-              style: const TextStyle(
-                fontFamily: 'ShipporiMincho',
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.downloading,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Divider(height: 16),
-            const SizedBox(height: 8),
-            ...parsedWidgets,
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<InlineSpan> _parseInlineText(BuildContext context, String input) {
-    final spans = <InlineSpan>[];
-    final regex = RegExp(r'\*\*(.*?)\*\*|\[(.*?)\]\((.*?)\)');
-    int start = 0;
-
-    for (final match in regex.allMatches(input)) {
-      if (match.start > start) {
-        spans.add(TextSpan(text: input.substring(start, match.start)));
-      }
-
-      final boldText = match.group(1);
-      final linkText = match.group(2);
-      final linkUrl = match.group(3);
-
-      if (boldText != null) {
-        spans.add(TextSpan(
-          text: boldText,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'sans-serif'),
-        ));
-      } else if (linkText != null && linkUrl != null) {
-        spans.add(
-          TextSpan(
-            text: linkText,
-            style: const TextStyle(
-              fontFamily: 'sans-serif',
-              color: AppColors.downloading,
-              fontWeight: FontWeight.w600,
-              decoration: TextDecoration.underline,
-            ),
-            recognizer: TapGestureRecognizer()
-              ..onTap = () => _launchUrl(linkUrl),
-          ),
-        );
-      }
-      start = match.end;
-    }
-
-    if (start < input.length) {
-      spans.add(TextSpan(text: input.substring(start)));
-    }
-
-    return spans;
-  }
-}
+// The previous local Markdown viewer classes were removed as privacy policy,
+// terms and conditions are now opened via web URL, and licenses via showLicensePage.
 
 // ─── Battery Optimization Tile ───────────────────────────────────────────────
 
