@@ -124,10 +124,10 @@ class SettingsScreen extends ConsumerWidget {
 
             // ── Performance ───────────────────────────────────────────
             const _SectionHeader(title: 'Performance'),
-            _SettingsGroupCard(
+            const _SettingsGroupCard(
               children: [
-                const _BatteryOptimizationTile(),
-                const _NotificationSettingsTile(),
+                _BatteryOptimizationTile(),
+                _NotificationSettingsTile(),
               ],
             ),
 
@@ -203,7 +203,7 @@ class SettingsScreen extends ConsumerWidget {
                         width: 1,
                       ),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.privacy_tip_outlined,
                       color: AppColors.downloading,
                       size: 20,
@@ -237,7 +237,7 @@ class SettingsScreen extends ConsumerWidget {
                         width: 1,
                       ),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.description_outlined,
                       color: AppColors.downloading,
                       size: 20,
@@ -271,7 +271,7 @@ class SettingsScreen extends ConsumerWidget {
                         width: 1,
                       ),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.gavel_outlined,
                       color: AppColors.downloading,
                       size: 20,
@@ -305,7 +305,7 @@ class SettingsScreen extends ConsumerWidget {
                         width: 1,
                       ),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.language_outlined,
                       color: AppColors.downloading,
                       size: 20,
@@ -339,7 +339,7 @@ class SettingsScreen extends ConsumerWidget {
                         width: 1,
                       ),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.copyright_outlined,
                       color: AppColors.downloading,
                       size: 20,
@@ -373,7 +373,7 @@ class SettingsScreen extends ConsumerWidget {
                         width: 1,
                       ),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.mail_outline_rounded,
                       color: AppColors.downloading,
                       size: 20,
@@ -846,7 +846,7 @@ class _AboutCard extends ConsumerWidget {
       child: Column(
         children: [
           Center(
-            child: Container(
+            child: DecoratedBox(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
@@ -903,7 +903,7 @@ class _AboutCard extends ConsumerWidget {
               color: AppColors.downloading.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Text(
+            child: const Text(
               'Designed & Developed by MeiGamingOfficial',
               style: TextStyle(
                 color: AppColors.downloading,
