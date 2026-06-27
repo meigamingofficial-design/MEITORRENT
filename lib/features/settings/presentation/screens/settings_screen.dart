@@ -189,222 +189,271 @@ class SettingsScreen extends ConsumerWidget {
             // ── About ─────────────────────────────────────────────────
             const _SectionHeader(title: 'About'),
             const _AboutCard(),
-            _SettingsGroupCard(
-              children: [
-                ListTile(
-                  leading: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.downloading.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.downloading.withValues(alpha: 0.15),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.privacy_tip_outlined,
-                      color: AppColors.downloading,
-                      size: 20,
+            _SettingsItemCard(
+              child: ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.downloading.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.downloading.withValues(alpha: 0.15),
+                      width: 1,
                     ),
                   ),
-                  title: Text(
-                    'Privacy Policy',
-                    style: TextStyle(
-                      fontFamily: 'ShipporiMincho',
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.text(context),
-                    ),
+                  child: const Icon(
+                    Icons.privacy_tip_outlined,
+                    color: AppColors.downloading,
+                    size: 20,
                   ),
-                  trailing: Icon(
-                    Icons.open_in_new_rounded,
-                    color: AppColors.textSecondary(context).withValues(alpha: 0.7),
-                    size: 16,
-                  ),
-                  onTap: () => _launchUrl('https://meigamingofficial-design.github.io/MEITORRENT/privacy-policy.html'),
                 ),
-                ListTile(
-                  leading: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.downloading.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.downloading.withValues(alpha: 0.15),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.description_outlined,
-                      color: AppColors.downloading,
-                      size: 20,
-                    ),
+                title: Text(
+                  'Privacy Policy',
+                  style: TextStyle(
+                    fontFamily: 'ShipporiMincho',
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.text(context),
                   ),
-                  title: Text(
-                    'Terms & Conditions',
-                    style: TextStyle(
-                      fontFamily: 'ShipporiMincho',
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.text(context),
-                    ),
-                  ),
-                  trailing: Icon(
-                    Icons.open_in_new_rounded,
-                    color: AppColors.textSecondary(context).withValues(alpha: 0.7),
-                    size: 16,
-                  ),
-                  onTap: () => _launchUrl('https://meigamingofficial-design.github.io/MEITORRENT/terms.html'),
                 ),
-                ListTile(
-                  leading: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.downloading.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.downloading.withValues(alpha: 0.15),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.gavel_outlined,
-                      color: AppColors.downloading,
-                      size: 20,
-                    ),
+                subtitle: Text(
+                  'Learn how we protect your data',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary(context),
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
                   ),
-                  title: Text(
-                    'Open Source Licenses',
-                    style: TextStyle(
-                      fontFamily: 'ShipporiMincho',
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.text(context),
-                    ),
-                  ),
-                  trailing: Icon(
-                    Icons.chevron_right,
-                    color: AppColors.textSecondary(context).withValues(alpha: 0.7),
-                    size: 18,
-                  ),
-                  onTap: () => showLicensePage(context: context),
                 ),
-                ListTile(
-                  leading: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.downloading.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.downloading.withValues(alpha: 0.15),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.language_outlined,
-                      color: AppColors.downloading,
-                      size: 20,
-                    ),
-                  ),
-                  title: Text(
-                    'Official Website',
-                    style: TextStyle(
-                      fontFamily: 'ShipporiMincho',
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.text(context),
-                    ),
-                  ),
-                  trailing: Icon(
-                    Icons.open_in_new_rounded,
-                    color: AppColors.textSecondary(context).withValues(alpha: 0.7),
-                    size: 16,
-                  ),
-                  onTap: () => _launchUrl('https://meigamingofficial-design.github.io/MEITORRENT/'),
+                trailing: Icon(
+                  Icons.open_in_new_rounded,
+                  color: AppColors.textSecondary(context).withValues(alpha: 0.7),
+                  size: 16,
                 ),
-                ListTile(
-                  leading: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.downloading.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.downloading.withValues(alpha: 0.15),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.copyright_outlined,
-                      color: AppColors.downloading,
-                      size: 20,
-                    ),
-                  ),
-                  title: Text(
-                    'GNU GPL v3.0 License',
-                    style: TextStyle(
-                      fontFamily: 'ShipporiMincho',
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.text(context),
-                    ),
-                  ),
-                  trailing: Icon(
-                    Icons.open_in_new_rounded,
-                    color: AppColors.textSecondary(context).withValues(alpha: 0.7),
-                    size: 16,
-                  ),
-                  onTap: () => _launchUrl('https://www.gnu.org/licenses/gpl-3.0.en.html'),
-                ),
-                ListTile(
-                  leading: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.downloading.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.downloading.withValues(alpha: 0.15),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.mail_outline_rounded,
-                      color: AppColors.downloading,
-                      size: 20,
-                    ),
-                  ),
-                  title: Text(
-                    'Contact Support',
-                    style: TextStyle(
-                      fontFamily: 'ShipporiMincho',
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.text(context),
-                    ),
-                  ),
-                  subtitle: Text(
-                    'meigaming.official@gmail.com',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary(context),
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  trailing: Icon(
-                    Icons.chevron_right,
-                    color: AppColors.textSecondary(context).withValues(alpha: 0.7),
-                    size: 18,
-                  ),
-                  onTap: () => _launchUrl('mailto:meigaming.official@gmail.com'),
-                ),
-              ],
+                onTap: () => _launchUrl('https://meigamingofficial-design.github.io/MEITORRENT/privacy-policy.html'),
+              ),
             ),
+            _SettingsItemCard(
+              child: ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.downloading.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.downloading.withValues(alpha: 0.15),
+                      width: 1,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.description_outlined,
+                    color: AppColors.downloading,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  'Terms & Conditions',
+                  style: TextStyle(
+                    fontFamily: 'ShipporiMincho',
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.text(context),
+                  ),
+                ),
+                subtitle: Text(
+                  'Read our terms of use',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary(context),
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.open_in_new_rounded,
+                  color: AppColors.textSecondary(context).withValues(alpha: 0.7),
+                  size: 16,
+                ),
+                onTap: () => _launchUrl('https://meigamingofficial-design.github.io/MEITORRENT/terms.html'),
+              ),
+            ),
+            _SettingsItemCard(
+              child: ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.downloading.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.downloading.withValues(alpha: 0.15),
+                      width: 1,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.code_rounded,
+                    color: AppColors.downloading,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  'Open Source Licenses',
+                  style: TextStyle(
+                    fontFamily: 'ShipporiMincho',
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.text(context),
+                  ),
+                ),
+                subtitle: Text(
+                  'Third-party open source software',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary(context),
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: AppColors.textSecondary(context).withValues(alpha: 0.7),
+                  size: 18,
+                ),
+                onTap: () => showLicensePage(context: context),
+              ),
+            ),
+            _SettingsItemCard(
+              child: ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.downloading.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.downloading.withValues(alpha: 0.15),
+                      width: 1,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.language_outlined,
+                    color: AppColors.downloading,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  'Official Website',
+                  style: TextStyle(
+                    fontFamily: 'ShipporiMincho',
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.text(context),
+                  ),
+                ),
+                subtitle: Text(
+                  'Visit our official website',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary(context),
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.open_in_new_rounded,
+                  color: AppColors.textSecondary(context).withValues(alpha: 0.7),
+                  size: 16,
+                ),
+                onTap: () => _launchUrl('https://meigamingofficial-design.github.io/MEITORRENT/'),
+              ),
+            ),
+            _SettingsItemCard(
+              child: ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.downloading.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.downloading.withValues(alpha: 0.15),
+                      width: 1,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.copyright_outlined,
+                    color: AppColors.downloading,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  'GNU GPL v3.0 License',
+                  style: TextStyle(
+                    fontFamily: 'ShipporiMincho',
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.text(context),
+                  ),
+                ),
+                subtitle: Text(
+                  'View the GNU GPL v3.0 License',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary(context),
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.open_in_new_rounded,
+                  color: AppColors.textSecondary(context).withValues(alpha: 0.7),
+                  size: 16,
+                ),
+                onTap: () => _launchUrl('https://www.gnu.org/licenses/gpl-3.0.en.html'),
+              ),
+            ),
+            _SettingsItemCard(
+              child: ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.downloading.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.downloading.withValues(alpha: 0.15),
+                      width: 1,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.mail_outline_rounded,
+                    color: AppColors.downloading,
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  'Contact Support',
+                  style: TextStyle(
+                    fontFamily: 'ShipporiMincho',
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.text(context),
+                  ),
+                ),
+                subtitle: Text(
+                  'meigaming.official@gmail.com',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary(context),
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: AppColors.textSecondary(context).withValues(alpha: 0.7),
+                  size: 18,
+                ),
+                onTap: () => _launchUrl('mailto:meigaming.official@gmail.com'),
+              ),
+            ),
+            const _ThankYouCard(),
             const SizedBox(height: 60),
           ],
         ),
@@ -423,14 +472,27 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
-      child: Text(
-        title.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: AppColors.downloading,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.2,
-        ),
+      child: Row(
+        children: [
+          Container(
+            width: 3.5,
+            height: 16,
+            decoration: BoxDecoration(
+              color: AppColors.downloading,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title.toUpperCase(),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: AppColors.downloading,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -824,6 +886,7 @@ class _AboutCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final versionAsync = ref.watch(appVersionProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -842,89 +905,227 @@ class _AboutCard extends ConsumerWidget {
             offset: const Offset(0, 4),
           ),
         ],
+        image: DecorationImage(
+          image: const AssetImage('assets/images/sakura_bg_light.png'),
+          fit: BoxFit.cover,
+          alignment: Alignment.centerRight,
+          opacity: isDark ? 0.12 : 0.8,
+        ),
       ),
-      child: Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Center(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppColors.border(context),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: Image.asset(
-                  'assets/images/app_logo.png',
-                  width: 64,
-                  height: 64,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Meitorrent',
-            style: TextStyle(
-              fontFamily: 'ShipporiMincho',
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: AppColors.text(context),
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            versionAsync.when(
-              data: (v) => 'Version $v',
-              loading: () => 'Version Loading...',
-              error: (_, _) => 'Version 1.0.7+8',
-            ),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.textSecondary(context),
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          DecoratedBox(
             decoration: BoxDecoration(
-              color: AppColors.downloading.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.border(context),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: const Text(
-              'Designed & Developed by MeiGamingOfficial',
-              style: TextStyle(
-                color: AppColors.downloading,
-                fontSize: 10.5,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.2,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: Image.asset(
+                'assets/images/app_logo.png',
+                width: 56,
+                height: 56,
+                fit: BoxFit.cover,
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            'A premium, hand-crafted Android torrent client powered by a native C++ Core, styled with a traditional Sumi-e Parchment aesthetic.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.textSecondary(context),
-              fontSize: 12.5,
-              height: 1.5,
-              fontWeight: FontWeight.w600,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Meitorrent',
+                  style: TextStyle(
+                    fontFamily: 'ShipporiMincho',
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.text(context),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.downloading.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.downloading.withValues(alpha: 0.15),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        versionAsync.when(
+                          data: (v) => 'v$v',
+                          loading: () => 'v1.0.7+8',
+                          error: (_, _) => 'v1.0.7+8',
+                        ),
+                        style: const TextStyle(
+                          color: AppColors.downloading,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Fast. Private. Reliable.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary(context),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Designed & Developed by MeiGamingOfficial',
+                  style: TextStyle(
+                    color: AppColors.downloading,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Settings Item Card ──────────────────────────────────────────────────────
+
+class _SettingsItemCard extends StatelessWidget {
+  const _SettingsItemCard({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.border(context).withValues(alpha: 0.8),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15),
+        child: Material(
+          color: AppColors.surface(context),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Thank You Card ──────────────────────────────────────────────────────────
+
+class _ThankYouCard extends StatelessWidget {
+  const _ThankYouCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.border(context).withValues(alpha: 0.8),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        image: DecorationImage(
+          image: const AssetImage('assets/images/sakura_bg_light.png'),
+          fit: BoxFit.cover,
+          alignment: Alignment.centerRight,
+          opacity: isDark ? 0.12 : 0.8,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(19),
+        child: Material(
+          color: Colors.transparent,
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.downloading.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.favorite_rounded,
+                  color: AppColors.downloading,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Thank you for using Meitorrent.',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.text(context),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Your support means a lot!',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
