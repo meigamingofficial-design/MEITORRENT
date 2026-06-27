@@ -87,8 +87,6 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
-    - PRIVACY_POLICY.md
-    - TERMS.md
     - LICENSES.md
     - assets/images/
     - assets/images/app_logo.png
