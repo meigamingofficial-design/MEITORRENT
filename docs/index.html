@@ -205,7 +205,7 @@
     /* Main Container & Features Grid */
     .container {
       max-width: 1100px;
-      margin: 60px auto 100px;
+      margin: 60px auto 60px;
       padding: 60px 48px;
       background: rgba(255, 253, 249, 0.9);
       backdrop-filter: blur(20px);
@@ -296,6 +296,32 @@
       line-height: 1.7;
     }
 
+    /* Call To Action Section */
+    .cta-section {
+      text-align: center;
+      padding: 80px 24px;
+      background: rgba(255, 253, 249, 0.7);
+      border-top: 1.5px solid var(--border-washi);
+      border-bottom: 1.5px solid var(--border-washi);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .cta-section h2 {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 36px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      color: var(--text-sumi);
+    }
+
+    .cta-section p {
+      font-size: 18px;
+      margin-bottom: 32px;
+      color: var(--text-charcoal);
+      font-weight: 500;
+    }
+
     /* Traditional Footer */
     .footer {
       background: rgba(250, 246, 238, 0.9);
@@ -313,11 +339,19 @@
       font-size: 20px;
       font-weight: 700;
       color: var(--text-sumi);
-      margin-bottom: 16px;
+      margin-bottom: 4px;
     }
 
     .footer-logo span {
       color: var(--primary-crimson);
+    }
+
+    .footer-tagline {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-charcoal);
+      margin-bottom: 20px;
+      letter-spacing: 0.05em;
     }
 
     .footer-links {
@@ -363,11 +397,17 @@
         font-size: 16px;
       }
       .container {
-        margin: 30px 16px 60px;
+        margin: 30px 16px 40px;
         padding: 40px 24px;
       }
       .card {
         padding: 30px 24px;
+      }
+      .cta-section h2 {
+        font-size: 28px;
+      }
+      .cta-section p {
+        font-size: 15px;
       }
     }
   </style>
@@ -380,60 +420,70 @@
       Meitorrent<span>.</span>
     </a>
     <nav class="nav-links">
-      <a href="privacy-policy.html">Privacy Policy</a>
-      <a href="terms.html">Terms &amp; Conditions</a>
+      <a href="#features">Features</a>
+      <a href="#download">Download</a>
+      <a href="https://github.com/meigamingofficial-design/MEITORRENT" target="_blank">GitHub</a>
+      <a href="mailto:meigaming.official@gmail.com">Support</a>
     </nav>
   </header>
 
   <section class="hero">
-    <span class="hero-hanko">🔒 100% PRIVATE</span>
-    <h1>Hand-Crafted P2P Engine<br>Wrapped in Calligraphic Art</h1>
-    <p class="hero-desc">Meitorrent is a production-grade, highly optimized Android torrent client powered by a native C++ core and designed with a premium Japanese Sumi-e &amp; Sakura theme.</p>
-    <a href="https://play.google.com/store/apps/details?id=com.meigaming.meitorrent" class="hanko-btn" target="_blank">Get Meitorrent</a>
+    <span class="hero-hanko">🔒 Privacy First</span>
+    <h1>Fast. Reliable. Beautiful.</h1>
+    <p class="hero-desc">Meitorrent is a modern Android torrent client built for speed, reliability, and simplicity. Download magnet links and .torrent files with seamless background transfers and a clean Japanese-inspired design.</p>
+    <a href="https://play.google.com/store/apps/details?id=com.meigaming.meitorrent" class="hanko-btn" target="_blank">Download on Google Play</a>
   </section>
 
-  <main class="container">
+  <main id="features" class="container">
     <div class="section-title">
-      <h2>Crafted for Stability &amp; Aesthetics</h2>
+      <h2>Everything You Need</h2>
     </div>
 
     <div class="features-grid">
       <div class="card">
-        <span class="card-icon">🚀</span>
-        <h3>Libtorrent 2.0 Core</h3>
-        <p>Utilizes native C++ core bindings (via Dart FFI) for high-performance, memory-safe, and blazing-fast download speeds.</p>
+        <span class="card-icon">⚡</span>
+        <h3>Fast Downloads</h3>
+        <p>Powered by a proven BitTorrent engine for reliable and high-performance downloads.</p>
       </div>
 
       <div class="card">
         <span class="card-icon">🛡️</span>
-        <h3>Intelligent Safety Guards</h3>
-        <p>Includes a Disk Space Guard to prevent storage depletion, a Bandwidth Guard for smart data usage, and background service protection.</p>
+        <h3>Reliable Background Transfers</h3>
+        <p>Helpful guidance for battery optimization settings so downloads continue reliably while your device is idle.</p>
       </div>
 
       <div class="card">
         <span class="card-icon">🎨</span>
-        <h3>Sumi-e Parchment Style</h3>
-        <p>An immersive Japanese aesthetic using soft ivory textures, charcoal ink layouts, and cherry blossom backgrounds.</p>
+        <h3>Japanese Inspired Design</h3>
+        <p>A calm interface inspired by Sumi-e ink art and Sakura aesthetics, designed for comfortable daily use.</p>
       </div>
 
       <div class="card">
-        <span class="card-icon">🔋</span>
-        <h3>OEM Battery Guard</h3>
-        <p>Alerts users about aggressive background process management and provides step-by-step optimization settings for uninterrupted transfers.</p>
+        <span class="card-icon">📂</span>
+        <h3>Smart Download Management</h3>
+        <p>Pause, resume, queue, and manage downloads while protecting available storage and bandwidth.</p>
       </div>
     </div>
   </main>
+
+  <section id="download" class="cta-section">
+    <h2>Ready to download?</h2>
+    <p>Get Meitorrent for Android today.</p>
+    <a href="https://play.google.com/store/apps/details?id=com.meigaming.meitorrent" class="hanko-btn" target="_blank">Get Meitorrent</a>
+  </section>
 
   <footer class="footer">
     <div class="footer-logo">
       Meitorrent<span>.</span>
     </div>
+    <div class="footer-tagline">Fast • Private • Reliable</div>
     <div class="footer-links">
       <a href="privacy-policy.html">Privacy Policy</a>
-      <a href="terms.html">Terms of Service</a>
+      <a href="terms.html">Terms &amp; Conditions</a>
+      <a href="https://www.gnu.org/licenses/gpl-3.0.en.html" target="_blank">GPL License</a>
     </div>
     <p>© 2026 MeiGamingOfficial. All rights reserved.</p>
-    <p>For support, reach out to <a href="mailto:meigaming.official@gmail.com" style="color: var(--primary-crimson); text-decoration: none;">meigaming.official@gmail.com</a></p>
+    <p style="margin-top: 12px;">Questions or feedback? <a href="mailto:meigaming.official@gmail.com" style="color: var(--primary-crimson); text-decoration: none; font-weight: 600;">meigaming.official@gmail.com</a></p>
   </footer>
 
 </body>
