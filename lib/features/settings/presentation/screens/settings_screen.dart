@@ -187,6 +187,35 @@ class SettingsScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
+                  Icons.language_outlined,
+                  color: AppColors.textSecondary(context),
+                  size: 20,
+                ),
+              ),
+              title: Text(
+                'Official Website',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.text(context),
+                ),
+              ),
+              trailing: Icon(
+                Icons.open_in_new_rounded,
+                color: AppColors.textSecondary(context),
+                size: 16,
+              ),
+              onTap: () => _launchUrl('https://meigamingofficial-design.github.io/MEITORRENT/'),
+            ),
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.border(context).withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
                   Icons.copyright_outlined,
                   color: AppColors.textSecondary(context),
                   size: 20,

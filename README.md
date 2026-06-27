@@ -113,3 +113,10 @@ dart pub cache gc
 ## ⚖️ License
 
 This project is open-source and distributed under the terms of the **GNU General Public License v3 (GPLv3)**. See [LICENSE](LICENSE) and [LICENSES.md](LICENSES.md) for more information.
+
+---
+
+## 🔒 Privacy & Legal
+
+- **Privacy Policy**: Hosted live at [meigamingofficial-design.github.io/MEITORRENT/privacy-policy.html](https://meigamingofficial-design.github.io/MEITORRENT/privacy-policy.html)
+- **Terms & Conditions**: Hosted live at [meigamingofficial-design.github.io/MEITORRENT/terms.html](https://meigamingofficial-design.github.io/MEITORRENT/terms.html)
