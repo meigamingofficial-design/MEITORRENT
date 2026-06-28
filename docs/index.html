@@ -86,6 +86,7 @@
     .nav-logo span {
       color: var(--primary-crimson);
       margin-left: 2px;
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
     }
 
     .nav-links {
@@ -400,6 +401,10 @@
         margin: 30px 16px 40px;
         padding: 40px 24px;
       }
+      .features-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
       .card {
         padding: 30px 24px;
       }
@@ -408,6 +413,22 @@
       }
       .cta-section p {
         font-size: 15px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        margin: 20px 12px 40px;
+        padding: 32px 16px;
+      }
+      .card {
+        padding: 24px 16px;
+      }
+      .hanko-btn {
+        padding: 14px 28px;
+        font-size: 15px;
+        width: 100%;
+        max-width: 290px;
       }
     }
   </style>
