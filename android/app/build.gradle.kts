@@ -23,7 +23,7 @@ tasks.withType<JavaCompile>().configureEach {
 
 android {
     namespace = "com.meigaming.meitorrent"
-    compileSdk = 34
+    compileSdk = 36
     ndkVersion = "28.2.13676358"
 
     compileOptions {
