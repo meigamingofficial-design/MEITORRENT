@@ -23,7 +23,7 @@ tasks.withType<JavaCompile>().configureEach {
 
 android {
     namespace = "com.meigaming.meitorrent"
-    compileSdk = 36
+    compileSdk = 34
     ndkVersion = "28.2.13676358"
 
     compileOptions {
@@ -35,7 +35,7 @@ android {
     defaultConfig {
         applicationId = "com.meigaming.meitorrent"
         minSdk = flutter.minSdkVersion
-        targetSdk = 36
+        targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
