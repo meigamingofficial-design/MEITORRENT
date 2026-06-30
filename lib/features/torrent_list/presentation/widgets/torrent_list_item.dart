@@ -614,7 +614,7 @@ class _ActionButtons extends ConsumerWidget {
                       context,
                     );
                     if (retry) {
-                      await Permission.manageExternalStorage.request();
+                      await Permission.storage.request();
                     }
                   }
                   return;
@@ -667,7 +667,7 @@ class _ActionButtons extends ConsumerWidget {
                   context,
                 );
                 if (retry) {
-                  await Permission.manageExternalStorage.request();
+                  await Permission.storage.request();
                 }
               }
               return;

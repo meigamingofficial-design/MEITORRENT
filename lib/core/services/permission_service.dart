@@ -1,10 +1,14 @@
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../core/theme/app_theme.dart';
 
-/// Centralized service for handling the sensitive "All Files Access" permission.
+/// Centralized service for handling storage permissions.
 ///
-/// Designed for Play Store compliance with clear rationales and non-blocking UX.
+/// On Android 13+ (SDK 33+) scoped storage requires no permission for
+/// app-specific dirs. On Android 10–12 we request READ/WRITE_EXTERNAL_STORAGE.
+/// MANAGE_EXTERNAL_STORAGE is NOT used — it violates Google Play policy for
+/// download/torrent apps.
 class PermissionService {
   PermissionService._();
 
@@ -173,8 +177,26 @@ class PermissionService {
     return granted ?? false;
   }
 
-  /// Check if the user has granted "All files access".
+  /// Check if the app has the storage access it needs for the current Android version.
+  ///
+  /// Android version breakdown:
+  /// - API 29+ (Android 10+): Apps can write to getExternalFilesDir() with NO permission.
+  ///   No permission dialog ever needed. Returns true immediately.
+  /// - API 28 and below (Android 9-): Needs READ/WRITE_EXTERNAL_STORAGE.
   static Future<bool> isStorageGranted() async {
-    return await Permission.manageExternalStorage.isGranted;
+    final sdkInt = await _getSdkInt();
+    // Android 10+ (API 29+): scoped storage — no permission needed for app dirs
+    if (sdkInt >= 29) return true;
+    // Android 9 and below: need legacy storage permission
+    return await Permission.storage.isGranted;
+  }
+
+  static Future<int> _getSdkInt() async {
+    try {
+      final info = await DeviceInfoPlugin().androidInfo;
+      return info.version.sdkInt;
+    } catch (_) {
+      return 33; // safe fallback — assume modern Android, no permission needed
+    }
   }
 }

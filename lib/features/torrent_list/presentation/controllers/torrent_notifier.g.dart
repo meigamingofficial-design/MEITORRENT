@@ -135,7 +135,7 @@ abstract class _$ActiveFilter extends $Notifier<TorrentFilter> {
   TorrentFilter build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<TorrentFilter, TorrentFilter>;
     final element =
         ref.element
@@ -145,7 +145,7 @@ abstract class _$ActiveFilter extends $Notifier<TorrentFilter> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -194,7 +194,7 @@ final class FilteredTorrentsProvider
   }
 }
 
-String _$filteredTorrentsHash() => r'38e71ed1d463b638a7b0d4305abaedeeab42845c';
+String _$filteredTorrentsHash() => r'9324280ba9cc6bc171f278410b30f59d7b8f8c8c';
 
 /// Central state manager for all torrent operations.
 ///
@@ -242,7 +242,7 @@ final class TorrentNotifierProvider
   TorrentNotifier create() => TorrentNotifier();
 }
 
-String _$torrentNotifierHash() => r'0785df94fee84101a360314bd56ef1835e82cf01';
+String _$torrentNotifierHash() => r'b17b7afb3bf4c99fcec4c5db1cc472f70b1374d2';
 
 /// Central state manager for all torrent operations.
 ///
@@ -256,7 +256,7 @@ abstract class _$TorrentNotifier extends $AsyncNotifier<List<TorrentStatus>> {
   FutureOr<List<TorrentStatus>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<List<TorrentStatus>>, List<TorrentStatus>>;
     final element =
@@ -267,7 +267,7 @@ abstract class _$TorrentNotifier extends $AsyncNotifier<List<TorrentStatus>> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -309,7 +309,7 @@ abstract class _$SelectedTorrents extends $Notifier<Set<String>> {
   Set<String> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<Set<String>, Set<String>>;
     final element =
         ref.element
@@ -319,6 +319,6 @@ abstract class _$SelectedTorrents extends $Notifier<Set<String>> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

@@ -83,7 +83,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (!_isStorageGranted) {
       final granted = await PermissionService.showStorageRationale(context);
       if (granted) {
-        await Permission.manageExternalStorage.request();
+        await Permission.storage.request();
         await _checkPermission();
       }
       return;
@@ -146,7 +146,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (!_isStorageGranted) {
       final granted = await PermissionService.showStorageRationale(context);
       if (granted) {
-        await Permission.manageExternalStorage.request();
+        await Permission.storage.request();
         await _checkPermission();
       }
       return;

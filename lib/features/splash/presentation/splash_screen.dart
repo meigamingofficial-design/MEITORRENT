@@ -1,16 +1,15 @@
 import 'dart:async';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/services/engine_process_manager.dart';
 import '../../../core/services/foreground_service_manager.dart';
 import '../../../core/services/logger_service.dart';
-import '../../../core/services/permission_service.dart';
 import '../../../data/models/torrent_model.dart';
 import '../../torrent_list/presentation/controllers/torrent_notifier.dart';
 import '../../torrent_list/presentation/screens/dashboard_screen.dart';
@@ -155,53 +154,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     }
 
     try {
-      // Standard storage permission (Android 10 and below) — check once, request only if needed
-      final storageStatus = await Permission.storage.status;
-      if (storageStatus.isDenied) {
-        await Permission.storage.request();
+      // Storage permission ONLY needed on Android 9 (API 28) and below.
+      // Android 10+ (API 29+) allows writes to getExternalFilesDir() without any permission.
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      if (androidInfo.version.sdkInt <= 28) {
+        final storageStatus = await Permission.storage.status;
+        if (storageStatus.isDenied) {
+          await Permission.storage.request();
+        }
       }
     } catch (e) {
       AppLogger.w('[Splash] Storage permission request failed: $e');
-    }
-
-    try {
-      // MANAGE_EXTERNAL_STORAGE (Android 11+)
-      // Only show the rationale dialog ONCE (first install). On subsequent launches where
-      // permission is still denied/skipped, we silently skip — no nagging.
-      final manageStatus = await Permission.manageExternalStorage.status;
-      if (!manageStatus.isGranted) {
-        final prefs = await SharedPreferences.getInstance();
-        final alreadyShown =
-            prefs.getBool('meitorrent_storage_perm_shown') ?? false;
-
-        if (!alreadyShown) {
-          // Mark as shown so we never prompt again (unless user explicitly triggers it)
-          await prefs.setBool('meitorrent_storage_perm_shown', true);
-          await _requestManageStorageWithRationale();
-        }
-        // If already shown and still not granted — silently continue, app still works
-      }
-    } catch (e) {
-      AppLogger.w('[Splash] Manage storage permission request failed: $e');
-    }
-  }
-
-  /// Shows a clear, friendly explanation dialog before directing the user to
-  /// the "All files access" system settings page. Handles rejection gracefully.
-  /// Only called ONCE per install — never nags again.
-  Future<void> _requestManageStorageWithRationale() async {
-    if (!mounted) return;
-
-    final granted = await PermissionService.showStorageRationale(context);
-
-    if (granted) {
-      // Open the system "All files access" settings page
-      await Permission.manageExternalStorage.request();
-
-      // Check if the user actually granted it after returning from system settings
-      // Permission handled, continue
-    } else {
-      // User chose to skip
     }
   }
 

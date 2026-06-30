@@ -44,7 +44,7 @@ final class SettingsNotifierProvider
   }
 }
 
-String _$settingsNotifierHash() => r'f5332cd314f50b88a56268d600a6b857e4dae7f6';
+String _$settingsNotifierHash() => r'596be6eefe5fbc099517d3530b16746cebaca4f7';
 
 /// Persists and applies engine configuration settings.
 
@@ -52,7 +52,7 @@ abstract class _$SettingsNotifier extends $Notifier<EngineConfig> {
   EngineConfig build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<EngineConfig, EngineConfig>;
     final element =
         ref.element
@@ -62,6 +62,6 @@ abstract class _$SettingsNotifier extends $Notifier<EngineConfig> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
