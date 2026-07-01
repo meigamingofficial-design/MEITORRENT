@@ -35,7 +35,7 @@ android {
     defaultConfig {
         applicationId = "com.meigaming.meitorrent"
         minSdk = flutter.minSdkVersion
-        targetSdk = 34
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -98,5 +98,47 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+// ─── 16 KB ELF alignment (Android 15+ / Google Play API 35+ requirement) ─────
+// The libtorrent_flutter plugin ships pre-compiled .so files with 4 KB-aligned
+// LOAD segments. Google Play now requires 16 KB alignment for all native libs.
+// This hook runs after every merge*NativeLibs task and realigns any non-compliant
+// .so files using the project's realign_elf.py script.
+val realignScript = rootProject.file("../.16kb_fix/realign_elf.py")
+
+tasks.configureEach {
+    if (name.startsWith("merge") && name.endsWith("NativeLibs")) {
+        doLast {
+            if (!realignScript.exists()) {
+                logger.warn("16KB-fix: realign_elf.py not found at $realignScript – skipping")
+                return@doLast
+            }
+
+            val variant = name.removePrefix("merge").removeSuffix("NativeLibs")
+                .replaceFirstChar { it.lowercase() }
+            val libDir = project.layout.buildDirectory
+                .dir("intermediates/merged_native_libs/$variant/$name/out/lib")
+                .get().asFile
+
+            if (!libDir.exists()) {
+                logger.warn("16KB-fix: merged libs dir not found at $libDir – skipping")
+                return@doLast
+            }
+
+            libDir.walkTopDown().filter { it.extension == "so" }.forEach { so ->
+                logger.lifecycle("16KB-fix: processing ${so.name} (${so.parentFile.name})")
+                val tmp = File(so.parent, "${so.name}.aligned")
+                exec {
+                    commandLine("python3", realignScript.absolutePath,
+                                so.absolutePath, tmp.absolutePath)
+                }
+                if (tmp.exists() && tmp.length() > 0) {
+                    so.delete()
+                    tmp.renameTo(so)
+                }
+            }
+        }
+    }
 }
 
